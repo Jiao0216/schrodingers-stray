@@ -46,6 +46,11 @@ management:
   endpoint:
     health:
       show-details: when_authorized
+  health:
+    redis:
+      enabled: false
+    mail:
+      enabled: false
 
 cat-rescue:
   share:
