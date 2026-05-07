@@ -8,6 +8,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpMethod;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -35,7 +37,27 @@ public class ShareAccessFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+    protected boolean shouldNotFilter(@NonNull HttpServletRequest request) {
+        String path = request.getRequestURI();
+        if (path == null) {
+            return true;
+        }
+        String method = request.getMethod();
+        if (method != null && HttpMethod.OPTIONS.matches(method)) {
+            return true;
+        }
+        String p = path.toLowerCase(Locale.ROOT);
+        return p.startsWith("/api/")
+                || p.startsWith("/actuator/health")
+                || p.startsWith("/error");
+    }
+
+    @Override
+    protected void doFilterInternal(
+            @NonNull HttpServletRequest request,
+            @NonNull HttpServletResponse response,
+            @NonNull FilterChain filterChain
+    )
             throws ServletException, IOException {
         String configuredPassword = props.getPassword() == null ? "" : props.getPassword().trim();
         // If a non-blank password is configured, keep gate active even when enabled flag is not set.
@@ -46,10 +68,6 @@ public class ShareAccessFilter extends OncePerRequestFilter {
         }
 
         String path = request.getRequestURI();
-        if (path.startsWith("/actuator/health") || path.startsWith("/error")) {
-            filterChain.doFilter(request, response);
-            return;
-        }
         if (!requiresProtectedAccess(path)) {
             filterChain.doFilter(request, response);
             return;
@@ -126,10 +144,6 @@ public class ShareAccessFilter extends OncePerRequestFilter {
             return false;
         }
         String p = path.toLowerCase(Locale.ROOT);
-        // REST APIs use their own auth (JWT, institution tokens, etc.); do not gate JSON behind the HTML share form.
-        if (p.startsWith("/api/")) {
-            return false;
-        }
         // Keep homepage/public static assets accessible, but protect sensitive data routes.
         return p.contains("/heatmap")
                 || p.contains("/feeding-stations")
