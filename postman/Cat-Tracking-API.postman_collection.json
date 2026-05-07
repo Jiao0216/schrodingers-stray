@@ -1,0 +1,189 @@
+{
+  "info": {
+    "_postman_id": "a1b2c3d4-tracking-cat",
+    "name": "Cat Tracking API",
+    "description": "流浪猫追踪平台接口测试集合。\n\n**Base URL**：变量 `baseUrl` 默认 `http://localhost:8090`。\n\n**说明**：\n- `POST /sightings` 与 `POST /api/v1/tracking/sightings` 等价（本集合使用 `/api/v1/sightings`）。\n- 志愿者需在 `users` 表配置 `service_latitude` / `service_longitude` 且在 500m 内才会收到「未绝育新目击」推送。\n- 热力图仅包含最近 30 天内目击；权重为线性衰减（当天≈1.0，30 天前≈0.0，更旧不入列）。\n- 7 天未目击提醒由定时任务扫描（默认每小时），需存在 `cat_id` 关联目击及可解析的接收用户。",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8090" },
+    { "key": "catId", "value": "1" },
+    { "key": "volunteerUserId", "value": "2" },
+    { "key": "reporterUserId", "value": "1" }
+  ],
+  "item": [
+    {
+      "name": "POST 上报目击（成功）",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json", "type": "text" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"reporterUserId\": {{reporterUserId}},\n  \"imageUrl\": \"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEASABIAAD/2wBDABALDA4MChAODQ4SERATGCgaGBYWGDEjJR0oOjM9PDkzODdASFxOQERXRTc4UG1RV19iZ2hnPk1xeXBkeF5f/2wBDAQARAMMGBUSJTE8GBpOT09OT09OT09OT09OT09OT09OT09OT09OT09OT09OT09OT09OT09OT09OT09OT09OT09OT09P/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCwAA8A/9k=\",\n  \"addressText\": \"2750 Monterey Rd, San Jose, CA\",\n  \"latitude\": 37.3055,\n  \"longitude\": -121.8567\n}"
+        },
+        "url": "{{baseUrl}}/api/v1/sightings",
+        "description": "**预期**：HTTP 200，JSON 含 `id`、`dedupStatus`（如 `NEW_CONFIRMED` 或 `PENDING_REVIEW`）、`catId` 或 `suggestedCatId`。\n\n**Headers**：`Content-Type: application/json`。\n\n**前置**：MySQL 中已存在 `users.id = reporterUserId`；OpenAI/Gemini 未配置时 Stub 仍会返回特征向量。"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+              "const j = pm.response.json();",
+              "pm.test('Has sighting id', function () { pm.expect(j).to.have.property('id'); });",
+              "if (j.catId) { pm.collectionVariables.set('catId', String(j.catId)); }"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "POST 上报目击（缺必填字段）",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"reporterUserId\": null,\n  \"imageUrl\": \"\",\n  \"latitude\": 37.3,\n  \"longitude\": -121.8\n}"
+        },
+        "url": "{{baseUrl}}/api/v1/sightings",
+        "description": "**预期**：HTTP 400（Bean Validation），ProblemDetail 或默认错误体。"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": ["pm.test('Status 400', function () { pm.expect(pm.response.code).to.be.oneOf([400, 500]); });"],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "GET 热力图数据",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/v1/cats/{{catId}}/heatmap",
+        "description": "**预期**：HTTP 200，`{ catId, generatedAt, points: [{ latitude, longitude, weight, occurredAt }] }`。\n\n**权重**：30 天内线性衰减；超过 30 天的目击不会出现在 `points` 中。\n\n**边界**：无目击时 `points` 可为空数组 `[]`。"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+              "const j = pm.response.json();",
+              "pm.test('Shape', function () {",
+              "  pm.expect(j).to.include.keys('catId','generatedAt','points');",
+              "  pm.expect(j.points).to.be.an('array');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "GET 热力图（不存在的 catId）",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/v1/cats/999999999/heatmap",
+        "description": "**预期**：HTTP 400，`Cat not found: 999999999`（GlobalExceptionHandler 对 IllegalArgumentException）。"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 400', function () { pm.response.to.have.status(400); });"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "GET 最后目击信息",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/v1/cats/{{catId}}/last-seen",
+        "description": "**预期**：HTTP 200，`{ catId, lastSeenAt, lastSeenLatitude, lastSeenLongitude, lastSightingId, lastReporterUserId, lastAddressText }`。\n\n**说明**：`lastReporterUserId` 取自该猫最新一条目击；若无目击记录则回退 `createdByUserId`（可能为 null）。"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+              "const j = pm.response.json();",
+              "pm.test('Has lastSeenAt', function () { pm.expect(j).to.have.property('lastSeenAt'); });"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "GET 最后目击（不存在的 catId）",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/v1/cats/999999999/last-seen",
+        "description": "**预期**：HTTP 400。"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": ["pm.test('Status 400', function () { pm.response.to.have.status(400); });"],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "GET 志愿者通知列表",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/v1/volunteers/notifications?userId={{volunteerUserId}}",
+        "description": "**预期**：HTTP 200，JSON 数组；无通知时为 `[]`。\n\n**元素字段**：`id`, `type`（`UNNEUTERED_SIGHTING_NEARBY` | `CAT_ABSENCE_REMINDER`）, `title`, `body`, `payloadJson`, `acknowledged`, `relatedCatId`, `relatedSightingId`, `createdAt`。\n\n**前置**：先在 `users` 表为 `volunteerUserId` 设置与上报点相距 ≤500m 的 `service_latitude`/`service_longitude`，再上报未绝育目击，才可能收到 `UNNEUTERED_SIGHTING_NEARBY`。"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+              "pm.test('Array body', function () { pm.expect(pm.response.json()).to.be.an('array'); });"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "GET 通知列表（userId 缺失 — 由 Spring 校验）",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/v1/volunteers/notifications",
+        "description": "**预期**：HTTP 400（缺少必填 query `userId`）。"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 400', function () { pm.expect(pm.response.code).to.equal(400); });"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    }
+  ]
+}

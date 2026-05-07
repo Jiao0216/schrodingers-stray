@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="catguardian-api-base" content="">
+  <link rel="icon" href="data:,">
+  <title>加入社区 · 登录 / 注册</title>
+  <style>
+    :root {
+      --bg:#1a1711;
+      --panel:#2b2417;
+      --panel-2:#342c1d;
+      --text:#f6ead3;
+      --muted:#c6b48f;
+      --border:#5e4d30;
+      --primary:#cc8f3f;
+      --primary-hover:#df9f4e;
+      --danger:#ff8080;
+      --ok:#95e39a;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;
+      background:radial-gradient(1200px 700px at 80% -5%,#5e4523 0%,transparent 60%),linear-gradient(180deg,#1a1711,#14110d);
+      font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--text)
+    }
+    .card{
+      width:min(480px,100%);background:linear-gradient(180deg,var(--panel),var(--panel-2));
+      border:1px solid var(--border);border-radius:16px;padding:24px;box-shadow:0 20px 44px rgba(0,0,0,.38)
+    }
+    h1{margin:0 0 8px;font-size:1.35rem}
+    .sub{margin:0 0 16px;color:var(--muted);font-size:13px}
+    label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600}
+    input{
+      width:100%;padding:10px 12px;border:1px solid #6b5938;background:#241f15;color:var(--text);
+      border-radius:10px;margin-bottom:12px;font-size:14px
+    }
+    .btn{
+      width:100%;border:0;background:var(--primary);color:#1f1405;border-radius:10px;padding:11px 14px;
+      font-size:14px;font-weight:700;cursor:pointer
+    }
+    .btn:hover{background:var(--primary-hover)}
+    .btn.secondary{background:#4b3f2a;color:var(--text)}
+    .btn.secondary:hover{background:#5a4a30}
+    .row{display:flex;gap:8px}
+    .row>*{flex:1}
+    .switch{margin-top:10px;color:var(--muted);font-size:13px;text-align:center}
+    .switch button{border:0;background:none;color:#ffd196;cursor:pointer;font-size:13px;font-weight:600}
+    .status{min-height:1.2em;margin-top:12px;font-size:13px}
+    .status.err{color:var(--danger)}
+    .status.ok{color:var(--ok)}
+    .hidden{display:none !important}
+    .link-btn{padding:0;border:0;background:none;color:#ffd196;cursor:pointer;font-size:12px;text-decoration:underline}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1 id="title">登录社区</h1>
+    <p id="sub" class="sub">先登录，没账号可快速注册。</p>
+
+    <form id="loginForm">
+      <label for="loginEmail">邮箱</label>
+      <input id="loginEmail" type="email" autocomplete="email">
+      <label for="loginPassword">密码</label>
+      <input id="loginPassword" type="password" autocomplete="current-password">
+      <label style="display:flex;align-items:center;gap:8px;margin:2px 0 8px;color:var(--text);font-weight:500;">
+        <input id="rememberMe" type="checkbox" style="width:auto;margin:0;">
+        记住我（30天）
+      </label>
+      <button type="button" id="forgotPwdBtn" class="link-btn" style="margin-bottom:10px;">忘记密码？发送重置链接</button>
+      <button type="submit" class="btn">登录并进入志愿者中心</button>
+    </form>
+
+    <form id="registerForm" class="hidden">
+      <label for="regEmail">邮箱</label>
+      <input id="regEmail" type="email" autocomplete="email">
+      <label for="regName">昵称</label>
+      <input id="regName" type="text" maxlength="100" autocomplete="nickname">
+      <div id="regNameHint" class="sub" style="margin:-8px 0 8px;"></div>
+      <label for="regPassword">密码（至少 8 位）</label>
+      <input id="regPassword" type="password" minlength="8" autocomplete="new-password">
+      <label for="regCode">邮箱验证码（5分钟有效）</label>
+      <div class="row">
+        <input id="regCode" type="text" inputmode="numeric" maxlength="6" autocomplete="one-time-code" style="margin-bottom:0;">
+        <button type="button" id="sendCodeBtn" class="btn secondary" style="flex:0 0 150px;">发送验证码</button>
+      </div>
+      <p id="regCodeHint" class="sub" style="margin:8px 0 10px;"></p>
+      <button type="submit" class="btn">注册并进入志愿者中心</button>
+    </form>
+
+    <p class="switch">
+      <span id="switchText">还没有账号？</span>
+      <button type="button" id="switchBtn">去注册</button>
+    </p>
+    <div id="status" class="status"></div>
+  </div>
+
+  <script>
+    const VOLUNTEER_KEY = "catguardian_volunteer_user_id";
+    const VOLUNTEER_ID_KEY = "volunteer_id";
+    const AUTH_KEY = "catguardian_auth_session";
+    const TOKEN_KEY = "token";
+    let isLogin = true;
+    let nicknameTimer = null;
+    let nicknameTaken = false;
+
+    function getApiBase() {
+      const q = new URLSearchParams(window.location.search || "").get("api");
+      if (q && q.trim()) return q.trim().replace(/\/+$/, "");
+      const m = document.querySelector('meta[name="catguardian-api-base"]');
+      const c = m ? (m.getAttribute("content") || "").trim() : "";
+      return c ? c.replace(/\/+$/, "") : "";
+    }
+    function apiUrl(path) {
+      const rel = path.startsWith("/") ? path : "/" + path;
+      const base = getApiBase();
+      return !base ? new URL(rel, window.location.origin).href : new URL(rel, base.endsWith("/") ? base : base + "/").href;
+    }
+    function setStatus(msg, type) {
+      const s = document.getElementById("status");
+      s.textContent = msg || "";
+      s.className = "status" + (type ? " " + type : "");
+    }
+    async function extractErrorDetail(resp) {
+      try {
+        const txt = await resp.text();
+        if (!txt) return "HTTP " + resp.status;
+        try {
+          const j = JSON.parse(txt);
+          return String(j.detail || j.message || j.error || j.title || ("HTTP " + resp.status));
+        } catch (_e) {
+          return txt.slice(0, 180);
+        }
+      } catch (_e) {
+        return "HTTP " + resp.status;
+      }
+    }
+    function setMode(loginMode) {
+      isLogin = loginMode;
+      document.getElementById("loginForm").classList.toggle("hidden", !loginMode);
+      document.getElementById("registerForm").classList.toggle("hidden", loginMode);
+      document.getElementById("title").textContent = loginMode ? "登录社区" : "注册社区账号";
+      document.getElementById("sub").textContent = loginMode ? "先登录，没账号可快速注册。" : "注册成功将自动登录并进入志愿者中心。";
+      document.getElementById("switchText").textContent = loginMode ? "还没有账号？" : "已有账号？";
+      document.getElementById("switchBtn").textContent = loginMode ? "去注册" : "返回登录";
+      setStatus("");
+    }
+    function buildAuthSession(user, rememberMe) {
+      const now = Date.now();
+      const ttlMs = rememberMe ? (30 * 24 * 60 * 60 * 1000) : (24 * 60 * 60 * 1000);
+      return {
+        token: "cg_" + String(user.id) + "_" + now,
+        rememberMe: !!rememberMe,
+        expiresAt: now + ttlMs,
+        user: { id: user.id, email: user.email || "", displayName: user.displayName || "" }
+      };
+    }
+    function persistSession(user, rememberMe) {
+      const session = buildAuthSession(user, rememberMe);
+      try {
+        localStorage.setItem(VOLUNTEER_KEY, String(user.id));
+        localStorage.setItem(VOLUNTEER_ID_KEY, String(user.id));
+        localStorage.setItem(TOKEN_KEY, session.token);
+        localStorage.setItem(AUTH_KEY, JSON.stringify(session));
+      } catch (_e) {}
+      try {
+        sessionStorage.setItem(AUTH_KEY, JSON.stringify(session));
+      } catch (_e) {}
+    }
+    function readJsonSafe(storage, key) {
+      try {
+        const raw = storage.getItem(key);
+        return raw ? JSON.parse(raw) : null;
+      } catch (_e) { return null; }
+    }
+    function readAuthSession() {
+      const local = readJsonSafe(localStorage, AUTH_KEY);
+      const sess = readJsonSafe(sessionStorage, AUTH_KEY);
+      const picked = local || sess;
+      if (!picked || !picked.token || !picked.user || !picked.user.id) return null;
+      if (Number(picked.expiresAt || 0) <= Date.now()) return null;
+      return picked;
+    }
+    function hasLoggedInState() {
+      const s = readAuthSession();
+      if (s && s.user && s.user.id != null) return true;
+      try {
+        const token = (localStorage.getItem(TOKEN_KEY) || "").trim();
+        const vid = (localStorage.getItem(VOLUNTEER_ID_KEY) || localStorage.getItem(VOLUNTEER_KEY) || "").trim();
+        return !!token && /^[1-9]\d*$/.test(vid);
+      } catch (_e) { return false; }
+    }
+    function hydrateRememberMe() {
+      const session = readAuthSession();
+      const cb = document.getElementById("rememberMe");
+      if (cb) cb.checked = !!(session && session.rememberMe);
+    }
+    function goVolunteer() { window.location.href = "/volunteer"; }
+
+    async function checkNicknameRealtime() {
+      const name = (document.getElementById("regName").value || "").trim();
+      const hint = document.getElementById("regNameHint");
+      nicknameTaken = false;
+      if (!name) { if (hint) hint.textContent = ""; return; }
+      try {
+        const u = new URL(apiUrl("/api/v1/auth/nickname-exists"));
+        u.searchParams.set("displayName", name);
+        const r = await fetch(u.toString(), { method: "POST", credentials: "omit", mode: "cors" });
+        const j = await r.json();
+        nicknameTaken = !!(j && j.exists);
+        if (hint) {
+          hint.style.color = nicknameTaken ? "var(--danger)" : "var(--ok)";
+          hint.textContent = nicknameTaken ? "该昵称已被占用，请更换。" : "该昵称可用。";
+        }
+      } catch (_e) {
+        if (hint) { hint.style.color = "var(--muted)"; hint.textContent = ""; }
+      }
+    }
+
+    document.getElementById("switchBtn").addEventListener("click", () => setMode(!isLogin));
+    document.getElementById("regName").addEventListener("input", () => {
+      if (nicknameTimer) clearTimeout(nicknameTimer);
+      nicknameTimer = setTimeout(checkNicknameRealtime, 260);
+    });
+    document.getElementById("sendCodeBtn").addEventListener("click", async () => {
+      const email = (document.getElementById("regEmail").value || "").trim();
+      if (!email) return setStatus("请先输入注册邮箱。", "err");
+      try {
+        let ok = false;
+        let lastErr = "";
+        const paths = ["/api/v1/auth/send-code", "/api/v1/auth/send-email-code"];
+        for (const p of paths) {
+          const u = new URL(apiUrl(p));
+          u.searchParams.set("email", email);
+          const r = await fetch(u.toString(), { method: "POST", credentials: "omit", mode: "cors" });
+          if (r.ok) {
+            ok = true;
+            break;
+          }
+          lastErr = await extractErrorDetail(r);
+        }
+        if (!ok) return setStatus("验证码发送失败：" + (lastErr || "请稍后重试"), "err");
+        const hint = document.getElementById("regCodeHint");
+        if (hint) hint.textContent = "验证码已发送至邮箱，请在5分钟内填写。";
+        setStatus("验证码发送成功。", "ok");
+      } catch (_e) {
+        setStatus("验证码发送失败，请稍后重试。", "err");
+      }
+    });
+
+    document.getElementById("forgotPwdBtn").addEventListener("click", async () => {
+      const email = (document.getElementById("loginEmail").value || "").trim();
+      if (!email) return setStatus("请先输入登录邮箱。", "err");
+      try {
+        let ok = false;
+        let lastErr = "";
+        const paths = ["/api/v1/auth/forgot-password", "/api/v1/auth/send-reset-link"];
+        for (const p of paths) {
+          const r = await fetch(apiUrl(p), {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Accept: "application/json" },
+            body: JSON.stringify({ email }),
+            credentials: "omit",
+            mode: "cors"
+          });
+          if (r.ok) {
+            ok = true;
+            break;
+          }
+          lastErr = await extractErrorDetail(r);
+        }
+        if (!ok) return setStatus("发送重置链接失败：" + (lastErr || "请稍后重试"), "err");
+        setStatus("如该邮箱已注册，重置链接已发送。", "ok");
+      } catch (_e) {
+        setStatus("发送重置链接失败，请稍后重试。", "err");
+      }
+    });
+
+    document.getElementById("loginForm").addEventListener("submit", async (ev) => {
+      ev.preventDefault();
+      const email = (document.getElementById("loginEmail").value || "").trim();
+      const password = document.getElementById("loginPassword").value || "";
+      if (!email || !password) return setStatus("请输入邮箱和密码。", "err");
+      try {
+        const r = await fetch(apiUrl("/api/v1/auth/login"), {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify({ email, password }),
+          credentials: "omit",
+          mode: "cors"
+        });
+        const txt = await r.text();
+        if (!r.ok) return setStatus("登录失败，请检查邮箱和密码。", "err");
+        persistSession(JSON.parse(txt), !!document.getElementById("rememberMe").checked);
+        setStatus("登录成功，正在进入志愿者中心…", "ok");
+        setTimeout(goVolunteer, 250);
+      } catch (_e) {
+        setStatus("网络异常，请稍后重试。", "err");
+      }
+    });
+
+    document.getElementById("registerForm").addEventListener("submit", async (ev) => {
+      ev.preventDefault();
+      const email = (document.getElementById("regEmail").value || "").trim();
+      const displayName = (document.getElementById("regName").value || "").trim();
+      const verificationCode = (document.getElementById("regCode").value || "").trim();
+      const password = document.getElementById("regPassword").value || "";
+      if (!email || !displayName || !password) return setStatus("请完整填写注册信息。", "err");
+      if (password.length < 8) return setStatus("密码至少 8 位。", "err");
+      if (!verificationCode) return setStatus("请先输入邮箱验证码。", "err");
+      if (nicknameTaken) return setStatus("昵称已被占用，请更换。", "err");
+      try {
+        const r = await fetch(apiUrl("/api/v1/auth/register"), {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify({ email, displayName, password, verificationCode }),
+          credentials: "omit",
+          mode: "cors"
+        });
+        const txt = await r.text();
+        if (!r.ok) {
+          let detail = "";
+          try {
+            const j = txt ? JSON.parse(txt) : null;
+            detail = j && (j.detail || j.message || j.error || j.title) ? String(j.detail || j.message || j.error || j.title) : "";
+          } catch (_e) { detail = (txt || "").slice(0, 120); }
+          const low = detail.toLowerCase();
+          if (r.status === 409 && low.includes("email")) {
+            setStatus("该邮箱已注册，请直接登录。", "err");
+            document.getElementById("loginEmail").value = email;
+            setMode(true);
+            return;
+          }
+          if (r.status === 409 && low.includes("displayname")) return setStatus("昵称已被占用，请更换。", "err");
+          if (r.status === 400 && low.includes("verification")) return setStatus("验证码错误或已过期，请重新发送。", "err");
+          return setStatus("注册失败：" + (detail || ("HTTP " + r.status)), "err");
+        }
+        const user = JSON.parse(txt);
+        persistSession(user, true);
+        setStatus("注册成功，正在进入志愿者中心…", "ok");
+        setTimeout(goVolunteer, 250);
+      } catch (_e) {
+        setStatus("网络异常，请稍后重试。", "err");
+      }
+    });
+
+    const mode = (new URLSearchParams(window.location.search || "").get("mode") || "").trim();
+    setMode(mode === "register" ? false : true);
+    hydrateRememberMe();
+  </script>
+</body>
+</html>

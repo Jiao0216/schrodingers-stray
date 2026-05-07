@@ -1,0 +1,12 @@
+target/
+.git
+.gitignore
+.idea
+*.iml
+.vscode
+.env
+.env.*
+!.env.example
+*.md
+.DS_Store
+node_modules/

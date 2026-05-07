@@ -1,0 +1,97 @@
+spring:
+  application:
+    name: cat-rescue-api
+  mail:
+    host: ${MAIL_HOST:}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: ${MAIL_SMTP_AUTH:true}
+          starttls:
+            enable: ${MAIL_SMTP_STARTTLS_ENABLE:true}
+  servlet:
+    multipart:
+      max-file-size: 15MB
+      max-request-size: 16MB
+  datasource:
+    # maxAllowedPacket (bytes) must be >= largest row (e.g. image_bytes). Server max_allowed_packet must be raised too — see README Database Notes.
+    url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3306}/${MYSQL_DATABASE:cat_rescue}?createDatabaseIfNotExist=true&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true&maxAllowedPacket=67108864
+    username: ${MYSQL_USER:root}
+    password: ${MYSQL_PASSWORD:}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      data-source-properties:
+        maxAllowedPacket: 67108864
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+    # Avoid "Unable to determine Dialect without JDBC metadata" when JDBC URL is missing or DB is unreachable at startup.
+    database-platform: org.hibernate.dialect.MySQLDialect
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+
+# HTTP listen port: see HttpPortConfiguration — env CAT_RESCUE_HTTP_PORT (default 8090). Ignores SERVER_PORT.
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: when_authorized
+
+cat-rescue:
+  share:
+    # Temporary friend-testing gate.
+    # Enable with: export CAT_RESCUE_SHARE_ENABLED=true
+    # Password with: export CAT_RESCUE_SHARE_PASSWORD=your_password
+    enabled: ${CAT_RESCUE_SHARE_ENABLED:false}
+    password: ${CAT_RESCUE_SHARE_PASSWORD:}
+    cookie-name: cat_rescue_share_auth
+  tracking:
+    # How often to scan for cats with no sightings in ABSENCE_REMINDER_DAYS (milliseconds).
+    absence-scan-ms: 3600000
+    # Set true to bypass OpenAI in tracking feature extraction during local debugging.
+    mock-feature-extraction: ${TRACKING_MOCK_FEATURE_EXTRACTION:false}
+  routing:
+    rescue-threshold: 0.55
+    feeding-threshold: 0.45
+    tnr-threshold: 0.48
+  multimodal:
+    # Default openai + OPENAI_API_KEY. Optional: gemini | auto (see MultimodalClientConfig).
+    provider: ${MULTIMODAL_PROVIDER:openai}
+  assessment:
+    # Store assessment upload bytes in DB (assessments.image_bytes). Default true. Uses MySQL when you run
+    # WITHOUT profile "local" and set MYSQL_* env vars. GET /api/v1/assessments/{id}/image returns stored bytes.
+    persist-images: ${ASSESSMENT_PERSIST_IMAGES:true}
+  openai:
+    # Any one of: OPENAI_API_KEY, CAT_RESCUE_OPENAI_API_KEY (Maven does not auto-load a .env file — export or source it before mvn).
+    api-key: ${OPENAI_API_KEY:${CAT_RESCUE_OPENAI_API_KEY:}}
+    model: ${OPENAI_MODEL:gpt-4o-mini}
+    base-url: ${OPENAI_BASE_URL:https://api.openai.com}
+  gemini:
+    # Only used when MULTIMODAL_PROVIDER is gemini or auto (optional; primary key is OPENAI_API_KEY above).
+    api-key: ${GEMINI_API_KEY:${CAT_RESCUE_GEMINI_API_KEY:}}
+    # 2.0-flash free tier often hits quota limit:0; switch to 1.5-flash when testing on free tier
+    model: ${GEMINI_MODEL:gemini-1.5-flash}
+    base-url: ${GEMINI_BASE_URL:https://generativelanguage.googleapis.com}
+  institution:
+    # B2B partner API: hash pepper for institution tokens (publicId.secret). Set a long random string in production.
+    token-pepper: ${CAT_RESCUE_INSTITUTION_TOKEN_PEPPER:change-me}
+    # Header X-Cat-Rescue-Institution-Admin must match this value to call /api/v1/institution/admin/** (approve applications).
+    admin-token: ${CAT_RESCUE_INSTITUTION_ADMIN_TOKEN:}
+  data-access:
+    # Optional: header X-Cat-Rescue-Admin-Data-Token — full precision heatmap, raw assessment list fields, GET /api/v1/assessments dump.
+    admin-data-token: ${CAT_RESCUE_ADMIN_DATA_TOKEN:}
+    # Optional: header X-Cat-Rescue-B-Data-token — B-end precise coordinates & full cat profiles (same as admin for geo; no jurisdiction filter yet).
+    b-data-token: ${CAT_RESCUE_B_DATA_TOKEN:}
+  site:
+    # Absolute public origin for share links (no trailing slash). Empty = clients use window.location.origin.
+    public-base-url: ${PUBLIC_BASE_URL:}

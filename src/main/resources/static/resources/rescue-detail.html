@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="catguardian-api-base" content="">
+  <title id="pageTitle">资源详情 · Schrödinger's Stray</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-deep: #fff7ed;
+      --text: #3f2d22;
+      --muted: #6b5b4f;
+      --accent: #f59e0b;
+      --glass: rgba(255, 251, 235, 0.85);
+      --glass-border: rgba(180, 140, 110, 0.24);
+    }
+    body.theme-tech {
+      --bg-deep: #05060a;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --accent: #38bdf8;
+      --glass: rgba(15, 23, 42, 0.72);
+      --glass-border: rgba(148, 163, 184, 0.18);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Noto Sans SC", system-ui, sans-serif;
+      color: var(--text);
+      background: var(--bg-deep);
+      line-height: 1.55;
+    }
+    .wrap {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 24px 16px 48px;
+    }
+    .nav-row {
+      margin-bottom: 20px;
+    }
+    .nav-row a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .nav-row a:hover { text-decoration: underline; }
+    .card {
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: 14px;
+      padding: 20px 22px;
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.06);
+    }
+    h1 {
+      font-size: 1.35rem;
+      margin: 0 0 8px;
+      font-weight: 700;
+    }
+    .meta {
+      color: var(--muted);
+      font-size: 0.92rem;
+      margin-bottom: 16px;
+    }
+    .kv { margin: 12px 0; }
+    .kv strong { display: block; font-size: 0.82rem; color: var(--muted); margin-bottom: 4px; }
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    .btn {
+      display: inline-block;
+      padding: 8px 14px;
+      border-radius: 10px;
+      font-size: 0.92rem;
+      font-weight: 600;
+      text-decoration: none;
+      border: 1px solid var(--glass-border);
+      background: rgba(56, 189, 248, 0.12);
+      color: var(--text);
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .btn.secondary { background: rgba(245, 158, 11, 0.14); }
+    .err {
+      color: #dc2626;
+      padding: 12px;
+      border-radius: 10px;
+      background: rgba(248, 113, 113, 0.12);
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="nav-row">
+      <a href="/index.html" id="backLink">← </a>
+    </div>
+    <div id="status" class="meta"></div>
+    <div id="card" class="card" style="display:none">
+      <h1 id="placeName"></h1>
+      <div id="distanceLine" class="meta"></div>
+      <div class="kv"><strong id="lblDesc"></strong><div id="desc"></div></div>
+      <div class="kv"><strong id="lblCity"></strong><div id="city"></div></div>
+      <div class="kv"><strong id="lblAddr"></strong><div id="addr"></div></div>
+      <div class="kv"><strong id="lblPhone"></strong><div id="phone"></div></div>
+      <div class="actions">
+        <a id="navBtn" class="btn" href="#" target="_blank" rel="noopener"></a>
+        <a id="siteBtn" class="btn secondary" href="#" target="_blank" rel="noopener" style="display:none"></a>
+        <button type="button" class="btn secondary" id="copyAddrBtn"></button>
+        <button type="button" class="btn secondary" id="copyPhoneBtn"></button>
+      </div>
+    </div>
+  </div>
+<script>
+  const LANG_KEY = "cat_rescue_ui_lang";
+  const THEME_KEY = "cat_rescue_ui_theme";
+
+  const I18N = {
+    zh: {
+      back: "返回首页",
+      load: "正在加载…",
+      errMissing: "缺少参数：请从评估页「查看详情」进入，或手动指定 type、id。",
+      errFetch: "加载失败：",
+      distance: "相对您所选位置约 ",
+      km: " km",
+      description: "简介",
+      city: "城市 / 区域",
+      address: "地址",
+      phone: "电话",
+      nav: "导航",
+      site: "官网",
+      copyAddr: "复制地址",
+      copyPhone: "复制电话",
+      copyOk: "已复制",
+      phoneMissing: "未提供",
+      detailDocTitle: "资源详情"
+    },
+    en: {
+      back: "Back to home",
+      load: "Loading…",
+      errMissing: "Missing parameters. Open this page from “View details” on the assessment screen, or add type and id to the URL.",
+      errFetch: "Failed to load: ",
+      distance: "About ",
+      km: " km from your selected location",
+      description: "Description",
+      city: "City / area",
+      address: "Address",
+      phone: "Phone",
+      nav: "Directions",
+      site: "Website",
+      copyAddr: "Copy address",
+      copyPhone: "Copy phone",
+      copyOk: "Copied",
+      phoneMissing: "Not provided",
+      detailDocTitle: "Resource detail"
+    }
+  };
+
+  let lang = localStorage.getItem(LANG_KEY) || "en";
+  let theme = localStorage.getItem(THEME_KEY) || "warm";
+
+  function t(key) {
+    return (I18N[lang] && I18N[lang][key]) || I18N.zh[key] || key;
+  }
+
+  function getApiBase() {
+    try {
+      const q = new URLSearchParams(window.location.search || "").get("api");
+      if (q && String(q).trim()) {
+        return String(q).trim().replace(/\/+$/, "");
+      }
+    } catch (_e) {}
+    try {
+      const ls = localStorage.getItem("catguardian_api_base");
+      if (ls && ls.trim()) {
+        return ls.trim().replace(/\/+$/, "");
+      }
+    } catch (_e) {}
+    const m = document.querySelector('meta[name="catguardian-api-base"]');
+    const c = m && m.getAttribute("content");
+    if (c != null && String(c).trim() !== "") {
+      return String(c).trim().replace(/\/+$/, "");
+    }
+    if (typeof window.__CATGUARDIAN_API_BASE__ === "string" && window.__CATGUARDIAN_API_BASE__.trim()) {
+      return window.__CATGUARDIAN_API_BASE__.trim().replace(/\/+$/, "");
+    }
+    return "";
+  }
+
+  function apiFetchUrl(path) {
+    const rel = path.startsWith("/") ? path : "/" + path;
+    const base = getApiBase();
+    try {
+      if (!base) {
+        return new URL(rel, window.location.origin).href;
+      }
+      const root = base.endsWith("/") ? base.slice(0, -1) : base;
+      return new URL(rel, root + "/").href;
+    } catch (_e) {
+      return rel;
+    }
+  }
+
+  document.documentElement.lang = lang === "en" ? "en" : "zh-CN";
+  document.body.classList.toggle("theme-tech", theme === "tech");
+  document.getElementById("pageTitle").textContent =
+    t("detailDocTitle") + " · Schrödinger's Stray";
+
+  const backLink = document.getElementById("backLink");
+  backLink.textContent = "← " + t("back");
+
+  const params = new URLSearchParams(window.location.search || "");
+  const typeRaw = (params.get("type") || "").toLowerCase();
+  const id = (params.get("id") || "").trim();
+  let lat = parseFloat(params.get("lat") || "");
+  let lng = parseFloat(params.get("lng") || "");
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+    lat = 37.3382;
+    lng = -121.8863;
+  }
+
+  const statusEl = document.getElementById("status");
+  const cardEl = document.getElementById("card");
+
+  function escapeHtml(s) {
+    return String(s ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  async function copyText(text, okMsg) {
+    const v = String(text || "");
+    try {
+      await navigator.clipboard.writeText(v);
+      statusEl.textContent = okMsg;
+    } catch (_e) {
+      statusEl.textContent = t("errFetch") + "clipboard";
+    }
+  }
+
+  async function load() {
+    if (!id || (typeRaw !== "rescue" && typeRaw !== "tnr")) {
+      statusEl.innerHTML = "<div class='err'>" + escapeHtml(t("errMissing")) + "</div>";
+      return;
+    }
+    statusEl.textContent = t("load");
+    const seg = typeRaw === "tnr" ? "tnr-directory" : "rescue-directory";
+    const url = apiFetchUrl("/api/v1/" + seg + "/" + encodeURIComponent(id)
+      + "?lat=" + encodeURIComponent(lat) + "&lng=" + encodeURIComponent(lng));
+    let data;
+    try {
+      const res = await fetch(url);
+      if (!res.ok) {
+        const txt = await res.text();
+        throw new Error("HTTP " + res.status + " " + txt.slice(0, 200));
+      }
+      data = await res.json();
+    } catch (err) {
+      statusEl.innerHTML = "<div class='err'>" + escapeHtml(t("errFetch") + (err && err.message ? err.message : String(err))) + "</div>";
+      return;
+    }
+
+    statusEl.textContent = "";
+    cardEl.style.display = "block";
+
+    document.getElementById("lblDesc").textContent = t("description");
+    document.getElementById("lblCity").textContent = t("city");
+    document.getElementById("lblAddr").textContent = t("address");
+    document.getElementById("lblPhone").textContent = t("phone");
+
+    document.getElementById("placeName").textContent = data.name || "";
+    const dk = data.distanceKm;
+    document.getElementById("distanceLine").textContent =
+      dk != null ? (t("distance") + dk + t("km")) : "";
+
+    document.getElementById("desc").textContent = data.shortDescription || "";
+    document.getElementById("city").textContent = data.city || "";
+    document.getElementById("addr").textContent = data.streetAddress || "—";
+
+    const phone = (data.phone || "").trim();
+    const phoneEl = document.getElementById("phone");
+    if (phone) {
+      phoneEl.innerHTML = "<a href='tel:" + escapeHtml(phone) + "'>" + escapeHtml(phone) + "</a>";
+    } else {
+      phoneEl.textContent = t("phoneMissing");
+    }
+
+    const navBtn = document.getElementById("navBtn");
+    navBtn.textContent = t("nav");
+    navBtn.href = data.navigationUrl || "#";
+
+    const siteBtn = document.getElementById("siteBtn");
+    const hint = data.websiteHint;
+    if (hint && String(hint).trim()) {
+      siteBtn.style.display = "inline-block";
+      siteBtn.textContent = t("site");
+      siteBtn.href = hint;
+    }
+
+    const copyAddrBtn = document.getElementById("copyAddrBtn");
+    copyAddrBtn.textContent = t("copyAddr");
+    copyAddrBtn.onclick = () => copyText(data.streetAddress || "", t("copyOk"));
+
+    const copyPhoneBtn = document.getElementById("copyPhoneBtn");
+    copyPhoneBtn.textContent = t("copyPhone");
+    copyPhoneBtn.disabled = !phone;
+    copyPhoneBtn.onclick = () => phone ? copyText(phone, t("copyOk")) : undefined;
+  }
+
+  load();
+</script>
+</body>
+</html>
