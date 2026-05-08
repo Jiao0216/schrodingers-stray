@@ -14,8 +14,8 @@ import com.catrescue.api.tracking.service.SightingDeduplicationService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
@@ -36,6 +36,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.Locale;
@@ -134,22 +135,34 @@ public class SightingController {
             @RequestParam @NotNull Long userId,
             HttpServletRequest request
     ) {
-        return sightingJpaRepository.findByReporterUserIdOrderByOccurredAtDesc(userId, PageRequest.of(0, 50))
-                .stream()
-                .map(s -> toListItem(s, request))
-                .toList();
+        Page<SightingEntity> sightPage = sightingJpaRepository.findByReporterUserIdOrderByOccurredAtDesc(
+                userId,
+                PageRequest.of(0, 50)
+        );
+        List<SightingListItemResponse> out = new ArrayList<>();
+        for (SightingEntity s : sightPage.getContent()) {
+            out.add(toListItem(s, request));
+        }
+        return out;
     }
 
     @GetMapping({"/my", "/my/"})
     public List<SightingListItemResponse> mySightingsByToken(
             @RequestHeader(value = "Authorization", required = false) String authorization,
+            @RequestParam(defaultValue = "3") int limitRaw,
             HttpServletRequest request
     ) {
         long userId = parseUserIdFromToken(authorization);
-        return sightingJpaRepository.findByReporterUserIdOrderByOccurredAtDesc(userId, PageRequest.of(0, 3))
-                .stream()
-                .map(s -> toListItem(s, request))
-                .toList();
+        int limit = Math.min(50, Math.max(1, limitRaw));
+        Page<SightingEntity> sightPage = sightingJpaRepository.findByReporterUserIdOrderByOccurredAtDesc(
+                userId,
+                PageRequest.of(0, limit)
+        );
+        List<SightingListItemResponse> out = new ArrayList<>();
+        for (SightingEntity s : sightPage.getContent()) {
+            out.add(toListItem(s, request));
+        }
+        return out;
     }
 
     @GetMapping("/{sightingId}/image")

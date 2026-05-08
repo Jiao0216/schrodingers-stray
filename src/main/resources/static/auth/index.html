@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="catguardian-api-base" content="">
   <link rel="icon" href="data:,">
-  <title>加入社区 · 登录 / 注册</title>
+  <title>Community Login / Register</title>
   <style>
     :root {
       --bg:#1a1711;
@@ -56,6 +56,10 @@
 </head>
 <body>
   <div class="card">
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:10px;">
+      <button type="button" id="langEnBtn" class="btn secondary" style="width:auto;padding:6px 10px;font-size:12px;">English</button>
+      <button type="button" id="langZhBtn" class="btn secondary" style="width:auto;padding:6px 10px;font-size:12px;">Chinese</button>
+    </div>
     <h1 id="title">登录社区</h1>
     <p id="sub" class="sub">先登录，没账号可快速注册。</p>
 
@@ -97,6 +101,7 @@
   </div>
 
   <script>
+    const LANG_KEY = "cat_rescue_ui_lang";
     const VOLUNTEER_KEY = "catguardian_volunteer_user_id";
     const VOLUNTEER_ID_KEY = "volunteer_id";
     const AUTH_KEY = "catguardian_auth_session";
@@ -104,6 +109,109 @@
     let isLogin = true;
     let nicknameTimer = null;
     let nicknameTaken = false;
+    let lang = (localStorage.getItem(LANG_KEY) || "en") === "zh" ? "zh" : "en";
+
+    const I18N = {
+      zh: {
+        pageTitle: "加入社区 · 登录 / 注册",
+        langEn: "英文",
+        langZh: "中文",
+        titleLogin: "登录社区",
+        titleRegister: "注册社区账号",
+        subLogin: "先登录，没账号可快速注册。",
+        subRegister: "注册成功将自动登录并进入志愿者中心。",
+        labelEmail: "邮箱",
+        labelPassword: "密码",
+        labelRemember: "记住我（30天）",
+        btnForgot: "忘记密码？发送重置链接",
+        btnLogin: "登录并进入志愿者中心",
+        labelNickname: "昵称",
+        labelRegPassword: "密码（至少 8 位）",
+        labelCode: "邮箱验证码（5分钟有效）",
+        btnSendCode: "发送验证码",
+        btnRegister: "注册并进入志愿者中心",
+        switchNoAccount: "还没有账号？",
+        switchHasAccount: "已有账号？",
+        switchToRegister: "去注册",
+        switchToLogin: "返回登录",
+        statusNeedRegEmail: "请先输入注册邮箱。",
+        statusCodeSendFail: "验证码发送失败：",
+        statusRetry: "请稍后重试",
+        statusCodeSentHint: "验证码已发送至邮箱，请在5分钟内填写。",
+        statusCodeSentOk: "验证码发送成功。",
+        statusCodeSendErr: "验证码发送失败，请稍后重试。",
+        statusNeedLoginEmail: "请先输入登录邮箱。",
+        statusResetFail: "发送重置链接失败：",
+        statusResetOk: "如该邮箱已注册，重置链接已发送。",
+        statusResetErr: "发送重置链接失败，请稍后重试。",
+        statusNeedLoginCreds: "请输入邮箱和密码。",
+        statusLoginFail: "登录失败，请检查邮箱和密码。",
+        statusLoginOk: "登录成功，正在进入志愿者中心…",
+        statusNetworkErr: "网络异常，请稍后重试。",
+        statusNeedRegisterFields: "请完整填写注册信息。",
+        statusPasswordTooShort: "密码至少 8 位。",
+        statusNeedCode: "请先输入邮箱验证码。",
+        statusNicknameTaken: "昵称已被占用，请更换。",
+        statusEmailTaken: "该邮箱已注册，请直接登录。",
+        statusCodeInvalid: "验证码错误或已过期，请重新发送。",
+        statusRegisterFail: "注册失败：",
+        statusRegisterOk: "注册成功，正在进入志愿者中心…",
+        nicknameTaken: "该昵称已被占用，请更换。",
+        nicknameAvailable: "该昵称可用。"
+      },
+      en: {
+        pageTitle: "Community Login / Register",
+        langEn: "English",
+        langZh: "Chinese",
+        titleLogin: "Community Login",
+        titleRegister: "Create Community Account",
+        subLogin: "Sign in first. New users can register in seconds.",
+        subRegister: "Registration signs you in and enters Volunteer Hub.",
+        labelEmail: "Email",
+        labelPassword: "Password",
+        labelRemember: "Remember me (30 days)",
+        btnForgot: "Forgot password? Send reset link",
+        btnLogin: "Sign in to Volunteer Hub",
+        labelNickname: "Nickname",
+        labelRegPassword: "Password (minimum 8 chars)",
+        labelCode: "Email verification code (5 minutes)",
+        btnSendCode: "Send code",
+        btnRegister: "Register and enter Volunteer Hub",
+        switchNoAccount: "No account yet?",
+        switchHasAccount: "Already have an account?",
+        switchToRegister: "Register",
+        switchToLogin: "Back to login",
+        statusNeedRegEmail: "Please enter your registration email first.",
+        statusCodeSendFail: "Failed to send code: ",
+        statusRetry: "please try again later",
+        statusCodeSentHint: "Code sent to email. Please enter it within 5 minutes.",
+        statusCodeSentOk: "Verification code sent.",
+        statusCodeSendErr: "Failed to send code. Please try again later.",
+        statusNeedLoginEmail: "Please enter your login email first.",
+        statusResetFail: "Failed to send reset link: ",
+        statusResetOk: "If the email exists, a reset link has been sent.",
+        statusResetErr: "Failed to send reset link. Please try again later.",
+        statusNeedLoginCreds: "Please enter email and password.",
+        statusLoginFail: "Login failed. Please check email and password.",
+        statusLoginOk: "Login successful. Redirecting to Volunteer Hub…",
+        statusNetworkErr: "Network error. Please try again later.",
+        statusNeedRegisterFields: "Please complete all required registration fields.",
+        statusPasswordTooShort: "Password must be at least 8 characters.",
+        statusNeedCode: "Please enter the verification code first.",
+        statusNicknameTaken: "Nickname is already taken. Please choose another.",
+        statusEmailTaken: "This email is already registered. Please sign in.",
+        statusCodeInvalid: "Verification code invalid or expired. Please resend.",
+        statusRegisterFail: "Registration failed: ",
+        statusRegisterOk: "Registration successful. Redirecting to Volunteer Hub…",
+        nicknameTaken: "This nickname is already taken.",
+        nicknameAvailable: "This nickname is available."
+      }
+    };
+
+    function t(key) {
+      const table = I18N[lang] || I18N.en;
+      return table[key] || I18N.en[key] || key;
+    }
 
     function getApiBase() {
       const q = new URLSearchParams(window.location.search || "").get("api");
@@ -111,6 +219,23 @@
       const m = document.querySelector('meta[name="catguardian-api-base"]');
       const c = m ? (m.getAttribute("content") || "").trim() : "";
       return c ? c.replace(/\/+$/, "") : "";
+    }
+    function tunnelBypassHeaders() {
+      const host = window.location.hostname || "";
+      if (!host) return {};
+      if (
+        host.includes("ngrok-free") ||
+        host.endsWith(".ngrok.io") ||
+        host.endsWith(".ngrok.app") ||
+        host.includes("ngrok") ||
+        host.endsWith("trycloudflare.com")
+      ) {
+        return { "ngrok-skip-browser-warning": "true" };
+      }
+      return {};
+    }
+    function mergeFetchHeaders(h) {
+      return Object.assign({}, tunnelBypassHeaders(), h || {});
     }
     function apiUrl(path) {
       const rel = path.startsWith("/") ? path : "/" + path;
@@ -140,11 +265,34 @@
       isLogin = loginMode;
       document.getElementById("loginForm").classList.toggle("hidden", !loginMode);
       document.getElementById("registerForm").classList.toggle("hidden", loginMode);
-      document.getElementById("title").textContent = loginMode ? "登录社区" : "注册社区账号";
-      document.getElementById("sub").textContent = loginMode ? "先登录，没账号可快速注册。" : "注册成功将自动登录并进入志愿者中心。";
-      document.getElementById("switchText").textContent = loginMode ? "还没有账号？" : "已有账号？";
-      document.getElementById("switchBtn").textContent = loginMode ? "去注册" : "返回登录";
+      document.getElementById("title").textContent = loginMode ? t("titleLogin") : t("titleRegister");
+      document.getElementById("sub").textContent = loginMode ? t("subLogin") : t("subRegister");
+      document.getElementById("switchText").textContent = loginMode ? t("switchNoAccount") : t("switchHasAccount");
+      document.getElementById("switchBtn").textContent = loginMode ? t("switchToRegister") : t("switchToLogin");
       setStatus("");
+    }
+    function applyI18n() {
+      document.documentElement.lang = lang === "zh" ? "zh-CN" : "en";
+      document.title = t("pageTitle");
+      document.getElementById("langEnBtn").textContent = t("langEn");
+      document.getElementById("langZhBtn").textContent = t("langZh");
+      document.getElementById("langEnBtn").style.opacity = lang === "en" ? "1" : "0.7";
+      document.getElementById("langZhBtn").style.opacity = lang === "zh" ? "1" : "0.7";
+      document.querySelector("label[for='loginEmail']").textContent = t("labelEmail");
+      document.querySelector("label[for='loginPassword']").textContent = t("labelPassword");
+      document.querySelector("label[for='regEmail']").textContent = t("labelEmail");
+      document.querySelector("label[for='regName']").textContent = t("labelNickname");
+      document.querySelector("label[for='regPassword']").textContent = t("labelRegPassword");
+      document.querySelector("label[for='regCode']").textContent = t("labelCode");
+      document.getElementById("sendCodeBtn").textContent = t("btnSendCode");
+      document.getElementById("forgotPwdBtn").textContent = t("btnForgot");
+      document.querySelector("#loginForm .btn[type='submit']").textContent = t("btnLogin");
+      document.querySelector("#registerForm .btn[type='submit']").textContent = t("btnRegister");
+      const rememberLine = document.querySelector("label[style*='align-items:center']");
+      if (rememberLine && rememberLine.lastChild) {
+        rememberLine.lastChild.textContent = " " + t("labelRemember");
+      }
+      setMode(isLogin);
     }
     function buildAuthSession(user, rememberMe) {
       const now = Date.now();
@@ -206,12 +354,17 @@
       try {
         const u = new URL(apiUrl("/api/v1/auth/nickname-exists"));
         u.searchParams.set("displayName", name);
-        const r = await fetch(u.toString(), { method: "POST", credentials: "omit", mode: "cors" });
+        const r = await fetch(u.toString(), {
+          method: "POST",
+          credentials: "omit",
+          mode: "cors",
+          headers: mergeFetchHeaders({ Accept: "application/json" })
+        });
         const j = await r.json();
         nicknameTaken = !!(j && j.exists);
         if (hint) {
           hint.style.color = nicknameTaken ? "var(--danger)" : "var(--ok)";
-          hint.textContent = nicknameTaken ? "该昵称已被占用，请更换。" : "该昵称可用。";
+          hint.textContent = nicknameTaken ? t("nicknameTaken") : t("nicknameAvailable");
         }
       } catch (_e) {
         if (hint) { hint.style.color = "var(--muted)"; hint.textContent = ""; }
@@ -225,7 +378,7 @@
     });
     document.getElementById("sendCodeBtn").addEventListener("click", async () => {
       const email = (document.getElementById("regEmail").value || "").trim();
-      if (!email) return setStatus("请先输入注册邮箱。", "err");
+      if (!email) return setStatus(t("statusNeedRegEmail"), "err");
       try {
         let ok = false;
         let lastErr = "";
@@ -233,25 +386,25 @@
         for (const p of paths) {
           const u = new URL(apiUrl(p));
           u.searchParams.set("email", email);
-          const r = await fetch(u.toString(), { method: "POST", credentials: "omit", mode: "cors" });
+          const r = await fetch(u.toString(), { method: "POST", credentials: "omit", mode: "cors", headers: mergeFetchHeaders({ Accept: "application/json" }) });
           if (r.ok) {
             ok = true;
             break;
           }
           lastErr = await extractErrorDetail(r);
         }
-        if (!ok) return setStatus("验证码发送失败：" + (lastErr || "请稍后重试"), "err");
+        if (!ok) return setStatus(t("statusCodeSendFail") + (lastErr || t("statusRetry")), "err");
         const hint = document.getElementById("regCodeHint");
-        if (hint) hint.textContent = "验证码已发送至邮箱，请在5分钟内填写。";
-        setStatus("验证码发送成功。", "ok");
+        if (hint) hint.textContent = t("statusCodeSentHint");
+        setStatus(t("statusCodeSentOk"), "ok");
       } catch (_e) {
-        setStatus("验证码发送失败，请稍后重试。", "err");
+        setStatus(t("statusCodeSendErr"), "err");
       }
     });
 
     document.getElementById("forgotPwdBtn").addEventListener("click", async () => {
       const email = (document.getElementById("loginEmail").value || "").trim();
-      if (!email) return setStatus("请先输入登录邮箱。", "err");
+      if (!email) return setStatus(t("statusNeedLoginEmail"), "err");
       try {
         let ok = false;
         let lastErr = "";
@@ -259,7 +412,7 @@
         for (const p of paths) {
           const r = await fetch(apiUrl(p), {
             method: "POST",
-            headers: { "Content-Type": "application/json", Accept: "application/json" },
+            headers: mergeFetchHeaders({ "Content-Type": "application/json", Accept: "application/json" }),
             body: JSON.stringify({ email }),
             credentials: "omit",
             mode: "cors"
@@ -270,10 +423,10 @@
           }
           lastErr = await extractErrorDetail(r);
         }
-        if (!ok) return setStatus("发送重置链接失败：" + (lastErr || "请稍后重试"), "err");
-        setStatus("如该邮箱已注册，重置链接已发送。", "ok");
+        if (!ok) return setStatus(t("statusResetFail") + (lastErr || t("statusRetry")), "err");
+        setStatus(t("statusResetOk"), "ok");
       } catch (_e) {
-        setStatus("发送重置链接失败，请稍后重试。", "err");
+        setStatus(t("statusResetErr"), "err");
       }
     });
 
@@ -281,22 +434,22 @@
       ev.preventDefault();
       const email = (document.getElementById("loginEmail").value || "").trim();
       const password = document.getElementById("loginPassword").value || "";
-      if (!email || !password) return setStatus("请输入邮箱和密码。", "err");
+      if (!email || !password) return setStatus(t("statusNeedLoginCreds"), "err");
       try {
         const r = await fetch(apiUrl("/api/v1/auth/login"), {
           method: "POST",
-          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          headers: mergeFetchHeaders({ "Content-Type": "application/json", Accept: "application/json" }),
           body: JSON.stringify({ email, password }),
           credentials: "omit",
           mode: "cors"
         });
         const txt = await r.text();
-        if (!r.ok) return setStatus("登录失败，请检查邮箱和密码。", "err");
+        if (!r.ok) return setStatus(t("statusLoginFail"), "err");
         persistSession(JSON.parse(txt), !!document.getElementById("rememberMe").checked);
-        setStatus("登录成功，正在进入志愿者中心…", "ok");
+        setStatus(t("statusLoginOk"), "ok");
         setTimeout(goVolunteer, 250);
       } catch (_e) {
-        setStatus("网络异常，请稍后重试。", "err");
+        setStatus(t("statusNetworkErr"), "err");
       }
     });
 
@@ -306,14 +459,14 @@
       const displayName = (document.getElementById("regName").value || "").trim();
       const verificationCode = (document.getElementById("regCode").value || "").trim();
       const password = document.getElementById("regPassword").value || "";
-      if (!email || !displayName || !password) return setStatus("请完整填写注册信息。", "err");
-      if (password.length < 8) return setStatus("密码至少 8 位。", "err");
-      if (!verificationCode) return setStatus("请先输入邮箱验证码。", "err");
-      if (nicknameTaken) return setStatus("昵称已被占用，请更换。", "err");
+      if (!email || !displayName || !password) return setStatus(t("statusNeedRegisterFields"), "err");
+      if (password.length < 8) return setStatus(t("statusPasswordTooShort"), "err");
+      if (!verificationCode) return setStatus(t("statusNeedCode"), "err");
+      if (nicknameTaken) return setStatus(t("statusNicknameTaken"), "err");
       try {
         const r = await fetch(apiUrl("/api/v1/auth/register"), {
           method: "POST",
-          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          headers: mergeFetchHeaders({ "Content-Type": "application/json", Accept: "application/json" }),
           body: JSON.stringify({ email, displayName, password, verificationCode }),
           credentials: "omit",
           mode: "cors"
@@ -327,27 +480,39 @@
           } catch (_e) { detail = (txt || "").slice(0, 120); }
           const low = detail.toLowerCase();
           if (r.status === 409 && low.includes("email")) {
-            setStatus("该邮箱已注册，请直接登录。", "err");
+            setStatus(t("statusEmailTaken"), "err");
             document.getElementById("loginEmail").value = email;
             setMode(true);
             return;
           }
-          if (r.status === 409 && low.includes("displayname")) return setStatus("昵称已被占用，请更换。", "err");
-          if (r.status === 400 && low.includes("verification")) return setStatus("验证码错误或已过期，请重新发送。", "err");
-          return setStatus("注册失败：" + (detail || ("HTTP " + r.status)), "err");
+          if (r.status === 409 && low.includes("displayname")) return setStatus(t("statusNicknameTaken"), "err");
+          if (r.status === 400 && low.includes("verification")) return setStatus(t("statusCodeInvalid"), "err");
+          return setStatus(t("statusRegisterFail") + (detail || ("HTTP " + r.status)), "err");
         }
         const user = JSON.parse(txt);
         persistSession(user, true);
-        setStatus("注册成功，正在进入志愿者中心…", "ok");
+        setStatus(t("statusRegisterOk"), "ok");
         setTimeout(goVolunteer, 250);
       } catch (_e) {
-        setStatus("网络异常，请稍后重试。", "err");
+        setStatus(t("statusNetworkErr"), "err");
       }
+    });
+
+    document.getElementById("langEnBtn").addEventListener("click", () => {
+      lang = "en";
+      localStorage.setItem(LANG_KEY, "en");
+      applyI18n();
+    });
+    document.getElementById("langZhBtn").addEventListener("click", () => {
+      lang = "zh";
+      localStorage.setItem(LANG_KEY, "zh");
+      applyI18n();
     });
 
     const mode = (new URLSearchParams(window.location.search || "").get("mode") || "").trim();
     setMode(mode === "register" ? false : true);
     hydrateRememberMe();
+    applyI18n();
   </script>
 </body>
 </html>

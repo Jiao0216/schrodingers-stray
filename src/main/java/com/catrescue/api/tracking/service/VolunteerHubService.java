@@ -1,32 +1,44 @@
 package com.catrescue.api.tracking.service;
 
 import com.catrescue.api.config.SiteProperties;
+import com.catrescue.api.dto.CatProfileAiGuidanceResponse;
+import com.catrescue.api.service.AssessmentService;
 import com.catrescue.api.tracking.domain.SterilizationStatus;
 import com.catrescue.api.tracking.domain.UserRole;
 import com.catrescue.api.tracking.domain.VolunteerBadgeCode;
+import com.catrescue.api.tracking.dto.CatProfileResponse;
 import com.catrescue.api.tracking.dto.CatShareStoryDto;
 import com.catrescue.api.tracking.dto.FeedingCheckInRequest;
 import com.catrescue.api.tracking.dto.FeedingCheckInResponse;
+import com.catrescue.api.tracking.dto.HeatmapSightingResponse;
 import com.catrescue.api.tracking.dto.NearbyHelpCatDto;
 import com.catrescue.api.tracking.dto.PatchVolunteerProfileRequest;
 import com.catrescue.api.tracking.dto.RegisterVolunteerRequest;
 import com.catrescue.api.tracking.dto.VolunteerBadgeDto;
+import com.catrescue.api.tracking.dto.VolunteerCatHubSnapshot;
+import com.catrescue.api.tracking.dto.VolunteerCreatedCatDto;
 import com.catrescue.api.tracking.dto.VolunteerLeaderboardEntryDto;
 import com.catrescue.api.tracking.dto.VolunteerLatestCatResponse;
 import com.catrescue.api.tracking.dto.VolunteerProfileResponse;
 import com.catrescue.api.tracking.dto.VolunteerRescueRecordDto;
+import com.catrescue.api.tracking.dto.VolunteerSavedCatEntryDto;
 import com.catrescue.api.tracking.dto.VolunteerStatsResponse;
 import com.catrescue.api.tracking.persistence.CatEntity;
 import com.catrescue.api.tracking.persistence.SightingEntity;
 import com.catrescue.api.tracking.persistence.UserEntity;
 import com.catrescue.api.tracking.persistence.VolunteerBadgeEarnedEntity;
 import com.catrescue.api.tracking.persistence.VolunteerFeedingCheckInEntity;
+import com.catrescue.api.tracking.persistence.VolunteerSavedCatEntity;
 import com.catrescue.api.tracking.repository.CatJpaRepository;
 import com.catrescue.api.tracking.repository.FeedingStationJpaRepository;
 import com.catrescue.api.tracking.repository.SightingJpaRepository;
 import com.catrescue.api.tracking.repository.UserJpaRepository;
 import com.catrescue.api.tracking.repository.VolunteerBadgeEarnedJpaRepository;
 import com.catrescue.api.tracking.repository.VolunteerFeedingCheckInJpaRepository;
+import com.catrescue.api.tracking.repository.VolunteerSavedCatJpaRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -55,6 +67,10 @@ public class VolunteerHubService {
     private final VolunteerFeedingCheckInJpaRepository volunteerFeedingCheckInJpaRepository;
     private final VolunteerBadgeEarnedJpaRepository volunteerBadgeEarnedJpaRepository;
     private final SiteProperties siteProperties;
+    private final CatHeatmapService catHeatmapService;
+    private final AssessmentService assessmentService;
+    private final VolunteerSavedCatJpaRepository volunteerSavedCatJpaRepository;
+    private final ObjectMapper objectMapper;
 
     public VolunteerHubService(
             UserJpaRepository userJpaRepository,
@@ -63,7 +79,11 @@ public class VolunteerHubService {
             FeedingStationJpaRepository feedingStationJpaRepository,
             VolunteerFeedingCheckInJpaRepository volunteerFeedingCheckInJpaRepository,
             VolunteerBadgeEarnedJpaRepository volunteerBadgeEarnedJpaRepository,
-            SiteProperties siteProperties
+            SiteProperties siteProperties,
+            CatHeatmapService catHeatmapService,
+            AssessmentService assessmentService,
+            VolunteerSavedCatJpaRepository volunteerSavedCatJpaRepository,
+            ObjectMapper objectMapper
     ) {
         this.userJpaRepository = userJpaRepository;
         this.sightingJpaRepository = sightingJpaRepository;
@@ -72,6 +92,10 @@ public class VolunteerHubService {
         this.volunteerFeedingCheckInJpaRepository = volunteerFeedingCheckInJpaRepository;
         this.volunteerBadgeEarnedJpaRepository = volunteerBadgeEarnedJpaRepository;
         this.siteProperties = siteProperties;
+        this.catHeatmapService = catHeatmapService;
+        this.assessmentService = assessmentService;
+        this.volunteerSavedCatJpaRepository = volunteerSavedCatJpaRepository;
+        this.objectMapper = objectMapper;
     }
 
     @Transactional
@@ -129,8 +153,19 @@ public class VolunteerHubService {
         loadVolunteer(userId);
         int p = Math.max(0, page);
         int sz = Math.min(50, Math.max(1, size));
-        return sightingJpaRepository.findByReporterUserIdOrderByOccurredAtDesc(userId, PageRequest.of(p, sz)).stream()
+        return sightingJpaRepository.findByReporterUserIdOrderByOccurredAtDesc(userId, PageRequest.of(p, sz)).getContent().stream()
                 .map(VolunteerHubService::toRescueRecord)
+                .toList();
+    }
+
+    /**
+     * Cats whose {@code cats.created_by_user_id} matches this volunteer (e.g. first sighting created the archive),
+     * including cases where no sighting row is returned for other reasons.
+     */
+    public List<VolunteerCreatedCatDto> listCatsCreatedByVolunteer(long userId) {
+        loadVolunteer(userId);
+        return catJpaRepository.findByCreatedByUserIdOrderByLastSeenAtDesc(userId, PageRequest.of(0, 50)).stream()
+                .map(c -> new VolunteerCreatedCatDto(c.getId(), c.getLastSeenAt()))
                 .toList();
     }
 
@@ -302,6 +337,55 @@ public class VolunteerHubService {
                 zh,
                 en
         );
+    }
+
+    @Transactional
+    public VolunteerSavedCatEntryDto saveCatSnapshot(long userId, long catId) {
+        loadVolunteer(userId);
+        CatProfileResponse profile = catHeatmapService.buildProfile(catId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "cat not found"));
+        List<HeatmapSightingResponse> sightings = new ArrayList<>(catHeatmapService.buildHeatmapSightings(catId));
+        if (sightings.size() > 40) {
+            sightings = new ArrayList<>(sightings.subList(0, 40));
+        }
+        CatProfileAiGuidanceResponse ai = assessmentService.findAiGuidanceForCat(catId).orElse(null);
+        VolunteerCatHubSnapshot snap = new VolunteerCatHubSnapshot(Instant.now(), profile, sightings, ai);
+        String json;
+        try {
+            json = objectMapper.writeValueAsString(snap);
+        } catch (JsonProcessingException e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "snapshot serialization failed");
+        }
+        Optional<VolunteerSavedCatEntity> existing = volunteerSavedCatJpaRepository.findByUserIdAndCatId(userId, catId);
+        VolunteerSavedCatEntity row = existing.orElseGet(VolunteerSavedCatEntity::new);
+        row.setUserId(userId);
+        row.setCatId(catId);
+        row.setSnapshotJson(json);
+        row.setSavedAt(Instant.now());
+        VolunteerSavedCatEntity saved = volunteerSavedCatJpaRepository.save(row);
+        return toSavedCatEntryDto(saved);
+    }
+
+    public List<VolunteerSavedCatEntryDto> listSavedCats(long userId) {
+        loadVolunteer(userId);
+        return volunteerSavedCatJpaRepository.findByUserIdOrderBySavedAtDesc(userId).stream()
+                .map(this::toSavedCatEntryDto)
+                .toList();
+    }
+
+    @Transactional
+    public void deleteSavedCat(long userId, long catId) {
+        loadVolunteer(userId);
+        volunteerSavedCatJpaRepository.deleteByUserIdAndCatId(userId, catId);
+    }
+
+    private VolunteerSavedCatEntryDto toSavedCatEntryDto(VolunteerSavedCatEntity e) {
+        try {
+            JsonNode node = objectMapper.readTree(e.getSnapshotJson());
+            return new VolunteerSavedCatEntryDto(e.getId(), e.getCatId(), e.getSavedAt(), node);
+        } catch (JsonProcessingException ex) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "invalid stored snapshot");
+        }
     }
 
     private UserEntity loadVolunteer(long userId) {

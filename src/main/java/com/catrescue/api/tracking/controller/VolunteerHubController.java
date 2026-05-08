@@ -8,11 +8,14 @@ import com.catrescue.api.tracking.dto.FeedingCheckInResponse;
 import com.catrescue.api.tracking.dto.NearbyHelpCatDto;
 import com.catrescue.api.tracking.dto.PatchVolunteerProfileRequest;
 import com.catrescue.api.tracking.dto.RegisterVolunteerRequest;
+import com.catrescue.api.tracking.dto.SaveVolunteerCatRequest;
 import com.catrescue.api.tracking.dto.VolunteerBadgeDto;
+import com.catrescue.api.tracking.dto.VolunteerCreatedCatDto;
 import com.catrescue.api.tracking.dto.VolunteerLeaderboardEntryDto;
 import com.catrescue.api.tracking.dto.VolunteerLatestCatResponse;
 import com.catrescue.api.tracking.dto.VolunteerProfileResponse;
 import com.catrescue.api.tracking.dto.VolunteerRescueRecordDto;
+import com.catrescue.api.tracking.dto.VolunteerSavedCatEntryDto;
 import com.catrescue.api.tracking.dto.VolunteerStatsResponse;
 import com.catrescue.api.tracking.persistence.UserEntity;
 import com.catrescue.api.tracking.service.VolunteerHubService;
@@ -27,11 +30,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -95,6 +100,33 @@ public class VolunteerHubController {
             @RequestParam(defaultValue = "20") @Min(1) @Max(50) int size
     ) {
         return volunteerHubService.listRescueRecords(userId, page, size);
+    }
+
+    @GetMapping({"/me/cats-created", "/me/cats-created/"})
+    public List<VolunteerCreatedCatDto> catsCreatedByVolunteer(@RequestParam @Positive long userId) {
+        return volunteerHubService.listCatsCreatedByVolunteer(userId);
+    }
+
+    @PostMapping({"/me/saved-cats", "/me/saved-cats/"})
+    public VolunteerSavedCatEntryDto saveCatToHub(
+            @RequestParam @Positive long userId,
+            @Valid @RequestBody SaveVolunteerCatRequest body
+    ) {
+        return volunteerHubService.saveCatSnapshot(userId, body.catId());
+    }
+
+    @GetMapping({"/me/saved-cats", "/me/saved-cats/"})
+    public List<VolunteerSavedCatEntryDto> listSavedCats(@RequestParam @Positive long userId) {
+        return volunteerHubService.listSavedCats(userId);
+    }
+
+    @DeleteMapping("/me/saved-cats/{catId}")
+    public ResponseEntity<Void> deleteSavedCat(
+            @RequestParam @Positive long userId,
+            @PathVariable @Positive long catId
+    ) {
+        volunteerHubService.deleteSavedCat(userId, catId);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/me/stats")

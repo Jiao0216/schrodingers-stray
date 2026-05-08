@@ -12,15 +12,20 @@ import com.catrescue.api.dto.AssessmentResponse;
 import com.catrescue.api.dto.AssessmentTimelineItemDto;
 import com.catrescue.api.dto.AssessmentTrackingMatchDto;
 import com.catrescue.api.dto.BranchActionsDto;
+import com.catrescue.api.dto.CatProfileAiGuidanceResponse;
 import com.catrescue.api.dto.CatFeaturesDto;
 import com.catrescue.api.dto.ModelLabelsDto;
 import com.catrescue.api.dto.StoredAssessmentImage;
 import com.catrescue.api.dto.TnrLocationDto;
+import com.catrescue.api.persistence.AssessmentEntity;
+import com.catrescue.api.persistence.AssessmentJpaRepository;
 import com.catrescue.api.repository.AssessmentRepository;
 import com.catrescue.api.service.client.MultimodalClient;
 import com.catrescue.api.tracking.dto.CatFeatureVector;
 import com.catrescue.api.tracking.dto.NewSightingCommand;
 import com.catrescue.api.tracking.persistence.SightingEntity;
+import com.catrescue.api.tracking.repository.CatJpaRepository;
+import com.catrescue.api.tracking.repository.SightingJpaRepository;
 import com.catrescue.api.tracking.service.CatFeatureExtractionService;
 import com.catrescue.api.tracking.service.CatHeatmapService;
 import com.catrescue.api.tracking.service.SightingDeduplicationService;
@@ -31,7 +36,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collections;
@@ -60,6 +67,9 @@ public class AssessmentService {
     private final CatHeatmapService catHeatmapService;
     private final CatFeatureExtractionService catFeatureExtractionService;
     private final AssessmentDedupService assessmentDedupService;
+    private final SightingJpaRepository sightingJpaRepository;
+    private final AssessmentJpaRepository assessmentJpaRepository;
+    private final CatJpaRepository catJpaRepository;
 
     public AssessmentService(
             AssessmentRepository repository,
@@ -72,7 +82,10 @@ public class AssessmentService {
             SightingDeduplicationService sightingDeduplicationService,
             CatHeatmapService catHeatmapService,
             CatFeatureExtractionService catFeatureExtractionService,
-            AssessmentDedupService assessmentDedupService
+            AssessmentDedupService assessmentDedupService,
+            SightingJpaRepository sightingJpaRepository,
+            AssessmentJpaRepository assessmentJpaRepository,
+            CatJpaRepository catJpaRepository
     ) {
         this.repository = repository;
         this.multimodalClient = multimodalClient;
@@ -85,6 +98,9 @@ public class AssessmentService {
         this.catHeatmapService = catHeatmapService;
         this.catFeatureExtractionService = catFeatureExtractionService;
         this.assessmentDedupService = assessmentDedupService;
+        this.sightingJpaRepository = sightingJpaRepository;
+        this.assessmentJpaRepository = assessmentJpaRepository;
+        this.catJpaRepository = catJpaRepository;
     }
 
     public AssessmentResponse createAssessment(
@@ -556,6 +572,110 @@ public class AssessmentService {
                     healthGuidance
             );
         };
+    }
+
+    /**
+     * Reconstructs branch-specific handling guidance from the nearest completed photo assessment
+     * (same 120m / 15min window as sighting image fallback).
+     */
+    public Optional<CatProfileAiGuidanceResponse> findAiGuidanceForCat(long catId) {
+        Instant since = Instant.now().minus(60, ChronoUnit.DAYS);
+        List<SightingEntity> recent = sightingJpaRepository.findByCatIdAndOccurredAtGreaterThanEqualOrderByOccurredAtDesc(
+                catId, since);
+        List<SightingEntity> toScan = new ArrayList<>(recent);
+        if (toScan.isEmpty()) {
+            sightingJpaRepository.findFirstByCatIdOrderByOccurredAtDesc(catId).ifPresent(toScan::add);
+        }
+        for (SightingEntity s : toScan.stream().limit(25).toList()) {
+            Optional<CatProfileAiGuidanceResponse> out = findClosestCompletedAssessmentIdNear(s)
+                    .flatMap(aid -> buildAiGuidance(aid, "NEAR_SIGHTING"));
+            if (out.isPresent()) {
+                return out;
+            }
+        }
+        return catJpaRepository.findById(catId).flatMap(cat ->
+                findClosestCompletedAssessmentIdNear(cat.getLastSeenLat(), cat.getLastSeenLng(), cat.getLastSeenAt())
+                        .flatMap(aid -> buildAiGuidance(aid, "NEAR_PROFILE")));
+    }
+
+    private Optional<CatProfileAiGuidanceResponse> buildAiGuidance(UUID assessmentId, String matchKind) {
+        return repository.findById(assessmentId).map(a -> {
+            BranchActionsDto actions;
+            try {
+                actions = a.status() == AssessmentStatus.FAILED
+                        ? failedActions(a.failureReason())
+                        : buildActions(a.branchType(), a.latitude(), a.longitude(), a.modelLabels());
+            } catch (Exception ex) {
+                log.warn("findAiGuidance buildActions failed: {}", ex.toString());
+                actions = new BranchActionsDto(
+                        DISCLAIMER,
+                        List.of("Nearby resource list temporarily unavailable; please search local shelters or TNR groups."),
+                        null,
+                        null,
+                        Collections.emptyList(),
+                        Collections.emptyList(),
+                        Collections.emptyList()
+                );
+            }
+            List<String> rationale = a.modelLabels().rationalePhrases() != null
+                    ? List.copyOf(a.modelLabels().rationalePhrases())
+                    : List.of();
+            return new CatProfileAiGuidanceResponse(
+                    assessmentId,
+                    a.createdAt(),
+                    a.branchType().name(),
+                    matchKind,
+                    actions.disclaimer(),
+                    actions.rescueNextSteps() != null ? List.copyOf(actions.rescueNextSteps()) : List.of(),
+                    actions.healthGuidanceLines() != null ? List.copyOf(actions.healthGuidanceLines()) : List.of(),
+                    rationale
+            );
+        });
+    }
+
+    private Optional<UUID> findClosestCompletedAssessmentIdNear(SightingEntity s) {
+        Instant at = s.getOccurredAt() != null ? s.getOccurredAt() : Instant.now();
+        return findClosestCompletedAssessmentIdNear(s.getLatitude(), s.getLongitude(), at);
+    }
+
+    private Optional<UUID> findClosestCompletedAssessmentIdNear(double lat, double lng, Instant occurredAt) {
+        if (lat == 0.0 && lng == 0.0) {
+            return Optional.empty();
+        }
+        Instant ref = occurredAt != null ? occurredAt : Instant.now();
+        List<AssessmentEntity> rows = assessmentJpaRepository.findTop500ByOrderByCreatedAtDesc();
+        AssessmentEntity best = null;
+        double bestScore = Double.POSITIVE_INFINITY;
+        for (AssessmentEntity a : rows) {
+            if (a.getStatus() != AssessmentStatus.COMPLETED) {
+                continue;
+            }
+            if (a.getLatitude() == null || a.getLongitude() == null) {
+                continue;
+            }
+            double meter = distanceMetersAssessment(lat, lng, a.getLatitude(), a.getLongitude());
+            long dt = Math.abs(Duration.between(ref, a.getCreatedAt()).getSeconds());
+            if (meter > 120.0 || dt > 900) {
+                continue;
+            }
+            double score = meter + (dt / 3.0);
+            if (score < bestScore) {
+                bestScore = score;
+                best = a;
+            }
+        }
+        return best == null ? Optional.empty() : Optional.of(best.getId());
+    }
+
+    private static double distanceMetersAssessment(double lat1, double lng1, double lat2, double lng2) {
+        final double rEarth = 6_371_000;
+        double dLat = Math.toRadians(lat2 - lat1);
+        double dLng = Math.toRadians(lng2 - lng1);
+        double aa = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
+                * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+        double c = 2 * Math.atan2(Math.sqrt(aa), Math.sqrt(Math.max(0.0, 1 - aa)));
+        return rEarth * c;
     }
 
     private static String sanitizeFilename(String name) {

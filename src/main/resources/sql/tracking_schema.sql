@@ -116,3 +116,14 @@ CREATE TABLE IF NOT EXISTS volunteer_badges_earned (
   INDEX idx_vol_badge_user (user_id),
   CONSTRAINT fk_vol_badge_user FOREIGN KEY (user_id) REFERENCES users(id)
 ) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS volunteer_saved_cats (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  user_id BIGINT NOT NULL,
+  cat_id BIGINT NOT NULL,
+  snapshot_json LONGTEXT NOT NULL,
+  saved_at TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  UNIQUE KEY uk_vol_saved_user_cat (user_id, cat_id),
+  INDEX idx_vol_saved_user_time (user_id, saved_at),
+  CONSTRAINT fk_vol_saved_user FOREIGN KEY (user_id) REFERENCES users(id)
+) ENGINE=InnoDB;

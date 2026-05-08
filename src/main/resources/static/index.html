@@ -347,6 +347,28 @@
       gap: 12px;
       margin-bottom: 20px;
     }
+    .cat-profile-ai-wrap {
+      margin-bottom: 20px;
+    }
+    .cat-profile-ai-wrap h3 {
+      margin: 0 0 8px;
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: var(--text);
+    }
+    .cat-ai-list {
+      margin: 6px 0 0;
+      padding-left: 18px;
+      font-size: 13px;
+      line-height: 1.45;
+      color: var(--text);
+    }
+    .cat-ai-disclaimer {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 12px;
+      line-height: 1.45;
+    }
     .cat-profile-card {
       border-radius: 14px;
       padding: 14px 16px;
@@ -747,13 +769,30 @@
       background: rgba(255, 251, 235, 0.82);
       border-color: rgba(120, 78, 50, 0.18);
     }
+    .community-thumb-wrap {
+      margin-bottom: 10px;
+      border-radius: 10px;
+      overflow: hidden;
+      background: rgba(15, 23, 42, 0.45);
+    }
+    body:not(.theme-tech) .community-thumb-wrap {
+      background: rgba(120, 78, 50, 0.1);
+    }
     .community-card .thumb {
       width: 100%;
       aspect-ratio: 4/3;
       object-fit: cover;
       border-radius: 10px;
       background: rgba(15, 23, 42, 0.5);
-      margin-bottom: 10px;
+      display: block;
+    }
+    .community-thumb-placeholder {
+      aspect-ratio: 4/3;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      opacity: 0.4;
     }
     .community-card .meta {
       font-size: 12px;
@@ -1586,8 +1625,8 @@
     <div class="top-controls">
       <button type="button" id="themeToggleBtn" class="theme-btn" data-i18n="themeToggleToTech">切换科技风</button>
       <div class="lang" role="group" aria-label="Language">
-        <button type="button" id="langEn" class="active">EN</button>
-        <button type="button" id="langZh">中文</button>
+        <button type="button" id="langEn" class="active" data-i18n="langEnLabel">English</button>
+        <button type="button" id="langZh" data-i18n="langZhLabel">中文</button>
       </div>
     </div>
   </header>
@@ -1687,7 +1726,7 @@
     <div class="heatmap-controls heatmap-controls-row">
       <div class="field">
         <label for="heatmapCatId" data-i18n="heatmapCatId">猫咪ID</label>
-        <input id="heatmapCatId" type="text" value="" placeholder="留空=全体猫咪">
+        <input id="heatmapCatId" type="text" value="" data-i18n-placeholder="heatmapCatIdPlaceholder" placeholder="留空=全体猫咪">
       </div>
       <button id="loadHeatmapBtn" type="button" class="btn secondary" data-i18n="heatmapLoad">加载热力图</button>
       <button id="openCatProfileFromHeatmapBtn" type="button" class="btn secondary" data-i18n="catProfileOpenFromHeatmap">个体档案</button>
@@ -1732,16 +1771,23 @@
 
       <article class="glass" style="padding:14px;border-radius:14px;border:1px solid var(--glass-border);">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
-          <h3 style="margin:0;font-size:15px;">最近上传的猫咪</h3>
-          <button type="button" id="volunteerReloadMineBtn" class="btn secondary" style="padding:8px 12px;">刷新</button>
+          <h3 style="margin:0;font-size:15px;" data-i18n="volunteerMyCatTitle">最近上传的猫咪</h3>
+          <button type="button" id="volunteerReloadMineBtn" class="btn secondary" style="padding:8px 12px;" data-i18n="volunteerReloadMine">刷新</button>
         </div>
         <div id="volunteerMyCatWrap" style="margin-top:12px;"></div>
         <p id="volunteerMyCatStatus" class="heatmap-note" style="margin-top:8px;"></p>
       </article>
 
       <article class="glass" style="padding:14px;border-radius:14px;border:1px solid var(--glass-border);">
+        <h3 style="margin:0 0 10px;font-size:15px;" data-i18n="volunteerSavedCatsTitle">我保存的猫咪档案</h3>
+        <p class="desc" style="margin:0 0 10px;font-size:12px;" data-i18n="volunteerSavedCatsDesc"></p>
+        <div id="volunteerSavedCatsList" style="display:grid;gap:8px;"></div>
+        <p id="volunteerSavedCatsMessage" class="heatmap-note" style="margin-top:8px;"></p>
+      </article>
+
+      <article class="glass" style="padding:14px;border-radius:14px;border:1px solid var(--glass-border);">
         <h3 style="margin:0 0 10px;font-size:15px;" data-i18n="volunteerCheckInTitle">喂养打卡</h3>
-        <button type="button" id="volunteerCheckInBtn" class="btn">立即打卡</button>
+        <button type="button" id="volunteerCheckInBtn" class="btn" data-i18n="volunteerCheckInBtn">立即打卡</button>
         <p id="volunteerCheckInStatus" class="heatmap-note" style="margin-top:8px;"></p>
       </article>
 
@@ -1797,12 +1843,12 @@
     <p class="desc" data-i18n="catProfileDesc">通过照片匹配或我认领的猫咪列表进入档案，查看近 30 天目击时间线与档案字段。</p>
     <div class="cat-profile-toolbar">
       <button id="catFeedCheckInBtn" type="button" class="btn secondary" data-i18n="catFeedCheckIn">喂养打卡</button>
+      <button id="catSaveToVolunteerBtn" type="button" class="btn secondary" data-i18n="volunteerSaveCatBtn" disabled>保存到志愿者中心</button>
     </div>
+    <p id="catSaveVolunteerNote" class="heatmap-note" style="margin:0 0 12px;"></p>
     <div class="cat-photo-match-section">
       <h3 class="cat-profile-timeline-title" data-i18n="catPhotoMatchTitle">通过照片找猫</h3>
-      <p class="desc" style="margin-top:0;margin-bottom:10px;" data-i18n="catPhotoMatchHint">
-        上传一张照片，与档案库中已有目击特征比对，列出最相似的前 3 只猫。
-      </p>
+      <p class="desc" style="margin-top:0;margin-bottom:10px;" data-i18n="catPhotoMatchHint"></p>
       <input type="file" id="catPhotoMatchInput" class="file-input-visually-hidden" accept="image/*" tabindex="-1" />
       <button type="button" class="btn secondary" id="catPhotoMatchBtn" data-i18n="catPhotoMatchUploadBtn">上传照片</button>
       <p id="catPhotoMatchStatus" class="heatmap-note" style="margin-top:10px;"></p>
@@ -1810,16 +1856,14 @@
     </div>
     <div class="cat-photo-match-section">
       <h3 class="cat-profile-timeline-title" data-i18n="catProfileClaimedTitle">查看我认领的猫</h3>
-      <p class="desc" style="margin-top:0;margin-bottom:10px;" data-i18n="catProfileClaimedHint">
-        从当前登录用户认领/上报过的猫咪中选择，直接打开档案。
-      </p>
+      <p class="desc" style="margin-top:0;margin-bottom:10px;" data-i18n="catProfileClaimedHint"></p>
       <button id="loadClaimedCatsBtn" type="button" class="btn secondary" data-i18n="catProfileClaimedLoadBtn">加载我认领的猫</button>
       <p id="claimedCatsStatus" class="heatmap-note" style="margin-top:10px;"></p>
       <div id="claimedCatsList" class="cat-photo-match-grid"></div>
     </div>
-    <div id="catProfileStatus" class="heatmap-note" style="margin-bottom:12px;"></div>
     <div id="catProfileSummary"></div>
     <h3 class="cat-profile-timeline-title" data-i18n="catProfileSightingsTitle">目击时间线</h3>
+    <div id="catProfileStatus" class="heatmap-note" style="margin-bottom:10px;"></div>
     <div id="catProfileTimeline"></div>
   </section>
 </div>
@@ -1828,6 +1872,23 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.heat/0.2.0/leaflet-heat.js"></script>
 <script>
   /** Spring Boot API when UI is on another origin (Butterbase / port 8090 static). Priority: ?api= → localStorage catguardian_api_base → meta catguardian-api-base → window.__CATGUARDIAN_API_BASE__ */
+  function tunnelBypassHeaders() {
+    try {
+      const host = typeof location !== "undefined" && location.hostname ? String(location.hostname) : "";
+      if (!host) return {};
+      if (
+        host.includes("ngrok-free") ||
+        host.endsWith(".ngrok.io") ||
+        host.endsWith(".ngrok.app") ||
+        host.includes("ngrok") ||
+        host.endsWith("trycloudflare.com")
+      ) {
+        return { "ngrok-skip-browser-warning": "true" };
+      }
+    } catch (_e) {}
+    return {};
+  }
+
   function getApiBase() {
     try {
       const q = new URLSearchParams(window.location.search || "").get("api");
@@ -1838,7 +1899,19 @@
     try {
       const ls = localStorage.getItem("catguardian_api_base");
       if (ls && ls.trim()) {
-        return ls.trim().replace(/\/+$/, "");
+        let b = ls.trim().replace(/\/+$/, "");
+        try {
+          const apiUrlObj = new URL(b.startsWith("http") ? b : "https://" + b);
+          const pageHost = typeof location !== "undefined" && location.hostname ? location.hostname : "";
+          if (
+            pageHost &&
+            !/^(localhost|127\.0\.0\.1)$/i.test(pageHost) &&
+            /^(localhost|127\.0\.0\.1)$/i.test(apiUrlObj.hostname)
+          ) {
+            return "";
+          }
+        } catch (_ignore) {}
+        return b;
       }
     } catch (_e) {}
     const m = document.querySelector('meta[name="catguardian-api-base"]');
@@ -1871,12 +1944,12 @@
   }
 
   function mergeDataHeaders(base) {
-    return Object.assign({}, base || {}, dataAccessHeaders());
+    return Object.assign({}, base || {}, tunnelBypassHeaders(), dataAccessHeaders());
   }
 
   function authHeaders() {
     try {
-      const token = (localStorage.getItem("token") || "").trim();
+      const token = (typeof readVolunteerToken === "function" ? readVolunteerToken() : "") || (localStorage.getItem("token") || "").trim();
       if (token) {
         return { Authorization: "Bearer " + token };
       }
@@ -1885,7 +1958,7 @@
   }
 
   function mergeAuthHeaders(base) {
-    return Object.assign({}, base || {}, authHeaders());
+    return Object.assign({}, base || {}, tunnelBypassHeaders(), authHeaders());
   }
 
   function apiFetchUrl(path) {
@@ -1932,6 +2005,13 @@
       return raw;
     }
     if (raw.healthStatus != null && raw.neuteredStatus != null) {
+      const persisted = !!(raw.imagePersisted === true || raw.imageStored === true);
+      const computed =
+        persisted && raw.id != null ? "/api/v1/assessments/" + raw.id + "/image" : null;
+      const imageUrl = raw.imageUrl || computed;
+      if (imageUrl && imageUrl !== raw.imageUrl) {
+        return Object.assign({}, raw, { imageUrl });
+      }
       return raw;
     }
     const ml = raw.modelLabels || {};
@@ -1967,9 +2047,10 @@
     const needsHelpCategory = branch === "RESCUE" || sick >= 0.55 || healthStrong;
     const healthyCategory = !needsHelpCategory && sick < 0.45 && !healthWatch && !healthStrong;
     const tnrVerifiedCategory = ear;
-    const imageUrl = raw.imageStored && raw.id
-      ? "/api/v1/assessments/" + raw.id + "/image"
-      : null;
+    const persisted = !!(raw.imagePersisted === true || raw.imageStored === true);
+    const imageUrl =
+      raw.imageUrl ||
+      (persisted && raw.id != null ? "/api/v1/assessments/" + raw.id + "/image" : null);
     return Object.assign({}, raw, {
       healthStatus,
       neuteredStatus,
@@ -1987,6 +2068,8 @@
   const I18N = {
     zh: {
       pageTitle: "薛定谔的流浪猫",
+      langEnLabel: "英文",
+      langZhLabel: "中文",
       brandTitle: "薛定谔的流浪猫",
       brandSub: "湾区 · 多模态 · TNR",
       formDesc: "上传猫咪照片并定位后，由 AI 评估体态与健康风险，并列出附近救助与 TNR 资源；日常投喂由智能喂食器定时打卡记录。",
@@ -2118,6 +2201,7 @@
       branchUnknown: "未知",
       heatmapDesc: "猫咪轨迹热力图（近30天线性衰减）",
       heatmapCatId: "猫咪ID",
+      heatmapCatIdPlaceholder: "留空=全体猫咪",
       heatmapAllCatsHint: "留空猫咪ID可查看所有用户上传的热力图",
       heatmapLoad: "加载热力图",
       heatmapWaiting: "等待加载热力图数据…",
@@ -2191,6 +2275,17 @@
       volunteerMyCatLoading: "正在加载...",
       volunteerMyCatEmpty: "你还没有上传猫咪。",
       volunteerMyCatLoadErr: "加载失败，请稍后重试。",
+      volunteerSavedCatsTitle: "我保存的猫咪档案",
+      volunteerSavedCatsDesc: "在个体档案页可将当前档案、近窗目击与 AI 建议打成快照保存；再次保存同一只猫会覆盖旧快照。",
+      volunteerSaveCatBtn: "保存到志愿者中心",
+      volunteerSaveCatSaving: "正在保存快照…",
+      volunteerSaveCatOk: "已保存到你的志愿者中心（可在此查看）。",
+      volunteerSaveCatErr: "保存失败：",
+      volunteerSaveCatNeedLogin: "请先登录后再保存。",
+      volunteerSavedCatsEmpty: "暂无保存的档案，在个体档案页打开一只猫后点击保存。",
+      volunteerSavedCatsRemove: "移除",
+      volunteerSavedCatsOpen: "打开档案",
+      volunteerSavedCatsSavedAt: "保存于",
       volunteerMyCatSter: "绝育状态",
       volunteerSubHome: "我的主页",
       volunteerSubCommunity: "社区榜单",
@@ -2238,6 +2333,13 @@
       volunteerRecordsDedup: "状态",
       volunteerRecordsEmpty: "暂无上报记录。",
       volunteerGenericLoadErr: "加载失败，请稍后重试。",
+      volunteerErr404User:
+        "HTTP 404：当前服务器上没有对应数据。常见于换了访问地址、新库或本地保存的志愿者 ID 与后端不一致。请点击「退出登录」后在本环境重新注册/登录。",
+      volunteerErrAuth: "登录已失效或无权访问。",
+      volunteerErrGateway: "网关或后端暂时不可用，请确认 API 已启动且隧道/域名指向正确端口。",
+      volunteerErrNetworkOrCors: "网络异常、跨域被拦截或无法解析响应。请在浏览器开发者工具 Network 中查看该请求的状态码与响应。",
+      volunteerErrHttpOnly: "加载失败（HTTP {status}）。",
+      volunteerErrHttpWithDetail: "加载失败（HTTP {status}）：{detail}",
       volunteerShareLoadErr: "生成失败，请检查猫咪 ID 或稍后重试。",
       volunteerUserIdLabel: "志愿者用户 ID（本地保存）",
       volunteerLoadProfileBtn: "加载档案",
@@ -2276,7 +2378,8 @@
       volunteerProfileErr: "加载失败：",
       catProfileDesc: "通过照片匹配或我认领的猫咪列表进入档案，查看近 30 天目击时间线与档案字段。",
       catProfileClaimedTitle: "查看我认领的猫",
-      catProfileClaimedHint: "从当前登录用户认领/上报过的猫咪中选择，直接打开档案。",
+      catProfileClaimedHint:
+        "列表合并「你作为上报人的目击」与「档案创建者为你」的猫咪。上传分析前请先登录，并在「上报用户 ID」与定位就绪后再提交，目击才会写入并带缩略图。下方「目击时间线」标题下的灰色说明仅针对当前已打开的档案，与上列表是否为空无关。",
       catProfileClaimedLoadBtn: "加载我认领的猫",
       catProfileClaimedLoading: "正在加载我认领的猫…",
       catProfileClaimedEmpty: "还没有认领/上报过猫咪。",
@@ -2308,6 +2411,18 @@
       catProfileOpenFromHeatmap: "打开个体档案",
       catProfileLastFed: "最后喂养",
       catProfileNeverFed: "暂无记录",
+      catProfileAiTitle: "AI 处理建议",
+      catProfileAiHint:
+        "由与该猫目击或档案坐标在约 120 米、15 分钟窗内最接近的已完成影像分析重新生成；仅供参考，不能代替现场判断或兽医诊疗。",
+      catProfileAiHealthLines: "健康与跟进提示",
+      catProfileAiRescueSteps: "建议采取的行动",
+      catProfileAiRationale: "模型依据短语",
+      catProfileAiMatch_NEAR_SIGHTING: "匹配来源：目击附近的上传",
+      catProfileAiMatch_NEAR_PROFILE: "匹配来源：档案最近坐标附近的上传",
+      catProfileAiBranch_RESCUE: "侧重救援",
+      catProfileAiBranch_FEEDING_OUTREACH: "投喂与扩散",
+      catProfileAiBranch_TNR_RESOURCES: "TNR 资源",
+      catProfileAiBranch_GENERAL_GUIDANCE: "综合指引",
       catFeedCheckIn: "喂养打卡",
       catFeedingSubmitting: "正在提交打卡…",
       catFeedSuccess: "打卡已记录",
@@ -2354,6 +2469,8 @@
     },
     en: {
       pageTitle: "Schrodinger's Stray Cat",
+      langEnLabel: "English",
+      langZhLabel: "Chinese",
       brandTitle: "Schrödinger's Stray Cat",
       brandSub: "Bay Area · Multimodal · TNR",
       formDesc: "Upload a photo and location for body-condition / health risk scoring plus nearby rescue & TNR; routine meals are auto check-ins from scheduled smart feeders.",
@@ -2485,6 +2602,7 @@
       branchUnknown: "Unknown",
       heatmapDesc: "Cat heatmap (30-day linear decay)",
       heatmapCatId: "Cat ID",
+      heatmapCatIdPlaceholder: "Leave empty = all cats",
       heatmapAllCatsHint: "Leave Cat ID empty to view heatmap for all uploaded cats",
       heatmapLoad: "Load heatmap",
       heatmapWaiting: "Waiting to load heatmap data...",
@@ -2557,6 +2675,17 @@
       volunteerMyCatLoading: "Loading...",
       volunteerMyCatEmpty: "You have not uploaded any cat yet.",
       volunteerMyCatLoadErr: "Failed to load. Please try again.",
+      volunteerSavedCatsTitle: "Saved cat profiles",
+      volunteerSavedCatsDesc: "From the cat profile tab, save a snapshot (archive fields, recent-window sightings, AI guidance). Saving again for the same cat overwrites the previous snapshot.",
+      volunteerSaveCatBtn: "Save to volunteer hub",
+      volunteerSaveCatSaving: "Saving snapshot…",
+      volunteerSaveCatOk: "Saved to your volunteer hub (see list below).",
+      volunteerSaveCatErr: "Save failed: ",
+      volunteerSaveCatNeedLogin: "Please sign in before saving.",
+      volunteerSavedCatsEmpty: "No saved profiles yet. Open a cat profile and tap Save.",
+      volunteerSavedCatsRemove: "Remove",
+      volunteerSavedCatsOpen: "Open profile",
+      volunteerSavedCatsSavedAt: "Saved at",
       volunteerMyCatSter: "Sterilization",
       volunteerSubHome: "My home",
       volunteerSubCommunity: "Community",
@@ -2604,6 +2733,13 @@
       volunteerRecordsDedup: "Status",
       volunteerRecordsEmpty: "No sighting records yet.",
       volunteerGenericLoadErr: "Could not load data. Try again later.",
+      volunteerErr404User:
+        "HTTP 404: no matching data on this server. Common after changing URL, a fresh database, or a stale saved volunteer id. Sign out and register/sign in again on this instance.",
+      volunteerErrAuth: "Session expired or access denied.",
+      volunteerErrGateway: "Gateway or backend unavailable. Ensure the API is running and your tunnel/domain targets the correct port.",
+      volunteerErrNetworkOrCors: "Network error, CORS block, or unreadable response. Check the request in DevTools → Network.",
+      volunteerErrHttpOnly: "Could not load (HTTP {status}).",
+      volunteerErrHttpWithDetail: "Could not load (HTTP {status}): {detail}",
       volunteerShareLoadErr: "Could not build text. Check the cat id or try again.",
       volunteerUserIdLabel: "Volunteer user id (saved locally)",
       volunteerLoadProfileBtn: "Load profile",
@@ -2642,7 +2778,8 @@
       volunteerProfileErr: "Failed to load: ",
       catProfileDesc: "Enter via photo match or your claimed-cats list to view archive fields and 30-day timeline.",
       catProfileClaimedTitle: "My Claimed Cats",
-      catProfileClaimedHint: "Pick from cats claimed/reported by current user and open profile directly.",
+      catProfileClaimedHint:
+        "This list merges sightings you reported and cats whose archive was created under your volunteer id. Sign in first, keep the reporter user id in sync, and submit analyses with coordinates so sightings (and thumbnails) are stored. The gray note under the “Sighting timeline” heading refers only to the cat profile currently open, not to whether the list above is empty.",
       catProfileClaimedLoadBtn: "Load my claimed cats",
       catProfileClaimedLoading: "Loading claimed cats…",
       catProfileClaimedEmpty: "No claimed/reported cats yet.",
@@ -2674,6 +2811,18 @@
       catProfileOpenFromHeatmap: "Open cat profile",
       catProfileLastFed: "Last fed",
       catProfileNeverFed: "No records yet",
+      catProfileAiTitle: "AI handling suggestions",
+      catProfileAiHint:
+        "Regenerated from the nearest completed image analysis within about 120m and 15 minutes of a sighting or the profile’s last coordinates. Not a substitute for in-person judgment or veterinary care.",
+      catProfileAiHealthLines: "Health & follow-up",
+      catProfileAiRescueSteps: "Recommended actions",
+      catProfileAiRationale: "Model rationale phrases",
+      catProfileAiMatch_NEAR_SIGHTING: "Matched to an upload near a sighting",
+      catProfileAiMatch_NEAR_PROFILE: "Matched to an upload near the profile’s last coordinates",
+      catProfileAiBranch_RESCUE: "Rescue branch",
+      catProfileAiBranch_FEEDING_OUTREACH: "Feeding outreach",
+      catProfileAiBranch_TNR_RESOURCES: "TNR resources",
+      catProfileAiBranch_GENERAL_GUIDANCE: "General guidance",
       catFeedCheckIn: "Log feeding",
       catFeedingSubmitting: "Saving check-in…",
       catFeedSuccess: "Check-in saved",
@@ -3553,6 +3702,71 @@
     return { ok: false, err: lastErr };
   }
 
+  async function fetchCatProfileAiGuidance(enc) {
+    const paths = [
+      "/api/v1/cats/" + enc + "/profile/ai-guidance",
+      "/cats/" + enc + "/profile/ai-guidance"
+    ];
+    for (const p of paths) {
+      try {
+        const u = new URL(apiFetchUrl(p));
+        u.searchParams.set("_ts", String(Date.now()));
+        const r = await fetch(u.toString(), {
+          cache: "no-store",
+          credentials: "omit",
+          mode: "cors",
+          headers: mergeDataHeaders({ Accept: "application/json" })
+        });
+        if (r.status === 204) {
+          return { ok: true, empty: true };
+        }
+        const txt = await r.text();
+        if (r.ok && txt) {
+          return { ok: true, empty: false, data: JSON.parse(txt) };
+        }
+      } catch (_e) {
+        /* try next path */
+      }
+    }
+    return { ok: false, empty: true };
+  }
+
+  function renderCatProfileAiHtml(g) {
+    const esc = (s) => escapeHtml(String(s == null ? "" : s));
+    const listHtml = (items, label) => {
+      if (!Array.isArray(items) || !items.length) return "";
+      return (
+        "<p class='cat-profile-meta' style='margin-top:10px;font-weight:700'>" +
+        esc(label) +
+        "</p><ul class='cat-ai-list'>" +
+        items.map((x) => "<li>" + esc(x) + "</li>").join("") +
+        "</ul>"
+      );
+    };
+    const branchKey = "catProfileAiBranch_" + String(g.branchType || "");
+    const branchLabel = t(branchKey) !== branchKey ? t(branchKey) : String(g.branchType || "");
+    const matchKey = "catProfileAiMatch_" + String(g.matchKind || "");
+    const matchLabel = t(matchKey) !== matchKey ? t(matchKey) : "";
+    const metaLine =
+      (g.assessmentCreatedAt ? formatIsoLocal(g.assessmentCreatedAt) : "—") +
+      (branchLabel ? " · " + branchLabel : "") +
+      (matchLabel ? " · " + matchLabel : "");
+    return (
+      "<div class='cat-profile-ai-wrap'><div class='cat-profile-card'><h3>" +
+      esc(t("catProfileAiTitle")) +
+      "</h3><p class='desc' style='margin-top:0'>" +
+      esc(t("catProfileAiHint")) +
+      "</p><p class='cat-profile-meta'>" +
+      esc(metaLine) +
+      "</p>" +
+      listHtml(g.healthGuidanceLines, t("catProfileAiHealthLines")) +
+      listHtml(g.rescueNextSteps, t("catProfileAiRescueSteps")) +
+      listHtml(g.rationalePhrases, t("catProfileAiRationale")) +
+      (g.disclaimer ? "<p class='cat-ai-disclaimer'>" + esc(g.disclaimer) + "</p>" : "") +
+      "</div></div>"
+    );
+  }
+
   function getStoredReporterUserIdNum() {
     try {
       const id = (localStorage.getItem(REPORTER_USER_STORAGE) || "").trim();
@@ -3619,12 +3833,20 @@
       if (statusEl) statusEl.textContent = t("catProfileNeedId");
       if (summaryEl) summaryEl.innerHTML = "";
       if (timelineEl) timelineEl.innerHTML = "";
+      const saveNote = document.getElementById("catSaveVolunteerNote");
+      const saveBtnEarly = document.getElementById("catSaveToVolunteerBtn");
+      if (saveNote) saveNote.textContent = "";
+      if (saveBtnEarly) saveBtnEarly.disabled = true;
       return;
     }
     activeCatProfileId = id;
     if (statusEl) statusEl.textContent = t("catProfileLoading");
     if (summaryEl) summaryEl.innerHTML = "";
     if (timelineEl) timelineEl.innerHTML = "";
+    const catSaveNote0 = document.getElementById("catSaveVolunteerNote");
+    if (catSaveNote0) catSaveNote0.textContent = "";
+    const catSaveBtn0 = document.getElementById("catSaveToVolunteerBtn");
+    if (catSaveBtn0) catSaveBtn0.disabled = true;
     const enc = encodeURIComponent(id);
     const viewerQ = {};
     const vid = getStoredReporterUserIdNum();
@@ -3635,13 +3857,17 @@
     );
     if (!profRes.ok) {
       if (statusEl) statusEl.textContent = t("catProfileNotFound") + (profRes.err ? " (" + profRes.err + ")" : "");
+      const sbFail = document.getElementById("catSaveToVolunteerBtn");
+      if (sbFail) sbFail.disabled = true;
       return;
     }
     const prof = profRes.data;
-    const sightRes = await fetchJsonFromCandidatePaths([
+    const sightPromise = fetchJsonFromCandidatePaths([
       "/api/v1/cats/" + enc + "/heatmap/sightings",
       "/cats/" + enc + "/heatmap/sightings"
     ]);
+    const aiPromise = fetchCatProfileAiGuidance(enc);
+    const [sightRes, aiGuidanceRes] = await Promise.all([sightPromise, aiPromise]);
     let sightings = [];
     if (sightRes.ok && Array.isArray(sightRes.data)) {
       sightings = sightRes.data;
@@ -3698,6 +3924,10 @@
     const lng = prof.lastSeenLongitude != null ? Number(prof.lastSeenLongitude).toFixed(4) : "—";
     const cnt = prof.sightingsInWindowDays != null ? Number(prof.sightingsInWindowDays) : 0;
     const lastFedTxt = prof.lastFedAt ? formatIsoLocal(prof.lastFedAt) : t("catProfileNeverFed");
+    let aiBlock = "";
+    if (aiGuidanceRes.ok && !aiGuidanceRes.empty && aiGuidanceRes.data) {
+      aiBlock = renderCatProfileAiHtml(aiGuidanceRes.data);
+    }
     if (summaryEl) {
       summaryEl.innerHTML =
         "<div class='cat-profile-summary'>" +
@@ -3733,7 +3963,8 @@
         "</h3><p class='cat-profile-meta'>" +
         escapeHtml(lat + ", " + lng) +
         "</p></div>" +
-        "</div>";
+        "</div>" +
+        aiBlock;
     }
     sightings = sightings.slice().sort((a, b) => {
       const ta = a.occurredAt ? Date.parse(a.occurredAt) : 0;
@@ -3784,9 +4015,12 @@
       }
       statusEl.textContent = t("catProfileWindowNote").replace("{days}", "30") + tail;
     }
+    const catSaveBtnEnd = document.getElementById("catSaveToVolunteerBtn");
+    if (catSaveBtnEnd) catSaveBtnEnd.disabled = !readVolunteerUserId();
   }
 
   async function loadClaimedCats() {
+    syncReporterUserIdWithVolunteer();
     const uid = readVolunteerUserId();
     const listEl = document.getElementById("claimedCatsList");
     const statusEl = document.getElementById("claimedCatsStatus");
@@ -3797,6 +4031,31 @@
     }
     if (statusEl) statusEl.textContent = t("catProfileClaimedLoading");
     try {
+      const rawRows = [];
+      const pullMy = async (path) => {
+        try {
+          const u = new URL(apiFetchUrl(path));
+          u.searchParams.set("limit", "50");
+          u.searchParams.set("_ts", String(Date.now()));
+          const rx = await fetch(u.toString(), {
+            cache: "no-store",
+            credentials: "omit",
+            mode: "cors",
+            headers: mergeAuthHeaders({ Accept: "application/json" })
+          });
+          if (!rx.ok) return;
+          const tj = await rx.text();
+          const arr = tj ? JSON.parse(tj) : [];
+          if (Array.isArray(arr)) {
+            for (const row of arr) rawRows.push(row);
+          }
+        } catch (_e) {
+          /* ignore */
+        }
+      };
+      if (Object.keys(authHeaders()).length > 0) {
+        await pullMy("/api/v1/sightings/my");
+      }
       const r = await fetch(apiFetchUrl("/api/v1/sightings?userId=" + encodeURIComponent(uid)), {
         cache: "no-store",
         credentials: "omit",
@@ -3808,7 +4067,11 @@
         if (statusEl) statusEl.textContent = t("catProfileLoadErr") + "HTTP " + r.status;
         return;
       }
-      const rows = txt ? JSON.parse(txt) : [];
+      const rowsParam = txt ? JSON.parse(txt) : [];
+      if (Array.isArray(rowsParam)) {
+        for (const row of rowsParam) rawRows.push(row);
+      }
+      const rows = rawRows;
       const uniq = [];
       const seen = new Set();
       if (Array.isArray(rows)) {
@@ -3823,6 +4086,33 @@
             occurredAt: row.occurredAt || ""
           });
         }
+      }
+      try {
+        const cr = await fetch(apiFetchUrl("/api/v1/volunteers/me/cats-created?userId=" + encodeURIComponent(uid)), {
+          cache: "no-store",
+          credentials: "omit",
+          mode: "cors",
+          headers: mergeAuthHeaders({ Accept: "application/json" })
+        });
+        if (cr.ok) {
+          const txtC = await cr.text();
+          const created = txtC ? JSON.parse(txtC) : [];
+          if (Array.isArray(created)) {
+            for (const c of created) {
+              const cid = c && c.catId != null ? String(c.catId).replace(/[^\d]/g, "") : "";
+              if (!cid || seen.has(cid)) continue;
+              seen.add(cid);
+              uniq.push({
+                catId: cid,
+                imageUrl: "",
+                sightingId: "",
+                occurredAt: c.lastSeenAt || ""
+              });
+            }
+          }
+        }
+      } catch (_ignore) {
+        /* optional endpoint */
       }
       if (!uniq.length) {
         if (statusEl) statusEl.textContent = t("catProfileClaimedEmpty");
@@ -4027,8 +4317,15 @@
             (lang === "zh" ? "同猫匹配" : "Same cat") +
             "</span>"
           : "";
+        const thumbSrc = resolveMediaUrl(row.imageUrl || "");
+        const thumbBlock = thumbSrc
+          ? "<div class='community-thumb-wrap'><img class='thumb' decoding='async' loading='lazy' src='" +
+            escapeHtml(thumbSrc) +
+            "' alt='' /></div>"
+          : "<div class='community-thumb-wrap community-thumb-placeholder' aria-hidden='true'><span>🐾</span></div>";
         return (
           "<article class='community-card'" + (catId ? " role='button' tabindex='0' data-community-cat-id='" + escapeHtml(catId) + "'" : "") + ">" +
+          thumbBlock +
           "<div><strong>" +
           escapeHtml(communityStatusLabelZh(row.healthStatus)) +
           "</strong> · " +
@@ -4244,10 +4541,7 @@
         cache: "no-store",
         credentials: "omit",
         mode: "cors",
-        headers: {
-          Accept: "application/json",
-          Authorization: "Bearer " + token
-        }
+        headers: mergeAuthHeaders({ Accept: "application/json" })
       });
       if (!meResp.ok) {
         await refreshVolunteerHub();
@@ -4368,6 +4662,32 @@
       sessionStorage.removeItem(AUTH_SESSION_KEY);
     } catch (_e) {}
     window.location.href = "/auth";
+  }
+
+  function volunteerFetchFailMessage(r, bodyText) {
+    const status = r && typeof r.status === "number" ? r.status : 0;
+    let detail = "";
+    const raw = String(bodyText || "").trim();
+    if (raw && !/^\s*</i.test(raw)) {
+      try {
+        const j = JSON.parse(raw);
+        const d = j && (j.detail || j.message || j.title);
+        if (d) detail = String(d).replace(/\s+/g, " ").trim().slice(0, 160);
+      } catch (_e) {
+        detail = raw.replace(/\s+/g, " ").trim().slice(0, 160);
+      }
+    }
+    if (status === 404) return t("volunteerErr404User");
+    if (status === 401 || status === 403) return t("volunteerErrAuth") + " (HTTP " + status + ")";
+    if (status === 502 || status === 503 || status === 504) return t("volunteerErrGateway") + " (HTTP " + status + ")";
+    if (!status) return t("volunteerErrNetworkOrCors");
+    return detail
+      ? t("volunteerErrHttpWithDetail").replace("{status}", String(status)).replace("{detail}", detail)
+      : t("volunteerErrHttpOnly").replace("{status}", String(status));
+  }
+
+  function volunteerCatchLoadMessage() {
+    return t("volunteerErrNetworkOrCors");
   }
 
   function syncReporterUserIdWithVolunteer() {
@@ -4645,7 +4965,8 @@
       volunteerLoadLeaderboard(),
       volunteerLoadBadges(),
       volunteerLoadRecords(),
-      volunteerLoadMyLatestCat()
+      volunteerLoadMyLatestCat(),
+      volunteerLoadSavedCats()
     ]);
   }
 
@@ -4658,7 +4979,6 @@
 
   async function volunteerLoadMyLatestCat() {
     const uid = readVolunteerUserId();
-    const token = readVolunteerToken();
     const wrap = document.getElementById("volunteerMyCatWrap");
     const status = document.getElementById("volunteerMyCatStatus");
     if (wrap) wrap.innerHTML = "";
@@ -4670,21 +4990,19 @@
     try {
       let arr = [];
       const u = new URL(apiFetchUrl("/api/v1/sightings/my"));
+      u.searchParams.set("limit", "3");
       u.searchParams.set("_ts", String(Date.now()));
       const r = await fetch(u.toString(), {
         cache: "no-store",
         credentials: "omit",
         mode: "cors",
-        headers: {
-          Accept: "application/json",
-          Authorization: "Bearer " + token
-        }
+        headers: mergeAuthHeaders({ Accept: "application/json" })
       });
+      const txt = await r.text();
       if (!r.ok) {
-        if (status) status.textContent = t("volunteerMyCatLoadErr") + " (HTTP " + r.status + ")";
+        if (status) status.textContent = volunteerFetchFailMessage(r, txt);
         return;
       }
-      const txt = await r.text();
       arr = txt ? JSON.parse(txt) : [];
       if (!Array.isArray(arr) || arr.length === 0) {
         if (status) status.textContent = "还没有上传记录，去上传第一只猫。";
@@ -4722,7 +5040,7 @@
       }
       if (status) status.textContent = "";
     } catch (_e) {
-      if (status) status.textContent = t("volunteerMyCatLoadErr");
+      if (status) status.textContent = volunteerCatchLoadMessage();
     }
   }
 
@@ -4801,7 +5119,7 @@
       const txt = await r.text();
       if (!r.ok) {
         if (card) card.style.display = "none";
-        if (msg) msg.textContent = t("volunteerGenericLoadErr");
+        if (msg) msg.textContent = volunteerFetchFailMessage(r, txt);
         return;
       }
       const j = JSON.parse(txt);
@@ -4818,7 +5136,7 @@
       if (meta) meta.textContent = line;
     } catch (_e) {
       if (card) card.style.display = "none";
-      if (msg) msg.textContent = t("volunteerGenericLoadErr");
+      if (msg) msg.textContent = volunteerCatchLoadMessage();
     }
   }
 
@@ -4836,7 +5154,7 @@
       const txt = await r.text();
       if (!r.ok) {
         if (listEl) listEl.innerHTML = "";
-        if (msgEl) msgEl.textContent = t("volunteerGenericLoadErr");
+        if (msgEl) msgEl.textContent = volunteerFetchFailMessage(r, txt);
         return;
       }
       const j = JSON.parse(txt);
@@ -4872,7 +5190,7 @@
       if (listEl) listEl.innerHTML = html;
     } catch (_e) {
       if (listEl) listEl.innerHTML = "";
-      if (msgEl) msgEl.textContent = t("volunteerGenericLoadErr");
+      if (msgEl) msgEl.textContent = volunteerCatchLoadMessage();
     }
   }
 
@@ -4890,7 +5208,7 @@
       const txt = await r.text();
       if (!r.ok) {
         if (listEl) listEl.innerHTML = "";
-        if (msgEl) msgEl.textContent = t("volunteerGenericLoadErr");
+        if (msgEl) msgEl.textContent = volunteerFetchFailMessage(r, txt);
         return;
       }
       const j = JSON.parse(txt);
@@ -4929,7 +5247,7 @@
       if (listEl) listEl.innerHTML = html;
     } catch (_e) {
       if (listEl) listEl.innerHTML = "";
-      if (msgEl) msgEl.textContent = t("volunteerGenericLoadErr");
+      if (msgEl) msgEl.textContent = volunteerCatchLoadMessage();
     }
   }
 
@@ -4946,7 +5264,7 @@
       const txt = await r.text();
       if (!r.ok) {
         if (wrap) wrap.innerHTML = "";
-        if (msgEl) msgEl.textContent = t("volunteerGenericLoadErr");
+        if (msgEl) msgEl.textContent = volunteerFetchFailMessage(r, txt);
         return;
       }
       const j = JSON.parse(txt);
@@ -4972,7 +5290,7 @@
       if (wrap) wrap.innerHTML = table;
     } catch (_e) {
       if (wrap) wrap.innerHTML = "";
-      if (msgEl) msgEl.textContent = t("volunteerGenericLoadErr");
+      if (msgEl) msgEl.textContent = volunteerCatchLoadMessage();
     }
   }
 
@@ -4995,7 +5313,7 @@
       const txt = await r.text();
       if (!r.ok) {
         if (listEl) listEl.innerHTML = "";
-        if (msgEl) msgEl.textContent = t("volunteerGenericLoadErr");
+        if (msgEl) msgEl.textContent = volunteerFetchFailMessage(r, txt);
         return;
       }
       const j = JSON.parse(txt);
@@ -5022,7 +5340,7 @@
       if (listEl) listEl.innerHTML = html;
     } catch (_e) {
       if (listEl) listEl.innerHTML = "";
-      if (msgEl) msgEl.textContent = t("volunteerGenericLoadErr");
+      if (msgEl) msgEl.textContent = volunteerCatchLoadMessage();
     }
   }
 
@@ -5045,7 +5363,7 @@
       const txt = await r.text();
       if (!r.ok) {
         if (listEl) listEl.innerHTML = "";
-        if (msgEl) msgEl.textContent = t("volunteerGenericLoadErr");
+        if (msgEl) msgEl.textContent = volunteerFetchFailMessage(r, txt);
         return;
       }
       const j = JSON.parse(txt);
@@ -5072,7 +5390,156 @@
       if (listEl) listEl.innerHTML = html;
     } catch (_e) {
       if (listEl) listEl.innerHTML = "";
-      if (msgEl) msgEl.textContent = t("volunteerGenericLoadErr");
+      if (msgEl) msgEl.textContent = volunteerCatchLoadMessage();
+    }
+  }
+
+  async function volunteerLoadSavedCats() {
+    const uid = readVolunteerUserId();
+    const listEl = document.getElementById("volunteerSavedCatsList");
+    const msgEl = document.getElementById("volunteerSavedCatsMessage");
+    if (!uid) {
+      if (listEl) listEl.innerHTML = "";
+      if (msgEl) msgEl.textContent = t("volunteerNeedUserId");
+      return;
+    }
+    try {
+      const r = await fetch(apiFetchUrl("/api/v1/volunteers/me/saved-cats?userId=" + encodeURIComponent(uid)), {
+        cache: "no-store",
+        credentials: "omit",
+        mode: "cors",
+        headers: mergeAuthHeaders({ Accept: "application/json" })
+      });
+      const txt = await r.text();
+      if (!r.ok) {
+        if (listEl) listEl.innerHTML = "";
+        if (msgEl) msgEl.textContent = volunteerFetchFailMessage(r, txt);
+        return;
+      }
+      const j = txt ? JSON.parse(txt) : [];
+      if (!Array.isArray(j) || !j.length) {
+        if (listEl) listEl.innerHTML = "";
+        if (msgEl) msgEl.textContent = t("volunteerSavedCatsEmpty");
+        return;
+      }
+      if (msgEl) msgEl.textContent = "";
+      const html = j
+        .map((row) => {
+          const snap = row.snapshot && typeof row.snapshot === "object" ? row.snapshot : {};
+          const prof = snap.profile && typeof snap.profile === "object" ? snap.profile : {};
+          const nm =
+            prof.displayName && String(prof.displayName).trim()
+              ? escapeHtml(String(prof.displayName).trim())
+              : escapeHtml(t("volunteerCatFallback").replace("{id}", String(row.catId != null ? row.catId : "—")));
+          const when = row.savedAt ? formatIsoLocal(row.savedAt) : "—";
+          const cid = String(row.catId != null ? row.catId : "").replace(/[^\d]/g, "");
+          return (
+            "<div class='volunteer-record-card'>" +
+              "<div style='font-weight:700;'>" +
+              nm +
+              "</div>" +
+              "<div style='margin-top:6px;color:var(--muted);font-size:12px;'>ID " +
+              escapeHtml(cid) +
+              "</div>" +
+              "<div style='margin-top:6px;color:var(--muted);font-size:12px;'>" +
+              escapeHtml(t("volunteerSavedCatsSavedAt")) +
+              " · " +
+              escapeHtml(when) +
+              "</div>" +
+              "<div style='margin-top:10px;display:flex;gap:6px;flex-wrap:wrap;'>" +
+              "<button type='button' class='btn secondary' style='padding:6px 10px;width:auto;' data-vol-open-saved='" +
+              escapeHtml(cid) +
+              "'>" +
+              escapeHtml(t("volunteerSavedCatsOpen")) +
+              "</button>" +
+              "<button type='button' class='btn secondary' style='padding:6px 10px;width:auto;' data-vol-remove-saved='" +
+              escapeHtml(cid) +
+              "'>" +
+              escapeHtml(t("volunteerSavedCatsRemove")) +
+              "</button>" +
+              "</div></div>"
+          );
+        })
+        .join("");
+      if (listEl) {
+        listEl.innerHTML = html;
+        listEl.querySelectorAll("[data-vol-open-saved]").forEach((b) => {
+          b.addEventListener("click", () => openCatProfileById(b.getAttribute("data-vol-open-saved")));
+        });
+        listEl.querySelectorAll("[data-vol-remove-saved]").forEach((b) => {
+          b.addEventListener("click", async () => {
+            const cid = (b.getAttribute("data-vol-remove-saved") || "").trim();
+            if (!/^[1-9]\d*$/.test(cid)) return;
+            try {
+              const rx = await fetch(
+                apiFetchUrl("/api/v1/volunteers/me/saved-cats/" + encodeURIComponent(cid) + "?userId=" + encodeURIComponent(uid)),
+                {
+                  method: "DELETE",
+                  cache: "no-store",
+                  credentials: "omit",
+                  mode: "cors",
+                  headers: mergeAuthHeaders({ Accept: "application/json" })
+                }
+              );
+              if (!rx.ok && msgEl) {
+                const delTxt = await rx.text().catch(() => "");
+                msgEl.textContent = volunteerFetchFailMessage(rx, delTxt);
+              } else await volunteerLoadSavedCats();
+            } catch (_e2) {
+              if (msgEl) msgEl.textContent = volunteerCatchLoadMessage();
+            }
+          });
+        });
+      }
+    } catch (_e) {
+      if (listEl) listEl.innerHTML = "";
+      if (msgEl) msgEl.textContent = volunteerCatchLoadMessage();
+    }
+  }
+
+  async function saveActiveCatToVolunteerHub() {
+    const note = document.getElementById("catSaveVolunteerNote");
+    const id = String(activeCatProfileId || "").trim().replace(/[^\d]/g, "");
+    const uid = readVolunteerUserId();
+    if (!uid) {
+      if (note) {
+        note.textContent = t("volunteerSaveCatNeedLogin");
+        note.className = "heatmap-note";
+      }
+      return;
+    }
+    if (!/^[1-9]\d*$/.test(id)) return;
+    if (note) {
+      note.textContent = t("volunteerSaveCatSaving");
+      note.className = "heatmap-note";
+    }
+    try {
+      const r = await fetch(apiFetchUrl("/api/v1/volunteers/me/saved-cats?userId=" + encodeURIComponent(uid)), {
+        method: "POST",
+        cache: "no-store",
+        credentials: "omit",
+        mode: "cors",
+        headers: mergeAuthHeaders({ "Content-Type": "application/json", Accept: "application/json" }),
+        body: JSON.stringify({ catId: Number(id) })
+      });
+      const txt = await r.text();
+      if (!r.ok) {
+        if (note) {
+          note.textContent = t("volunteerSaveCatErr") + (txt ? txt.slice(0, 120) : "HTTP " + r.status);
+          note.className = "heatmap-note";
+        }
+        return;
+      }
+      if (note) {
+        note.textContent = t("volunteerSaveCatOk");
+        note.className = "heatmap-note volunteer-status-ok";
+      }
+      volunteerLoadSavedCats();
+    } catch (_e) {
+      if (note) {
+        note.textContent = t("volunteerSaveCatErr");
+        note.className = "heatmap-note";
+      }
     }
   }
 
@@ -6104,6 +6571,10 @@
         if (statusEl) statusEl.textContent = t("catFeedErr") + (res.err || "");
       }
     });
+  }
+  const catSaveToVolunteerBtn = document.getElementById("catSaveToVolunteerBtn");
+  if (catSaveToVolunteerBtn) {
+    catSaveToVolunteerBtn.addEventListener("click", () => saveActiveCatToVolunteerHub());
   }
   const catPhotoMatchInput = document.getElementById("catPhotoMatchInput");
   const catPhotoMatchBtn = document.getElementById("catPhotoMatchBtn");

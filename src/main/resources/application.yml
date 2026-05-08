@@ -52,9 +52,6 @@ management:
     mail:
       enabled: false
 
-resend:
-  api-key: ${RESEND_API_KEY:}
-
 cat-rescue:
   share:
     # Temporary friend-testing gate.

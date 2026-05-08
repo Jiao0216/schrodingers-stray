@@ -1,8 +1,10 @@
 package com.catrescue.api.tracking.controller;
 
+import com.catrescue.api.dto.CatProfileAiGuidanceResponse;
 import com.catrescue.api.security.data.DataAccessResolver;
 import com.catrescue.api.security.data.DataAccessTier;
 import com.catrescue.api.security.data.DataMaskingService;
+import com.catrescue.api.service.AssessmentService;
 import com.catrescue.api.tracking.dto.CatLastSeenResponse;
 import com.catrescue.api.tracking.dto.CatProfileResponse;
 import com.catrescue.api.tracking.dto.HeatmapPointDto;
@@ -30,15 +32,18 @@ public class CatTrackingController {
     private final CatHeatmapService catHeatmapService;
     private final DataAccessResolver dataAccessResolver;
     private final DataMaskingService dataMaskingService;
+    private final AssessmentService assessmentService;
 
     public CatTrackingController(
             CatHeatmapService catHeatmapService,
             DataAccessResolver dataAccessResolver,
-            DataMaskingService dataMaskingService
+            DataMaskingService dataMaskingService,
+            AssessmentService assessmentService
     ) {
         this.catHeatmapService = catHeatmapService;
         this.dataAccessResolver = dataAccessResolver;
         this.dataMaskingService = dataMaskingService;
+        this.assessmentService = assessmentService;
     }
 
     @GetMapping("/heatmap")
@@ -98,6 +103,20 @@ public class CatTrackingController {
         return catHeatmapService.buildPublicProfile(catId)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    /**
+     * AI handling guidance from the nearest completed assessment (time/space match to sightings or last-seen).
+     * Available whenever the cat archive exists; returns {@code 204} when no matching upload is found.
+     */
+    @GetMapping("/{id}/profile/ai-guidance")
+    public ResponseEntity<CatProfileAiGuidanceResponse> profileAiGuidance(@PathVariable("id") Long catId) {
+        if (catHeatmapService.buildPublicProfile(catId).isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        return assessmentService.findAiGuidanceForCat(catId)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.noContent().build());
     }
 
     @GetMapping("/{id}/last-seen")
