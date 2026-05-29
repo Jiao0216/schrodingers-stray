@@ -100,3 +100,7 @@ cat-rescue:
   site:
     # Absolute public origin for share links (no trailing slash). Empty = clients use window.location.origin.
     public-base-url: ${PUBLIC_BASE_URL:}
+  # 本地 Python FastAPI（cat-agent）联调：Spring 将 /api/v1/agent/** 转发到该地址，前端只访问同源 Java。
+  python-agent:
+    enabled: ${CAT_RESCUE_PYTHON_AGENT_ENABLED:true}
+    base-url: ${CAT_RESCUE_PYTHON_AGENT_BASE_URL:http://127.0.0.1:8000}

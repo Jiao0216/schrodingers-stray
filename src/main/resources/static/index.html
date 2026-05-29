@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -610,6 +610,151 @@
       color: var(--text);
     }
 
+    /* Python agent — conversational panel */
+    .python-agent-chat {
+      margin-top: 4px;
+    }
+    .python-agent-chat-thread {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-height: 420px;
+      overflow-y: auto;
+      padding: 4px 2px 12px;
+      margin-bottom: 8px;
+    }
+    .python-agent-msg {
+      display: flex;
+      width: 100%;
+    }
+    .python-agent-msg--assistant {
+      justify-content: flex-start;
+    }
+    .python-agent-msg--user {
+      justify-content: flex-end;
+    }
+    .python-agent-bubble {
+      max-width: 92%;
+      border-radius: 14px;
+      padding: 10px 14px;
+      font-size: 0.95rem;
+      line-height: 1.55;
+      border: 1px solid var(--glass-border);
+      background: rgba(255, 251, 235, 0.78);
+      color: var(--text);
+      word-break: break-word;
+    }
+    body.theme-tech .python-agent-bubble {
+      background: rgba(15, 23, 42, 0.78);
+    }
+    .python-agent-bubble--assistant {
+      border-radius: 14px 14px 14px 6px;
+    }
+    .python-agent-bubble--user {
+      border-radius: 14px 14px 6px 14px;
+      background: rgba(56, 189, 248, 0.14);
+      border-color: rgba(56, 189, 248, 0.38);
+    }
+    body:not(.theme-tech) .python-agent-bubble--user {
+      background: rgba(251, 191, 36, 0.2);
+      border-color: rgba(245, 158, 11, 0.42);
+    }
+    .python-agent-quick-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 4px;
+      margin-bottom: 10px;
+    }
+    .python-agent-quick-row .btn.secondary {
+      flex: 1 1 auto;
+      min-width: min(100%, 148px);
+    }
+    .python-agent-chat-input-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: stretch;
+    }
+    .python-agent-chat-input-row input[type="text"] {
+      flex: 1 1 200px;
+      min-width: 0;
+    }
+    .python-agent-chat-input-row .btn {
+      flex: 0 0 auto;
+    }
+
+    /* 首页 Hero 常驻站长对话（无消息时仅引导语 + 居中输入） */
+    .python-agent-slot-home {
+      width: 100%;
+      max-width: 720px;
+      margin: 28px auto 0;
+      padding: 0 12px;
+    }
+    .python-agent-block--home {
+      margin-top: 0 !important;
+      border-radius: 18px;
+      background: rgba(255, 251, 235, 0.72);
+      border: 1px solid rgba(120, 78, 50, 0.2);
+      box-shadow: 0 12px 40px rgba(15, 23, 42, 0.08);
+    }
+    body.theme-tech .python-agent-block--home {
+      background: rgba(15, 23, 42, 0.55);
+      border-color: rgba(56, 189, 248, 0.22);
+    }
+    .python-agent-home-shell {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      padding: 20px 16px 22px;
+    }
+    .python-agent-home-title {
+      margin: 0;
+      font-size: 1.05rem;
+      font-weight: 700;
+      text-align: center;
+      color: var(--text);
+    }
+    .python-agent-home-hint {
+      margin: 0;
+      text-align: center;
+      font-size: 0.95rem;
+      line-height: 1.55;
+      color: var(--text);
+      opacity: 0.88;
+      max-width: 34rem;
+    }
+    .python-agent-block--home.python-agent-home--has-messages .python-agent-home-hint {
+      display: none;
+    }
+    .python-agent-chat--home {
+      width: 100%;
+      max-width: 640px;
+    }
+    .python-agent-block--home .python-agent-chat-thread--home {
+      max-height: min(46vh, 340px);
+      width: 100%;
+      margin-bottom: 4px;
+    }
+    .python-agent-block--home:not(.python-agent-home--has-messages) .python-agent-chat-thread--home {
+      display: none;
+    }
+    .python-agent-chat-input-row--home {
+      width: 100%;
+      max-width: 640px;
+      margin: 0 auto;
+      justify-content: center;
+    }
+    .python-agent-chat-input-row--home input[type="text"] {
+      flex: 1 1 280px;
+      max-width: 100%;
+      min-height: 44px;
+      border-radius: 999px;
+      padding-left: 16px;
+      padding-right: 16px;
+    }
+
     .preview-row {
       display: flex;
       flex-wrap: wrap;
@@ -833,6 +978,32 @@
       line-height: 1.5;
     }
     .timeline-list li { margin-bottom: 8px; }
+
+    .dup-timeline-details {
+      margin-top: 10px;
+      border-radius: 10px;
+      border: 1px solid rgba(245, 158, 11, 0.38);
+      background: rgba(255, 251, 235, 0.45);
+      padding: 8px 10px 10px;
+    }
+    body.theme-tech .dup-timeline-details {
+      background: rgba(15, 23, 42, 0.4);
+      border-color: rgba(148, 163, 184, 0.28);
+    }
+    .dup-timeline-summary {
+      font-weight: 600;
+      color: var(--muted);
+      cursor: pointer;
+      user-select: none;
+      list-style-position: outside;
+    }
+    .dup-timeline-details[open] > .dup-timeline-summary {
+      margin-bottom: 6px;
+    }
+    .dup-timeline-list {
+      margin: 0;
+      padding: 0 0 0 18px;
+    }
 
     .heatmap-filter-row {
       display: flex;
@@ -1165,6 +1336,42 @@
       font-size: 11px;
       color: var(--muted);
       line-height: 1.45;
+    }
+
+    .ear-clip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px 18px;
+      align-items: center;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text);
+    }
+    .ear-clip-row label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0;
+      cursor: pointer;
+      font-weight: 500;
+    }
+    .ear-clip-row input { width: auto; accent-color: var(--cyan); }
+    .ear-clip-group-label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      color: #4b3628;
+    }
+    body.theme-tech .ear-clip-group-label { color: #cbd5e1; }
+    .python-agent-block .python-agent-body {
+      margin-top: 6px;
+      font-size: 13px;
+      line-height: 1.55;
+      color: var(--text);
+      white-space: pre-wrap;
+      word-break: break-word;
     }
 
     .steri-banner.confirmed {
@@ -1571,47 +1778,6 @@
     }
     .inference-stub-banner.hidden { display: none; }
 
-    .api-base-banner {
-      margin: 0 0 14px;
-      padding: 14px 16px;
-      border-radius: 14px;
-      border: 1px solid rgba(245, 158, 11, 0.55);
-      background: var(--warn-bg);
-      color: var(--text);
-      font-size: 13px;
-      line-height: 1.55;
-    }
-    .api-base-banner.hidden { display: none; }
-    .api-base-banner strong {
-      display: block;
-      margin-bottom: 8px;
-      font-size: 14px;
-      color: var(--accent);
-    }
-    .api-base-banner .api-base-banner-hint {
-      margin: 0 0 12px;
-      opacity: 0.95;
-    }
-    .api-base-banner-row {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 10px;
-    }
-    .api-base-input {
-      flex: 1 1 220px;
-      min-width: 0;
-      padding: 10px 12px;
-      border-radius: 10px;
-      border: 1px solid rgba(148, 163, 184, 0.35);
-      background: rgba(255, 251, 235, 0.85);
-      color: var(--text);
-      font-size: 13px;
-    }
-    body.theme-tech .api-base-input {
-      background: rgba(15, 23, 42, 0.65);
-      border-color: rgba(148, 163, 184, 0.28);
-    }
   </style>
 </head>
 <body>
@@ -1625,21 +1791,11 @@
     <div class="top-controls">
       <button type="button" id="themeToggleBtn" class="theme-btn" data-i18n="themeToggleToTech">切换科技风</button>
       <div class="lang" role="group" aria-label="Language">
-        <button type="button" id="langEn" class="active" data-i18n="langEnLabel">English</button>
-        <button type="button" id="langZh" data-i18n="langZhLabel">中文</button>
+        <button type="button" id="langEn" class="active">English</button>
+        <button type="button" id="langZh">中文</button>
       </div>
     </div>
   </header>
-
-  <div id="apiBaseBanner" class="api-base-banner hidden" role="region" aria-label="API base URL">
-    <strong data-i18n="apiBaseBannerTitle"></strong>
-    <p class="api-base-banner-hint" data-i18n="apiBaseBannerHint"></p>
-    <div class="api-base-banner-row">
-      <input type="url" id="apiBaseInput" class="api-base-input" autocomplete="url" data-i18n-placeholder="apiBasePlaceholder" spellcheck="false" />
-      <button type="button" id="apiBaseSaveBtn" class="btn secondary" data-i18n="apiBaseSave"></button>
-      <button type="button" id="adminResetBtn" class="btn secondary" data-i18n="adminResetBtn"></button>
-    </div>
-  </div>
 
   <section class="hero hero--warm" aria-labelledby="heroHeadline">
     <div class="hero-bg-carousel" aria-hidden="true">
@@ -1654,6 +1810,7 @@
         <a class="btn hero-cta-secondary" href="mailto:zhang.jiao2@northeastern.edu?subject=%E6%9C%BA%E6%9E%84%E5%90%88%E4%BD%9C%E7%94%B3%E8%AF%B7" data-i18n="heroBtnOrg">申请机构合作</a>
         <a class="hero-cta-text" href="mailto:zhang.jiao2@northeastern.edu?subject=%E6%8A%95%E8%B5%84%E4%BA%BA%E5%90%88%E4%BD%9C" data-i18n="heroBtnInvestor">投资人联系</a>
       </div>
+      <div id="pythonAgentChatSlotHome" class="python-agent-slot-home" aria-label="Station chat"></div>
     </div>
   </section>
 
@@ -1670,8 +1827,6 @@
   <div id="panel-upload" class="main-panel">
   <div class="demo-layout">
     <section class="glass panel-upload">
-      <p class="desc" data-i18n="formDesc">上传照片，定位或输入地址，获取分析与社交文案。</p>
-
       <form id="assessmentForm">
         <input type="hidden" id="endpoint" value="/api/v1/assessments">
         <div class="field">
@@ -1695,6 +1850,15 @@
           </div>
           <input id="latitude" type="hidden">
           <input id="longitude" type="hidden">
+        </div>
+
+        <div class="field">
+          <span class="ear-clip-group-label" data-i18n="earClipLabel">剪耳（TNR 标记）</span>
+          <div class="ear-clip-row" role="radiogroup" aria-label="Ear clip">
+            <label><input type="radio" name="earClip" value="yes"> <span data-i18n="earClipYes">已剪耳</span></label>
+            <label><input type="radio" name="earClip" value="no"> <span data-i18n="earClipNo">未剪耳</span></label>
+            <label><input type="radio" name="earClip" value="unknown" checked> <span data-i18n="earClipUnknown">不确定</span></label>
+          </div>
         </div>
 
         <input type="hidden" id="trackingUserId" value="">
@@ -2068,29 +2232,18 @@
   const I18N = {
     zh: {
       pageTitle: "薛定谔的流浪猫",
-      langEnLabel: "英文",
-      langZhLabel: "中文",
       brandTitle: "薛定谔的流浪猫",
       brandSub: "湾区 · 多模态 · TNR",
-      formDesc: "上传猫咪照片并定位后，由 AI 评估体态与健康风险，并列出附近救助与 TNR 资源；日常投喂由智能喂食器定时打卡记录。",
       photoLabel: "猫咪照片（必填）",
       addressLabel: "地址（自动定位或手动输入）",
       addressPlaceholder: "例如 2750 Monterey Rd, San Jose, CA",
       locateBtn: "自动定位",
       useAddressBtn: "解析地址",
-      endpointLabel: "接口地址",
       heroHeadlineLine: "你是观测者。",
       heroSubtitleLine: "每只流浪猫都处于叠加态——直到你行动，让它坍缩为安全与幸福。",
       heroBtnOrg: "申请机构合作",
       heroBtnInvestor: "投资人联系",
       heroBtnCommunity: "加入社区",
-      dashboardTitle: "守护网络",
-      dashboardStatAssessments: "社区评估记录（累计）",
-      dashboardStatSightings: "近30天新增目击",
-      dashboardStatCatsDistinct: "有档案的独立猫咪（去重）",
-      dashboardStatGeoAssessments: "带 GPS 的评估",
-      dashboardStatFeedingOverdue: "超24小时未喂养（需关注）",
-      dashboardStatTodayAutoDispenses: "今日定时自动投食（站点）",
       healthScoresTitle: "体态与健康（模型 0–100%）",
       healthScoresFootnote: "任一分项低于 70% 时建议人工现场核实。综合「伤病」概率由体态等多维信号推导。",
       healthGuidanceTitle: "健康与救助建议",
@@ -2102,7 +2255,6 @@
       triageFeedAutoHint: "日常投喂由定时喂食器计入打卡；本分析不测是否缺粮。",
       dashboardOfflineNote: "未连接后端 API 时无法汇总；请使用页面顶部配置或地址栏 ?api= 后再刷新。",
       dashboardImpactPartial: "部分接口不可用，已用「—」表示缺失项。",
-      dashboardImpactLoading: "正在从后端汇总…",
       dashboardSimpleLoading: "正在从后端汇总…",
       dashboardSimpleLine: "已追踪 {cats} 只猫 · {sightings} 个目击记录",
       stepStatus: "猫咪状态",
@@ -2116,8 +2268,6 @@
       heatmapLoadedShort: "拖动地图可查看目击点详情；点击圆点查看照片与时间。",
       submitBtn: "提交分析",
       emptyWait: "等待请求。上传照片后将显示分析结果与附近机构。",
-      emptyAnalyzing: "分析中…",
-      jsonToggle: "查看原始 JSON（调试）",
       trackingUserAutoNote: "已根据本设备自动分配用户标识 · {id}（用于社区上报与热力图）。",
       yes: "是",
       no: "否",
@@ -2126,11 +2276,7 @@
       triageSick: "是否伤病",
       triageFeed: "是否缺粮（照片）",
       triageNeuter: "是否已绝育",
-      badgeConfirmed: "已标记（人工确认）",
-      badgeSuspected: "疑似已被标记（请复核）",
       badgeUnknown: "未确认已标记",
-      bannerConfirmed: "该猫已标记（人工确认），建议避免重复捕捉；优先健康观察与救助。",
-      bannerSuspected: "疑似已被标记，请先现场复核耳尖标记，再决定是否进入捕捉流程。",
       probSick: "伤病概率",
       probFeed: "喂养概率",
       probTnr: "未绝育概率",
@@ -2146,15 +2292,8 @@
       xTwitter: "X / Twitter",
       rescueList: "附近治疗 / 救助中心",
       tnrList: "附近绝育（TNR）",
-      tnrListConfirmed: "附近绝育（已标记，通常无需重复）",
       tnrListSuspected: "附近绝育（疑似已标记，复核后再操作）",
       disclaimer: "免责声明",
-      addrMissing: "地址待补充",
-      phoneMissing: "未提供",
-      copyAddr: "复制地址",
-      copyPhone: "复制电话",
-      nav: "导航",
-      site: "官网",
       viewDetail: "查看详情",
       kmApprox: "约",
       kmUnit: "km",
@@ -2206,16 +2345,12 @@
       heatmapLoad: "加载热力图",
       heatmapWaiting: "等待加载热力图数据…",
       heatmapLoading: "正在加载社区目击数据…",
-      heatmapLoadedNote: "拖动地图可查看各目击点详情。",
       heatmapStatBadge: "近30天社区数据",
-      heatmapLoaded: "热力图已渲染。点位数: ",
       heatmapEmpty: "该猫最近30天暂无可用目击点。",
       heatmapErr: "热力图加载失败: ",
       heatmapTryGeneric: "热力图暂时无法加载，请稍后重试。",
       heatmapHintBadCatId: "请确认猫咪ID是否存在，或先上报该猫目击记录。",
-      heatmapSourceHint: "数据源: ",
       heatmapHeatPluginMissing: "未加载 leaflet.heat，已降级为普通点位图。",
-      heatmapDebugHint: "调试: ",
       heatmapPopupTime: "时间",
       heatmapPopupFeature: "特征",
       heatmapPopupSameCat: "同猫判定",
@@ -2234,7 +2369,6 @@
       feedingStationRemoteFeedErr: "远程投食失败，请检查网络或稍后重试。",
       themeToggleToTech: "切换科技风",
       themeToggleToWarm: "切换温暖风",
-      trackingUserLabel: "追踪上报用户ID",
       autoMatchLabel: "上传后自动检索同猫并定位热力图",
       findSameCatBtn: "按当前照片检索同猫并定位",
       sameCatSearching: "正在按新上传照片检索同猫…",
@@ -2267,14 +2401,18 @@
       volunteerNotifyTitle: "通知",
       volunteerBadgesTitle: "我的徽章",
       volunteerLeaderboardTitle: "排行榜",
-      volunteerGateText: "请先登录，没账号再注册。",
-      volunteerGateLogin: "去登录",
-      volunteerGateRegister: "没账号，去注册",
       volunteerMyCatTitle: "我最近上传的猫咪",
       volunteerReloadMine: "刷新",
       volunteerMyCatLoading: "正在加载...",
       volunteerMyCatEmpty: "你还没有上传猫咪。",
-      volunteerMyCatLoadErr: "加载失败，请稍后重试。",
+      volunteerMyCatNeedLogin: "请先登录后查看。",
+      volunteerMyCatUploadCta: "去上传第一只猫",
+      volunteerMyCatImgUnavailable: "图片暂时不可见（已尝试主地址和备用地址）。",
+      volunteerMyCatImgNone: "暂无可显示图片。",
+      volunteerMyCatAiSummaryLabel: "AI 健康摘要",
+      volunteerFeedThisCatBtn: "我去喂它",
+      volunteerFeedThisCatOk: "✓ 打卡成功，+10 积分 · 已更新该猫最近喂养时间",
+      volunteerFeedThisCatPartial: "打卡成功，但更新猫咪喂养时间失败，请稍后重试。",
       volunteerSavedCatsTitle: "我保存的猫咪档案",
       volunteerSavedCatsDesc: "在个体档案页可将当前档案、近窗目击与 AI 建议打成快照保存；再次保存同一只猫会覆盖旧快照。",
       volunteerSaveCatBtn: "保存到志愿者中心",
@@ -2286,18 +2424,14 @@
       volunteerSavedCatsRemove: "移除",
       volunteerSavedCatsOpen: "打开档案",
       volunteerSavedCatsSavedAt: "保存于",
-      volunteerMyCatSter: "绝育状态",
       volunteerSubHome: "我的主页",
       volunteerSubCommunity: "社区榜单",
-      volunteerCardRegister: "注册 / 档案 ID",
       volunteerEmail: "邮箱",
       volunteerDisplayName: "昵称",
       volunteerPhone: "手机（可选）",
-      volunteerSvcCoords: "服务坐标（可选，用于附近推送）",
       volunteerGeoBtn: "定位",
       volunteerRegisterBtn: "注册志愿者",
       volunteerNeedEmailName: "请填写邮箱与昵称。",
-      volunteerRegisterErr: "注册失败：",
       volunteerRegisterOk: "注册成功，用户 ID 已保存到本地。",
       volunteerEmailTaken: "邮箱已注册，请直接登录",
       volunteerRegisterFailed: "注册未成功，请检查输入或稍后重试。",
@@ -2312,13 +2446,11 @@
       volunteerSterilNot: "待绝育 / 未确认",
       volunteerEarTippedShort: "耳标",
       volunteerCatFallback: "猫咪 #{id}",
-      volunteerNearbyHintCoords: "坐标已隐藏，仅显示距离与优先级。",
       volunteerLbColRank: "名次",
       volunteerLbColName: "昵称",
       volunteerLbColPoints: "积分",
       volunteerAnonymousName: "匿名志愿者",
       volunteerLbEmpty: "暂无排行数据。",
-      volunteerLbLoadHint: "点击下方按钮加载排行榜。",
       volunteerBadgeEarned: "获得",
       volunteerBadge_FIRST_CHECKIN: "首次打卡",
       volunteerBadge_CHECKINS_10: "打卡累计 10 次",
@@ -2326,13 +2458,11 @@
       volunteerBadge_VOLUNTEER_POINTS_100: "积分达到 100",
       volunteerBadge_SIGHTINGS_5: "目击上报 5 次",
       volunteerBadgesEmpty: "暂无徽章，多打卡或上报目击即可获得。",
-      volunteerNotifyUntitled: "通知",
       volunteerRecordsTime: "时间",
       volunteerRecordsCat: "猫咪 ID",
       volunteerRecordsAddr: "位置描述",
       volunteerRecordsDedup: "状态",
       volunteerRecordsEmpty: "暂无上报记录。",
-      volunteerGenericLoadErr: "加载失败，请稍后重试。",
       volunteerErr404User:
         "HTTP 404：当前服务器上没有对应数据。常见于换了访问地址、新库或本地保存的志愿者 ID 与后端不一致。请点击「退出登录」后在本环境重新注册/登录。",
       volunteerErrAuth: "登录已失效或无权访问。",
@@ -2341,20 +2471,12 @@
       volunteerErrHttpOnly: "加载失败（HTTP {status}）。",
       volunteerErrHttpWithDetail: "加载失败（HTTP {status}）：{detail}",
       volunteerShareLoadErr: "生成失败，请检查猫咪 ID 或稍后重试。",
-      volunteerUserIdLabel: "志愿者用户 ID（本地保存）",
       volunteerLoadProfileBtn: "加载档案",
       volunteerSyncReporterBtn: "同步到目击上报 ID",
-      volunteerCardStats: "档案与贡献",
-      volunteerCardCheckIn: "喂养打卡（+10 积分）",
-      volunteerCheckInHint: "使用浏览器定位记录一次投喂/巡查打卡，累计积分并解锁徽章。",
       volunteerCheckInBtn: "打卡",
       volunteerCheckInLocating: "正在定位…",
-      volunteerCheckInOk: "打卡成功：",
-      volunteerCheckInErr: "打卡失败：",
-      volunteerCardNearby: "附近待助猫咪",
       volunteerNearbyBtn: "刷新列表",
       volunteerNearbyEmpty: "暂无（系统会自动使用你当前位置，可稍后再试）。",
-      volunteerCardNotify: "通知收件箱",
       volunteerNotifyBtn: "刷新通知",
       volunteerNotifyEmpty: "附近暂无需要帮助的猫咪",
       volunteerNotifyEmptySub: "开启位置权限后，当附近出现未绝育或受伤的猫咪时，你会收到提醒",
@@ -2362,20 +2484,15 @@
       volunteerLocationPushOn: "已开启位置推送",
       volunteerNotifyNearbyUnneutered: "附近{n}米发现一只疑似未绝育的猫咪",
       volunteerNotifyDetailBtn: "查看详情",
-      volunteerCardLeaderboard: "排行榜",
       volunteerLeaderboardBtn: "加载排行榜",
-      volunteerCardBadges: "成就徽章",
       volunteerBadgesBtn: "刷新徽章",
-      volunteerCardShare: "分享救助故事",
       volunteerShareCatId: "猫咪 ID",
       volunteerShareBtn: "生成文案",
       volunteerShareNativeBtn: "系统分享",
       volunteerShareNeedCat: "请输入有效的猫咪 ID。",
       volunteerShareNoWebShare: "当前浏览器不支持 Web Share API，可复制上方文案。",
-      volunteerCardRecords: "救助记录（目击上报）",
       volunteerRecordsBtn: "加载记录",
       volunteerNeedUserId: "请先在本地填写有效的志愿者用户 ID，或完成注册。",
-      volunteerProfileErr: "加载失败：",
       catProfileDesc: "通过照片匹配或我认领的猫咪列表进入档案，查看近 30 天目击时间线与档案字段。",
       catProfileClaimedTitle: "查看我认领的猫",
       catProfileClaimedHint:
@@ -2456,42 +2573,56 @@
       communityFilterHealthy: "健康",
       dupBannerTitle: "疑似同一只猫",
       dupBannerLine: "我们曾在 {date} 于 {loc} 见过极为相似的猫咪（相似度约 {pct}%）。",
-      timelineTitle: "出现记录时间线",
+      timelineSummary: "出现记录时间线（{n} 条，点击展开）",
       locUnknown: "位置未记录",
-      apiBaseBannerTitle: "需要连接 Spring Boot 后端",
-      apiBaseBannerHint: "Butterbase 上只有静态页面；「分析」请求要发到已部署的 Java API。请填写 API 根地址（须 HTTPS，无末尾斜杠），保存后仅本浏览器生效。本地调试可在地址栏使用 ?api=http://localhost:8090（需从 http://localhost 打开页面以避免混合内容拦截）。",
-      apiBasePlaceholder: "https://your-api.example.com",
-      apiBaseSave: "保存并刷新",
-      apiBaseInvalid: "请输入有效地址。当前为 HTTPS 页面时，API 须使用 https://。",
-      adminResetBtn: "清空所有数据",
-      adminResetConfirm: "确认清空所有数据？此操作不可撤销",
-      adminResetFailed: "清空失败："
+      earClipLabel: "剪耳（TNR 标记）",
+      earClipYes: "已剪耳",
+      earClipNo: "未剪耳",
+      earClipUnknown: "不确定",
+      earClipOverrideNeuterYes: "已按表单：剪耳（TNR）",
+      earClipOverrideNeuterNo: "已按表单：未剪耳（建议安排 TNR）",
+      earClipBannerUserTipped: "已按表单标记为剪耳：右侧「是否已绝育」以「是」为准。",
+      aiDeepAnalysisTitle: "🤖 AI 站长对话",
+      aiDeepAnalysisCta: "🤖 开始 AI 站长对话",
+      aiDeepAnalysisCtaHint: "分析完成后自动连接站长流式对话（本地 :8000），可在下方输入框继续提问。",
+      aiDeepAnalysisStreaming: "站长正在输入…",
+      pythonLoading: "正在请求 Python Agent…",
+      pythonErr: "Python Agent 请求失败：",
+      aiQuickFeed: "需要喂食吗？",
+      aiQuickShelter: "附近哪里可以绝育/治疗？",
+      aiQuickDanger: "这只猫危险吗？",
+      aiChatPlaceholder: "输入你的问题…",
+      aiChatSend: "发送",
+      aiHomeChatHint: "直接向救助站站长提问：喂食、TNR、附近医院或收容所等。无需先上传照片；上传分析后仍可在下方继续追问。",
+      aiFieldEmpty: "（该字段暂无内容）",
+      aiNoMatch: "暂时无法从本次分析结果里匹配到对应说明，可以试试下方的快捷问题。",
+      aiBehaviorMissing: "本次未返回行为解读文本；请确认 Agent 已开启行为分析（include_behavior）或稍后再试。",
+      aiReplyFeedingLead: "【喂食相关】来自健康分析：",
+      aiReplyShelterLead: "【附近机构 · 实时检索】",
+      aiReplyDangerLead: "【行为与安全】",
+      aiReplyKnowledgeLead: "【知识参考】",
+      aiEarClipYesBanner: "✅ 已完成TNR，无需绝育",
+      aiEarClipNoBanner: "⚠️ 未绝育，建议联系Shelter进行TNR",
+      aiEarClipUnknownBanner: "❓ 建议近距离观察耳朵",
+      aiNearbyNoAddress: "请先在表单中填写地址/位置，再检索附近机构。",
+      aiNearbySkipNoNeed: "当前为「已剪耳」且健康分析原文中未出现「送去治疗」，未请求 TNR/医院联网检索。",
+      aiNearbyAutoTitle: "【未剪耳 · 已为你检索附近 TNR / 救助资源】",
+      aiNearbyTruncatedNote: "（以上仅展示最近的 3 家 / 条，其余已省略。）"
     },
     en: {
-      pageTitle: "Schrodinger's Stray Cat",
-      langEnLabel: "English",
-      langZhLabel: "Chinese",
+      pageTitle: "Schrödinger's Stray Cat",
       brandTitle: "Schrödinger's Stray Cat",
       brandSub: "Bay Area · Multimodal · TNR",
-      formDesc: "Upload a photo and location for body-condition / health risk scoring plus nearby rescue & TNR; routine meals are auto check-ins from scheduled smart feeders.",
       photoLabel: "Photo (required)",
       addressLabel: "Address",
       addressPlaceholder: "e.g. 2750 Monterey Rd, San Jose, CA",
       locateBtn: "Locate",
       useAddressBtn: "Geocode",
-      endpointLabel: "Endpoint",
       heroHeadlineLine: "You are the observer.",
       heroSubtitleLine: "Every stray exists in superposition — until you act to collapse it into safety and warmth.",
       heroBtnOrg: "Partner with us",
       heroBtnInvestor: "Contact investors",
       heroBtnCommunity: "Join the community",
-      dashboardTitle: "Guardian network",
-      dashboardStatAssessments: "Community assessments (all-time)",
-      dashboardStatSightings: "New sightings (last 30 days)",
-      dashboardStatCatsDistinct: "Distinct cats on file",
-      dashboardStatGeoAssessments: "Assessments with GPS",
-      dashboardStatFeedingOverdue: "Cats not fed in 24h+",
-      dashboardStatTodayAutoDispenses: "Today’s scheduled auto-feeds (stations)",
       healthScoresTitle: "Body condition & health (model 0–100%)",
       healthScoresFootnote: "Any score under 70%: recommend an in-person check. The combined illness/injury bar aggregates these signals.",
       healthGuidanceTitle: "Health & rescue guidance",
@@ -2503,7 +2634,6 @@
       triageFeedAutoHint: "Routine meals come from scheduled feeders; this photo analysis does not score hunger.",
       dashboardOfflineNote: "Connect an API base URL (banner or ?api=) and reload to see live totals.",
       dashboardImpactPartial: "Some endpoints failed; missing cells show as —.",
-      dashboardImpactLoading: "Loading summary from API…",
       dashboardSimpleLoading: "Loading summary from API...",
       dashboardSimpleLine: "Tracking {cats} cats · {sightings} sightings",
       stepStatus: "Cat status",
@@ -2514,12 +2644,10 @@
       heatmapStatPrefix: "Tracking",
       heatmapStatCatsUnit: "cats",
       heatmapStatPointsUnit: "sightings",
-      heatmapLoadedNote: "Drag the map and tap dots for photos and times.",
       heatmapStatBadge: "Last 30 days",
       submitBtn: "Analyze",
       emptyWait: "Waiting. After upload: triage, copy, nearby resources.",
-      emptyAnalyzing: "Analyzing…",
-      jsonToggle: "Raw JSON (debug)",
+      trackingUserAutoNote: "This device was auto-assigned reporter id · {id} (used for community sightings and the heatmap).",
       yes: "Yes",
       no: "No",
       statusId: "Status",
@@ -2527,11 +2655,7 @@
       triageSick: "Sick / injured?",
       triageFeed: "Hunger from photo?",
       triageNeuter: "Sterilized?",
-      badgeConfirmed: "Marked (human confirmed)",
-      badgeSuspected: "Possibly marked (verify)",
       badgeUnknown: "Not confirmed",
-      bannerConfirmed: "Marked (confirmed). Avoid repeat trapping; prioritize observation & rescue.",
-      bannerSuspected: "Possibly marked. Verify ear-tip on site before trapping.",
       probSick: "Illness / injury",
       probFeed: "Feeding need",
       probTnr: "Not neutered (model)",
@@ -2547,15 +2671,8 @@
       xTwitter: "X / Twitter",
       rescueList: "Nearby rescue / care",
       tnrList: "Nearby spay-neuter (TNR)",
-      tnrListConfirmed: "Nearby TNR (already marked — usually no repeat surgery)",
       tnrListSuspected: "Nearby TNR (possibly marked — verify first)",
       disclaimer: "Disclaimer",
-      addrMissing: "Address N/A",
-      phoneMissing: "N/A",
-      copyAddr: "Copy address",
-      copyPhone: "Copy phone",
-      nav: "Navigate",
-      site: "Website",
       viewDetail: "View details",
       kmApprox: "~",
       kmUnit: "km",
@@ -2607,15 +2724,12 @@
       heatmapLoad: "Load heatmap",
       heatmapWaiting: "Waiting to load heatmap data...",
       heatmapLoading: "Loading community sightings…",
-      heatmapLoaded: "Heatmap rendered. Points: ",
       heatmapLoadedShort: "Drag the map and tap circles for sighting details.",
       heatmapEmpty: "No eligible sightings in last 30 days.",
       heatmapErr: "Heatmap load failed: ",
       heatmapTryGeneric: "Couldn't load the heatmap. Try again in a moment.",
       heatmapHintBadCatId: "Check whether the cat ID exists, or report a sighting first.",
-      heatmapSourceHint: "Source: ",
       heatmapHeatPluginMissing: "leaflet.heat missing; fallback to point markers only.",
-      heatmapDebugHint: "Debug: ",
       heatmapPopupTime: "Time",
       heatmapPopupFeature: "Features",
       heatmapPopupSameCat: "Same-cat",
@@ -2634,7 +2748,6 @@
       feedingStationRemoteFeedErr: "Remote feed failed. Check network and try again.",
       themeToggleToTech: "Switch to Tech",
       themeToggleToWarm: "Switch to Warm",
-      trackingUserLabel: "Tracking reporter user ID",
       autoMatchLabel: "Auto-match same cat and center heatmap after upload",
       findSameCatBtn: "Find same cat from current photo",
       sameCatSearching: "Searching same cat from uploaded photo...",
@@ -2667,14 +2780,18 @@
       volunteerNotifyTitle: "Notifications",
       volunteerBadgesTitle: "My Badges",
       volunteerLeaderboardTitle: "Leaderboard",
-      volunteerGateText: "Please sign in first. No account yet? Register.",
-      volunteerGateLogin: "Sign in",
-      volunteerGateRegister: "Create account",
       volunteerMyCatTitle: "My latest uploaded cat",
       volunteerReloadMine: "Refresh",
       volunteerMyCatLoading: "Loading...",
       volunteerMyCatEmpty: "You have not uploaded any cat yet.",
-      volunteerMyCatLoadErr: "Failed to load. Please try again.",
+      volunteerMyCatNeedLogin: "Please sign in to view.",
+      volunteerMyCatUploadCta: "Upload your first cat",
+      volunteerMyCatImgUnavailable: "Image temporarily unavailable (primary and fallback URLs failed).",
+      volunteerMyCatImgNone: "No image available.",
+      volunteerMyCatAiSummaryLabel: "AI health summary",
+      volunteerFeedThisCatBtn: "I'll feed this cat",
+      volunteerFeedThisCatOk: "✓ Check-in saved, +10 pts · last-fed time updated",
+      volunteerFeedThisCatPartial: "Check-in saved, but updating last-fed time failed. Please try again.",
       volunteerSavedCatsTitle: "Saved cat profiles",
       volunteerSavedCatsDesc: "From the cat profile tab, save a snapshot (archive fields, recent-window sightings, AI guidance). Saving again for the same cat overwrites the previous snapshot.",
       volunteerSaveCatBtn: "Save to volunteer hub",
@@ -2686,18 +2803,14 @@
       volunteerSavedCatsRemove: "Remove",
       volunteerSavedCatsOpen: "Open profile",
       volunteerSavedCatsSavedAt: "Saved at",
-      volunteerMyCatSter: "Sterilization",
       volunteerSubHome: "My home",
       volunteerSubCommunity: "Community",
-      volunteerCardRegister: "Register / user ID",
       volunteerEmail: "Email",
       volunteerDisplayName: "Display name",
       volunteerPhone: "Phone (optional)",
-      volunteerSvcCoords: "Service coordinates (optional, for nearby alerts)",
       volunteerGeoBtn: "Locate",
       volunteerRegisterBtn: "Register",
       volunteerNeedEmailName: "Email and display name are required.",
-      volunteerRegisterErr: "Registration failed: ",
       volunteerRegisterOk: "Registered — user id saved locally.",
       volunteerEmailTaken: "This email is already registered. Please sign in.",
       volunteerRegisterFailed: "Registration did not complete. Check your input or try again.",
@@ -2712,13 +2825,11 @@
       volunteerSterilNot: "Needs TNR / not verified",
       volunteerEarTippedShort: "Ear-tipped",
       volunteerCatFallback: "Cat #{id}",
-      volunteerNearbyHintCoords: "Exact coordinates are hidden; distance and priority are shown.",
       volunteerLbColRank: "Rank",
       volunteerLbColName: "Name",
       volunteerLbColPoints: "Points",
       volunteerAnonymousName: "Anonymous Volunteer",
       volunteerLbEmpty: "No leaderboard entries yet.",
-      volunteerLbLoadHint: "Tap the button below to load the leaderboard.",
       volunteerBadgeEarned: "Earned",
       volunteerBadge_FIRST_CHECKIN: "First check-in",
       volunteerBadge_CHECKINS_10: "10 check-ins",
@@ -2726,13 +2837,11 @@
       volunteerBadge_VOLUNTEER_POINTS_100: "100 volunteer points",
       volunteerBadge_SIGHTINGS_5: "5 sighting reports",
       volunteerBadgesEmpty: "No badges yet — keep checking in or reporting sightings.",
-      volunteerNotifyUntitled: "Notice",
       volunteerRecordsTime: "Time",
       volunteerRecordsCat: "Cat ID",
       volunteerRecordsAddr: "Location note",
       volunteerRecordsDedup: "Status",
       volunteerRecordsEmpty: "No sighting records yet.",
-      volunteerGenericLoadErr: "Could not load data. Try again later.",
       volunteerErr404User:
         "HTTP 404: no matching data on this server. Common after changing URL, a fresh database, or a stale saved volunteer id. Sign out and register/sign in again on this instance.",
       volunteerErrAuth: "Session expired or access denied.",
@@ -2741,20 +2850,12 @@
       volunteerErrHttpOnly: "Could not load (HTTP {status}).",
       volunteerErrHttpWithDetail: "Could not load (HTTP {status}): {detail}",
       volunteerShareLoadErr: "Could not build text. Check the cat id or try again.",
-      volunteerUserIdLabel: "Volunteer user id (saved locally)",
       volunteerLoadProfileBtn: "Load profile",
       volunteerSyncReporterBtn: "Copy id to sighting upload",
-      volunteerCardStats: "Profile & impact",
-      volunteerCardCheckIn: "Feeding check-in (+10 pts)",
-      volunteerCheckInHint: "Uses browser geolocation once to record a patrol / feeding visit.",
       volunteerCheckInBtn: "Check in",
       volunteerCheckInLocating: "Locating…",
-      volunteerCheckInOk: "Check-in saved: ",
-      volunteerCheckInErr: "Check-in failed: ",
-      volunteerCardNearby: "Nearby cats likely needing help",
       volunteerNearbyBtn: "Refresh list",
       volunteerNearbyEmpty: "None — your current location is used automatically; try again later.",
-      volunteerCardNotify: "Notification inbox",
       volunteerNotifyBtn: "Refresh",
       volunteerNotifyEmpty: "No nearby cats currently need help",
       volunteerNotifyEmptySub: "Enable location access to receive alerts for nearby unneutered or injured cats",
@@ -2762,20 +2863,15 @@
       volunteerLocationPushOn: "Location push enabled",
       volunteerNotifyNearbyUnneutered: "A likely unneutered cat was found {n}m nearby",
       volunteerNotifyDetailBtn: "View details",
-      volunteerCardLeaderboard: "Leaderboard",
       volunteerLeaderboardBtn: "Load leaderboard",
-      volunteerCardBadges: "Badges",
       volunteerBadgesBtn: "Refresh badges",
-      volunteerCardShare: "Share a rescue story",
       volunteerShareCatId: "Cat id",
       volunteerShareBtn: "Build text",
       volunteerShareNativeBtn: "Native share",
       volunteerShareNeedCat: "Enter a valid cat id.",
       volunteerShareNoWebShare: "Web Share API unavailable — copy the text instead.",
-      volunteerCardRecords: "Rescue records (sightings you reported)",
       volunteerRecordsBtn: "Load records",
       volunteerNeedUserId: "Enter a volunteer user id or register first.",
-      volunteerProfileErr: "Failed to load: ",
       catProfileDesc: "Enter via photo match or your claimed-cats list to view archive fields and 30-day timeline.",
       catProfileClaimedTitle: "My Claimed Cats",
       catProfileClaimedHint:
@@ -2856,16 +2952,41 @@
       communityFilterHealthy: "Healthy",
       dupBannerTitle: "Same cat likely",
       dupBannerLine: "We've seen a very similar cat on {date} near {loc} (similarity ~{pct}%).",
-      timelineTitle: "Sighting timeline",
+      timelineSummary: "Sighting timeline ({n} records — tap to expand)",
       locUnknown: "Location not recorded",
-      apiBaseBannerTitle: "Spring Boot API URL required",
-      apiBaseBannerHint: "Butterbase hosts only static files; analysis calls your Java backend elsewhere. Enter the API origin (HTTPS, no trailing slash). Saved in this browser only. For local API use ?api=http://localhost:8090 and open the UI from http://localhost to avoid mixed-content blocking.",
-      apiBasePlaceholder: "https://your-api.example.com",
-      apiBaseSave: "Save & reload",
-      apiBaseInvalid: "Enter a valid URL. On HTTPS pages the API must use https://.",
-      adminResetBtn: "Reset all data",
-      adminResetConfirm: "Confirm reset all data? This action cannot be undone.",
-      adminResetFailed: "Reset failed: "
+      earClipLabel: "Ear tip (TNR marker)",
+      earClipYes: "Tipped",
+      earClipNo: "Not tipped",
+      earClipUnknown: "Unknown",
+      earClipOverrideNeuterYes: "Form: tipped (TNR)",
+      earClipOverrideNeuterNo: "Form: not tipped (plan TNR)",
+      earClipBannerUserTipped: "Ear clip set to tipped — the right panel shows “Yes” for sterilized.",
+      aiDeepAnalysisTitle: "🤖 Station lead chat",
+      aiDeepAnalysisCta: "🤖 Start station-lead chat",
+      aiDeepAnalysisCtaHint: "After analysis, the station-lead chat starts automatically (local :8000). Continue in the input below.",
+      aiDeepAnalysisStreaming: "Station lead is typing…",
+      pythonLoading: "Calling Python agent…",
+      pythonErr: "Python agent request failed: ",
+      aiQuickFeed: "Does this cat need feeding?",
+      aiQuickShelter: "Where can I spay/neuter or get treatment nearby?",
+      aiQuickDanger: "Is this cat dangerous?",
+      aiChatPlaceholder: "Type a question…",
+      aiChatSend: "Send",
+      aiHomeChatHint: "Ask the station lead about feeding, TNR, nearby clinics or shelters—no photo upload required. After you run an assessment, you can keep chatting below.",
+      aiFieldEmpty: "(No text in this field.)",
+      aiNoMatch: "I couldn’t map that to a field in this run—try a quick button below.",
+      aiBehaviorMissing: "No behavior text was returned; ensure the agent enables behavior analysis (include_behavior) or try again later.",
+      aiReplyFeedingLead: "[Feeding — from health analysis]",
+      aiReplyShelterLead: "[Nearby resources — live search]",
+      aiReplyDangerLead: "[Behavior & safety]",
+      aiReplyKnowledgeLead: "[Knowledge]",
+      aiEarClipYesBanner: "✅ Ear tip indicates TNR is done; no new neuter needed.",
+      aiEarClipNoBanner: "⚠️ Not tipped — likely not yet neutered; contact a shelter/rescue for TNR.",
+      aiEarClipUnknownBanner: "❓ Ear status unclear — observe the ears up close when safe.",
+      aiNearbyNoAddress: "Fill in the address/location on the form before searching nearby resources.",
+      aiNearbySkipNoNeed: "Ear tip is “tipped” and the health text does not contain “送去治疗”, so TNR/vet web search was not requested.",
+      aiNearbyAutoTitle: "[Not tipped — nearby TNR / rescue resources]",
+      aiNearbyTruncatedNote: "(Showing at most the nearest 3 listings; the rest are omitted.)"
     }
   };
 
@@ -3030,102 +3151,42 @@
     refreshTrackingUserNote();
     renderImpactDashFromCache();
     refreshImpactDashFootnote();
+    refreshPythonAgentHomeUi();
   }
 
   function applyTheme() {
     document.body.classList.toggle("theme-tech", theme === "tech");
   }
 
-  document.getElementById("langZh").addEventListener("click", () => {
-    lang = "zh";
+  function refreshDynamicLanguageContent() {
+    try { renderCommunityGrid(); } catch (_e) {}
+    try { renderAssessmentHeatmap(); } catch (_e) {}
+    const pv = document.getElementById("panel-volunteer");
+    if (pv && !pv.hidden) {
+      try { volunteerLoadMyLatestCat(); } catch (_e) {}
+    }
+    const pcp = document.getElementById("panel-cat-profile");
+    if (pcp && !pcp.hidden && activeCatProfileId) {
+      try { loadCatProfile(); } catch (_e) {}
+    }
+  }
+
+  function setLanguage(next) {
+    lang = next;
     localStorage.setItem(LANG_KEY, lang);
     applyStaticI18n();
     renderImpactDashFromCache();
     refreshImpactDashFootnote();
-  });
-  document.getElementById("langEn").addEventListener("click", () => {
-    lang = "en";
-    localStorage.setItem(LANG_KEY, lang);
-    applyStaticI18n();
-    renderImpactDashFromCache();
-    refreshImpactDashFootnote();
-  });
+    refreshDynamicLanguageContent();
+  }
+  document.getElementById("langZh").addEventListener("click", () => setLanguage("zh"));
+  document.getElementById("langEn").addEventListener("click", () => setLanguage("en"));
   document.getElementById("themeToggleBtn").addEventListener("click", () => {
     theme = theme === "tech" ? "warm" : "tech";
     localStorage.setItem(THEME_KEY, theme);
     applyTheme();
     applyStaticI18n();
   });
-
-  /** On Butterbase static hosting there is no /api — prompt for Spring Boot origin or use ?api=. */
-  function initApiBaseBanner() {
-    const banner = document.getElementById("apiBaseBanner");
-    const input = document.getElementById("apiBaseInput");
-    const saveBtn = document.getElementById("apiBaseSaveBtn");
-    const resetBtn = document.getElementById("adminResetBtn");
-    if (!banner || !input || !saveBtn) return;
-    // Keep UI clean for local/dev usage: hide this banner by default.
-    banner.classList.add("hidden");
-    return;
-    const host = window.location.hostname || "";
-    const isButterbase = host.endsWith(".butterbase.dev");
-    const isLocalDev = host === "localhost" || host === "127.0.0.1";
-    if (!isButterbase && !isLocalDev) {
-      return;
-    }
-    banner.classList.remove("hidden");
-    if (isLocalDev) {
-      input.style.display = "none";
-      saveBtn.style.display = "none";
-    }
-    saveBtn.addEventListener("click", () => {
-      const raw = (input.value || "").trim();
-      if (!raw) {
-        alert(t("apiBaseInvalid"));
-        return;
-      }
-      let u;
-      try {
-        u = new URL(raw.includes("://") ? raw : "https://" + raw);
-      } catch (_e) {
-        alert(t("apiBaseInvalid"));
-        return;
-      }
-      const origin = u.origin;
-      if (window.location.protocol === "https:" && u.protocol !== "https:") {
-        alert(t("apiBaseInvalid"));
-        return;
-      }
-      try {
-        localStorage.setItem("catguardian_api_base", origin);
-      } catch (_e) {
-        alert(t("apiBaseInvalid"));
-        return;
-      }
-      window.location.reload();
-    });
-    if (resetBtn) {
-      resetBtn.addEventListener("click", async () => {
-        if (!window.confirm(t("adminResetConfirm"))) return;
-        try {
-          const res = await fetch(apiFetchUrl("/api/v1/admin/reset"), {
-            method: "DELETE",
-            headers: mergeAuthHeaders({ Accept: "application/json" }),
-            credentials: "omit",
-            mode: "cors"
-          });
-          const txt = await res.text();
-          if (!res.ok) {
-            alert(t("adminResetFailed") + "HTTP " + res.status + (txt ? " · " + txt.slice(0, 200) : ""));
-            return;
-          }
-          window.location.reload();
-        } catch (e) {
-          alert(t("adminResetFailed") + (e && e.message ? e.message : String(e)));
-        }
-      });
-    }
-  }
 
   function initHeroCarousel() {
     const a = document.getElementById("heroBgA");
@@ -3174,8 +3235,24 @@
 
   const THRESHOLD = { sick: 0.55, feeding: 0.45 };
 
+  if (form && !form.dataset.neuterEarSyncBound) {
+    form.dataset.neuterEarSyncBound = "1";
+    form.addEventListener("change", function (ev) {
+      const tgt = ev.target;
+      if (tgt && tgt.name === "earClip") {
+        syncNeuterTileFromEarClipForm();
+      }
+    });
+  }
+
   /** Set after successful analyze when server returned {@code trackingMatch} (avoid duplicate sighting upload). */
   let lastAssessmentTracking = null;
+  /** Last successful Java assessment JSON — for station-lead chat context. */
+  let __lastAssessmentPayload = null;
+
+  /** Last Java assessment: model neuter hint for earClip「不确定」fallback. */
+  let __lastAssessmentTriageModelSterilized = false;
+  let __lastAssessmentTriageHasResult = false;
 
   let lastSocialCopy = "";
   let heatmapMap = null;
@@ -3644,6 +3721,47 @@
 
   function yesNoChip(ok) {
     return ok ? "<span class='chip ok'>" + t("yes") + "</span>" : "<span class='chip no'>" + t("no") + "</span>";
+  }
+
+  function buildNeuterAuxBadge(earClipVal, modelLikelySterilized) {
+    if (earClipVal === "yes") {
+      return "<span class='chip ok'>" + escapeHtml(t("earClipOverrideNeuterYes")) + "</span>";
+    }
+    if (earClipVal === "no") {
+      return "<span class='chip warn'>" + escapeHtml(t("earClipOverrideNeuterNo")) + "</span>";
+    }
+    return modelLikelySterilized
+      ? "<span class='chip ok'>" + escapeHtml(t("badgeSterilizedModel")) + "</span>"
+      : "<span class='chip no'>" + escapeHtml(t("badgeUnknown")) + "</span>";
+  }
+
+  function syncNeuterTileFromEarClipForm() {
+    const tile = document.getElementById("triageNeuterTile");
+    if (!tile || !__lastAssessmentTriageHasResult) {
+      return;
+    }
+    const ear = getEarClipForPython();
+    const model = !!__lastAssessmentTriageModelSterilized;
+    let disp = model;
+    if (ear === "yes") {
+      disp = true;
+    } else if (ear === "no") {
+      disp = false;
+    }
+    tile.innerHTML =
+      "<strong>" + escapeHtml(t("triageNeuter")) + "</strong><br>" +
+      yesNoChip(disp) + "<br>" +
+      buildNeuterAuxBadge(ear, model);
+    const bw = document.getElementById("sterilizedBannerWrap");
+    if (bw) {
+      if (ear === "yes" || (ear === "unknown" && model)) {
+        bw.style.display = "";
+        bw.innerHTML = escapeHtml(ear === "yes" ? t("earClipBannerUserTipped") : t("bannerSterilizedOk"));
+      } else {
+        bw.style.display = "none";
+        bw.innerHTML = "";
+      }
+    }
   }
 
   function escapeHtml(str) {
@@ -4177,12 +4295,15 @@
         const sl = s.locationSummary || t("locUnknown");
         return "<li>" + escapeHtml(tl) + " — " + escapeHtml(sl) + " · " + escapeHtml(s.healthStatus || "") + "</li>";
       }).join("");
+      const n = dup.clusterSightings.length;
       timeline =
-        "<div style='margin-top:10px;font-weight:600;color:var(--muted);'>" +
-        escapeHtml(t("timelineTitle")) +
-        "</div><ul class='timeline-list'>" +
+        "<details class='dup-timeline-details'>" +
+        "<summary class='dup-timeline-summary'>" +
+        escapeHtml(t("timelineSummary").replace("{n}", String(n))) +
+        "</summary>" +
+        "<ul class='timeline-list dup-timeline-list'>" +
         items +
-        "</ul>";
+        "</ul></details>";
     }
     return (
       "<div class='dup-banner' role='status'><strong>⚠️ " +
@@ -4203,13 +4324,14 @@
     return true;
   }
 
-  function communityStatusLabelZh(code) {
+  function communityStatusLabel(code) {
     const x = String(code || "").toUpperCase();
-    if (x === "HEALTHY") return "健康";
-    if (x === "LIKELY_INTACT") return "疑似未绝育";
-    if (x === "TNR_VERIFIED") return "已绝育";
-    if (x === "INJURED" || x === "NEEDS_HELP" || x === "MONITOR") return "疑似受伤";
-    return x ? x.replace(/_/g, " ") : "未知";
+    const isEn = lang === "en";
+    if (x === "HEALTHY") return isEn ? "Healthy" : "健康";
+    if (x === "LIKELY_INTACT") return isEn ? "Likely unneutered" : "疑似未绝育";
+    if (x === "TNR_VERIFIED") return isEn ? "Sterilized" : "已绝育";
+    if (x === "INJURED" || x === "NEEDS_HELP" || x === "MONITOR") return isEn ? "Possibly injured" : "疑似受伤";
+    return x ? x.replace(/_/g, " ") : (isEn ? "Unknown" : "未知");
   }
 
   function getCommunityCatId(row) {
@@ -4327,9 +4449,9 @@
           "<article class='community-card'" + (catId ? " role='button' tabindex='0' data-community-cat-id='" + escapeHtml(catId) + "'" : "") + ">" +
           thumbBlock +
           "<div><strong>" +
-          escapeHtml(communityStatusLabelZh(row.healthStatus)) +
+          escapeHtml(communityStatusLabel(row.healthStatus)) +
           "</strong> · " +
-          escapeHtml(communityStatusLabelZh(row.neuteredStatus)) +
+          escapeHtml(communityStatusLabel(row.neuteredStatus)) +
           "</div>" +
           "<div class='meta'>" +
           escapeHtml(loc) +
@@ -4984,7 +5106,7 @@
     if (wrap) wrap.innerHTML = "";
     if (status) status.textContent = t("volunteerMyCatLoading");
     if (!uid) {
-      if (status) status.textContent = "请先登录后查看。";
+      if (status) status.textContent = t("volunteerMyCatNeedLogin");
       return;
     }
     try {
@@ -5005,9 +5127,9 @@
       }
       arr = txt ? JSON.parse(txt) : [];
       if (!Array.isArray(arr) || arr.length === 0) {
-        if (status) status.textContent = "还没有上传记录，去上传第一只猫。";
+        if (status) status.textContent = t("volunteerMyCatEmpty");
         if (wrap) {
-          wrap.innerHTML = "<a class='btn' href='/?panel=panel-upload' style='display:inline-block;width:auto;'>去上传第一只猫</a>";
+          wrap.innerHTML = "<a class='btn' href='/?panel=panel-upload' style='display:inline-block;width:auto;'>" + escapeHtml(t("volunteerMyCatUploadCta")) + "</a>";
         }
         return;
       }
@@ -5024,15 +5146,15 @@
           const fallbackEsc = escapeHtml(fallbackImgSrc);
           const image = imgSrc
             ? "<img src='" + escapeHtml(imgSrc) + "' alt='' loading='lazy' data-fallback-src='" + fallbackEsc + "' onerror='volunteerCardImageError(this," + escapeHtml(String(j.catId || 0)) + ")' style='width:100%;max-width:380px;border-radius:12px;display:block;object-fit:cover;'>" +
-              "<div style='display:none;color:var(--muted);font-size:12px;margin-top:8px;'>图片暂时不可见（已尝试主地址和备用地址）。</div>"
-            : "<div style='color:var(--muted);font-size:12px;margin-top:8px;'>暂无可显示图片。</div>";
+              "<div style='display:none;color:var(--muted);font-size:12px;margin-top:8px;'>" + escapeHtml(t("volunteerMyCatImgUnavailable")) + "</div>"
+            : "<div style='color:var(--muted);font-size:12px;margin-top:8px;'>" + escapeHtml(t("volunteerMyCatImgNone")) + "</div>";
           return (
             "<div class='volunteer-record-card' style='margin-bottom:10px;'>" +
               image +
               "<div style='margin-top:10px;font-size:14px;font-weight:700;'>" + name + "</div>" +
               "<div style='margin-top:6px;color:var(--muted);font-size:12px;'>" + escapeHtml(t("volunteerRecordsTime")) + " · " + escapeHtml(when) + "</div>" +
               "<div style='margin-top:6px;color:var(--muted);font-size:12px;'>" + escapeHtml(t("volunteerRecordsAddr")) + " · " + addr + "</div>" +
-              "<div style='margin-top:6px;color:var(--muted);font-size:12px;'>AI健康摘要 · " + aiSummary + "</div>" +
+              "<div style='margin-top:6px;color:var(--muted);font-size:12px;'>" + escapeHtml(t("volunteerMyCatAiSummaryLabel")) + " · " + aiSummary + "</div>" +
               "<div style='margin-top:8px;'><button type='button' class='btn secondary' style='padding:6px 10px;width:auto;' onclick='openCatProfileById(" + escapeHtml(String(j.catId || 0)) + ")'>" + escapeHtml(t("catProfileClaimedOpenBtn")) + "</button></div>" +
             "</div>"
           );
@@ -5181,7 +5303,7 @@
               "<span class='volunteer-chip'>" + ster + "</span>" +
             "</div>" +
             "<div style='margin-top:8px;'>" +
-              "<button type='button' class='btn secondary' style='padding:6px 10px;width:auto;' onclick='volunteerFeedThisCat(" + escapeHtml(String(c.catId || 0)) + ")'>我去喂它</button>" +
+              "<button type='button' class='btn secondary' style='padding:6px 10px;width:auto;' onclick='volunteerFeedThisCat(" + escapeHtml(String(c.catId || 0)) + ")'>" + escapeHtml(t("volunteerFeedThisCatBtn")) + "</button>" +
               "<button type='button' class='btn secondary' style='padding:6px 10px;width:auto;margin-left:6px;' onclick='openCatProfileById(" + escapeHtml(String(c.catId || 0)) + ")'>" + escapeHtml(t("catProfileClaimedOpenBtn")) + "</button>" +
             "</div>" +
           "</div>"
@@ -5605,10 +5727,10 @@
     await volunteerDoCheckIn();
     const res = await postFeedingCheckIn(catId);
     if (res.ok) {
-      if (st) st.textContent = "✓ 打卡成功，+10积分 · 已更新该猫最近喂养时间";
+      if (st) st.textContent = t("volunteerFeedThisCatOk");
       await volunteerLoadRecords();
     } else if (st) {
-      st.textContent = "打卡成功，但更新猫咪喂养时间失败，请稍后重试。";
+      st.textContent = t("volunteerFeedThisCatPartial");
     }
   }
 
@@ -5961,6 +6083,695 @@
     return obj && obj.id != null && typeof obj.status === "string";
   }
 
+  function getEarClipForPython() {
+    const el = document.querySelector('input[name="earClip"]:checked');
+    return el && el.value ? el.value : "unknown";
+  }
+
+  function pickDeepField(data, primary, fallbacks) {
+    const v = data[primary];
+    if (v != null && String(v).trim()) {
+      return String(v);
+    }
+    for (let i = 0; i < fallbacks.length; i++) {
+      const k = fallbacks[i];
+      const x = data[k];
+      if (x != null && String(x).trim()) {
+        return String(x);
+      }
+    }
+    return "";
+  }
+
+  function pythonAgentBaseUrl() {
+    if (typeof window.__CATGUARDIAN_PYTHON_AGENT_BASE__ === "string" && window.__CATGUARDIAN_PYTHON_AGENT_BASE__.trim()) {
+      return window.__CATGUARDIAN_PYTHON_AGENT_BASE__.trim().replace(/\/+$/, "");
+    }
+    try {
+      const ls = localStorage.getItem("catguardian_python_agent_base");
+      if (ls && ls.trim()) {
+        return ls.trim().replace(/\/+$/, "");
+      }
+    } catch (_e) { /* ignore */ }
+    return "http://127.0.0.1:8000";
+  }
+
+  function pythonAgentStreamUrl() {
+    return pythonAgentBaseUrl() + "/api/ai/chat-stream";
+  }
+
+  function readGeoForPythonAgent() {
+    const latEl = document.getElementById("latitude");
+    const lngEl = document.getElementById("longitude");
+    const lat = latEl && latEl.value ? Number(latEl.value) : NaN;
+    const lng = lngEl && lngEl.value ? Number(lngEl.value) : NaN;
+    if (Number.isFinite(lat) && Number.isFinite(lng)) {
+      return { lat: lat, lng: lng };
+    }
+    return { lat: null, lng: null };
+  }
+
+  function buildPythonAgentAssessmentContext() {
+    const payload = __lastAssessmentPayload;
+    if (!payload) {
+      return "";
+    }
+    const en = lang === "en";
+    const parts = [];
+    const labels = payload.modelLabels || {};
+    const actions = payload.actions || {};
+    const sick = labels.sickOrInjuredConfidence;
+    const feed = labels.needsFeedingConfidence;
+    if (sick != null && Number.isFinite(Number(sick))) {
+      parts.push((en ? "Sick/injured confidence: " : "伤病疑似度：") + Math.round(Number(sick) * 100) + "%");
+    }
+    if (feed != null && Number.isFinite(Number(feed))) {
+      parts.push((en ? "Needs feeding confidence: " : "需喂食度：") + Math.round(Number(feed) * 100) + "%");
+    }
+    const ear = getEarClipForPython();
+    if (ear) {
+      parts.push((en ? "Volunteer ear-tip note: " : "志愿者剪耳备注：") + ear);
+    }
+    const rationale = Array.isArray(labels.rationalePhrases) ? labels.rationalePhrases : [];
+    if (rationale.length) {
+      parts.push((en ? "Model rationale: " : "模型依据：") + rationale.slice(0, 4).join("；"));
+    }
+    const lines = Array.isArray(actions.healthGuidanceLines) ? actions.healthGuidanceLines : [];
+    if (lines.length) {
+      parts.push((en ? "Health guidance:" : "健康建议：") + "\n" + lines.slice(0, 6).map(function (x) {
+        return String(x || "").trim();
+      }).filter(Boolean).join("\n"));
+    }
+    const addr = addressInput && addressInput.value ? addressInput.value.trim() : "";
+    if (addr) {
+      parts.push((en ? "Location: " : "位置：") + addr);
+    }
+    return parts.join("\n\n");
+  }
+
+  function collectPythonAgentHistoryFromThread(threadEl) {
+    const thread = threadEl || document.getElementById("pythonAgentChatThread");
+    if (!thread) {
+      return [];
+    }
+    const streamingLabel = t("aiDeepAnalysisStreaming");
+    const turns = [];
+    thread.querySelectorAll(".python-agent-msg").forEach(function (row) {
+      const bubble = row.querySelector(".python-agent-bubble");
+      if (!bubble) {
+        return;
+      }
+      const text = (bubble.innerText || bubble.textContent || "").trim();
+      if (!text || text === streamingLabel) {
+        return;
+      }
+      const role = row.classList.contains("python-agent-msg--user") ? "user" : "assistant";
+      turns.push({ role: role, content: text });
+    });
+    return turns.slice(-10);
+  }
+
+  function buildPythonAgentStreamBody(userMessage, extra) {
+    const geo = readGeoForPythonAgent();
+    const body = {
+      message: userMessage,
+      lat: geo.lat,
+      lng: geo.lng,
+      need_nearby: !!(extra && extra.need_nearby),
+      history: extra && Array.isArray(extra.history) ? extra.history : [],
+      locale: lang,
+      output_language: lang
+    };
+    const ctx = buildPythonAgentAssessmentContext();
+    if (ctx) {
+      body.assessment_context = ctx;
+    }
+    if (extra && extra.iot_snapshot) {
+      body.iot_snapshot = extra.iot_snapshot;
+    }
+    return body;
+  }
+
+  function buildPythonAgentInitialMessage() {
+    const en = lang === "en";
+    return en
+      ? "I just finished a stray-cat photo assessment on this platform. As the rescue station lead, give warm, practical follow-up advice—no form-style “cannot tell” checklists."
+      : "我刚在本平台完成一次流浪猫照片评估。请以救助站站长身份，给出温暖、可执行的后续建议，不要填表式罗列「无法判断」。";
+  }
+
+  async function consumePythonAgentSse(response, handlers) {
+    if (!response.body) {
+      throw new Error("No response body for SSE");
+    }
+    const reader = response.body.getReader();
+    const dec = new TextDecoder();
+    let buf = "";
+    while (true) {
+      const chunk = await reader.read();
+      if (chunk.done) {
+        break;
+      }
+      buf += dec.decode(chunk.value, { stream: true });
+      const blocks = buf.split("\n\n");
+      buf = blocks.pop() || "";
+      for (let i = 0; i < blocks.length; i++) {
+        const block = blocks[i];
+        const dataLine = block.split("\n").find(function (ln) {
+          return ln.indexOf("data: ") === 0;
+        });
+        if (!dataLine) {
+          continue;
+        }
+        let payload;
+        try {
+          payload = JSON.parse(dataLine.slice(6));
+        } catch (_parse) {
+          continue;
+        }
+        if (payload.type === "token" && payload.content && handlers.onToken) {
+          handlers.onToken(String(payload.content));
+        } else if (payload.type === "route" && handlers.onRoute) {
+          handlers.onRoute(payload.route);
+        } else if (payload.type === "cards" && handlers.onCards) {
+          handlers.onCards(payload.items || []);
+        } else if (payload.type === "error") {
+          throw new Error(payload.message || "stream error");
+        }
+      }
+    }
+  }
+
+  async function streamPythonAgentChat(body, bubbleEl) {
+    const res = await fetch(pythonAgentStreamUrl(), {
+      method: "POST",
+      mode: "cors",
+      headers: { "Content-Type": "application/json", Accept: "text/event-stream" },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) {
+      const errText = await res.text();
+      let detail = errText;
+      try {
+        const j = JSON.parse(errText);
+        detail = j.detail != null ? String(j.detail) : errText;
+      } catch (_e) { /* plain */ }
+      throw new Error(detail.slice(0, 500) || "HTTP " + res.status);
+    }
+    let acc = "";
+    await consumePythonAgentSse(res, {
+      onToken: function (piece) {
+        acc += piece;
+        if (bubbleEl) {
+          bubbleEl.innerHTML = escapeHtml(acc).replace(/\n/g, "<br>");
+        }
+      }
+    });
+    return acc;
+  }
+
+  function pythonAgentAppendStreamingBubble(threadEl) {
+    const row = document.createElement("div");
+    row.className = "python-agent-msg python-agent-msg--assistant";
+    const bubble = document.createElement("div");
+    bubble.className = "python-agent-bubble python-agent-bubble--assistant";
+    bubble.textContent = t("aiDeepAnalysisStreaming");
+    row.appendChild(bubble);
+    threadEl.appendChild(row);
+    if (threadEl.id === "pythonAgentChatThreadHome") {
+      const card = document.getElementById("pythonAgentChatCardHome");
+      if (card) {
+        card.classList.add("python-agent-home--has-messages");
+      }
+    }
+    return bubble;
+  }
+
+  /**
+   * Java 评估成功后展示按钮；点击后 POST cat-agent /api/ai/chat-stream（SSE），再以对话 UI 展示。
+   */
+  function pythonAgentPendingSectionHtml() {
+    return (
+      "<section id='pythonAgentPending' class='step-card' style='margin-top:14px'>" +
+      "<div class='step-head'><span class='step-num'>2</span><h3>" + escapeHtml(t("aiDeepAnalysisTitle")) + "</h3></div>" +
+      "<p class='meta-line'>" + escapeHtml(t("pythonLoading")) + "</p>" +
+      "<div class='loading-bar' style='margin-top:10px;max-width:320px'></div>" +
+      "</section>"
+    );
+  }
+
+  function pythonAgentFailCardHtml(msg) {
+    return (
+      "<section class='step-card' style='margin-top:14px;border-color:rgba(248,113,113,0.45)'>" +
+      "<div class='step-head'><span class='step-num'>!</span><h3>" + escapeHtml(t("aiDeepAnalysisTitle")) + "</h3></div>" +
+      "<p class='meta-line' style='color:var(--danger)'>" + escapeHtml(t("pythonErr")) + escapeHtml(msg) + "</p>" +
+      "</section>"
+    );
+  }
+
+  function pythonAgentReplaceActiveWithFail(msg) {
+    const failHtml = pythonAgentFailCardHtml(msg);
+    const pending = document.getElementById("pythonAgentPending");
+    const chatCard = document.getElementById("pythonAgentChatCard");
+    if (pending) {
+      pending.outerHTML = failHtml;
+    } else if (chatCard) {
+      chatCard.outerHTML = failHtml;
+    } else if (resultView) {
+      resultView.insertAdjacentHTML("beforeend", failHtml);
+    }
+  }
+
+  function extractHealthLines(healthRaw) {
+    const lines = String(healthRaw || "")
+      .split(/\r?\n/)
+      .map(function (l) {
+        return l.trim();
+      })
+      .filter(Boolean);
+    let injuryLine = "";
+    let feedLine = "";
+    for (let i = 0; i < lines.length; i++) {
+      const ln = lines[i];
+      if (ln.indexOf("是否受伤：") === 0) {
+        injuryLine = ln;
+      }
+      if (ln.indexOf("是否需要喂养：") === 0) {
+        feedLine = ln;
+      }
+    }
+    return { injuryLine: injuryLine, feedLine: feedLine, full: String(healthRaw || "").trim() };
+  }
+
+  function summarizeHealthForChat(healthRaw) {
+    const hl = extractHealthLines(healthRaw);
+    let injury = "unk";
+    if (hl.injuryLine.indexOf("：是") >= 0 || hl.injuryLine.indexOf(":是") >= 0) {
+      injury = "yes";
+    } else if (hl.injuryLine.indexOf("：否") >= 0 || hl.injuryLine.indexOf(":否") >= 0) {
+      injury = "no";
+    }
+    const en = lang === "en";
+    let core;
+    if (injury === "yes") {
+      core = en
+        ? "From this photo, the model flags a possible injury. Observe in person and contact a vet if things worsen."
+        : "根据当前照片，模型判断可能存在受伤风险，建议结合现场观察，必要时联系兽医。";
+    } else if (injury === "no") {
+      core = en
+        ? "The model does not see obvious injury signs in this photo. Keep monitoring the cat over time."
+        : "从照片看，模型未发现明显外伤迹象，仍建议持续关注状态变化。";
+    } else {
+      core = en
+        ? "The model cannot confidently tell from this photo alone whether the cat is injured—on-site observation helps."
+        : "仅凭照片较难判断是否受伤，建议近距离观察或咨询专业人士。";
+    }
+    const feedNote = en
+      ? " Extra feeding cannot be decided from photos alone—pair with feeding logs and local guidance."
+      : " 是否需要额外喂食无法仅凭照片判定，请结合喂养记录与现场情况判断。";
+    return core + feedNote;
+  }
+
+  function pythonAgentKnowledgeMerged(apiData) {
+    let k = pickDeepField(apiData, "knowledge", ["knowledge_reference"]);
+    if (apiData.knowledge_error) {
+      k = k
+        ? k + "\n\n（" + apiData.knowledge_error + "）"
+        : String(apiData.knowledge_error);
+    }
+    return (k || "").trim();
+  }
+
+  function pythonAgentAppendBubble(threadEl, role, textPlain) {
+    if (!threadEl) {
+      return;
+    }
+    const row = document.createElement("div");
+    row.className = "python-agent-msg python-agent-msg--" + role;
+    const bubble = document.createElement("div");
+    bubble.className = "python-agent-bubble python-agent-bubble--" + role;
+    const s = textPlain != null ? String(textPlain) : "";
+    bubble.innerHTML = s ? escapeHtml(s).replace(/\n/g, "<br>") : escapeHtml(t("aiFieldEmpty"));
+    row.appendChild(bubble);
+    threadEl.appendChild(row);
+    if (threadEl.id === "pythonAgentChatThreadHome") {
+      const card = document.getElementById("pythonAgentChatCardHome");
+      if (card) {
+        card.classList.add("python-agent-home--has-messages");
+      }
+    }
+    try {
+      threadEl.scrollTop = threadEl.scrollHeight;
+    } catch (_e) { /* ignore */ }
+  }
+
+  function pythonAgentAnswerFeeding(apiData) {
+    const health = pickDeepField(apiData, "health", ["analysis_text"]);
+    const hl = extractHealthLines(health);
+    const parts = [t("aiReplyFeedingLead")];
+    if (hl.injuryLine) {
+      parts.push(hl.injuryLine);
+    }
+    if (hl.feedLine) {
+      parts.push(hl.feedLine);
+    }
+    if (!hl.injuryLine && !hl.feedLine && hl.full) {
+      parts.push(hl.full);
+    }
+    if (parts.length < 2) {
+      parts.push(t("aiFieldEmpty"));
+    }
+    return parts.join("\n\n");
+  }
+
+  function pythonAgentNeedVetFromHealth(healthStr) {
+    return String(healthStr || "").indexOf("送去治疗") >= 0;
+  }
+
+  function pythonAgentNeedTnrFromEarClip() {
+    return getEarClipForPython() === "no";
+  }
+
+  function pythonAgentTruncateNearbyOrgsDisplay(text, maxN) {
+    const raw = String(text || "").trim();
+    if (!raw) {
+      return raw;
+    }
+    const n = maxN != null && maxN > 0 ? maxN : 3;
+    const re = /^\s*\d+[\.)、]\s+/gm;
+    const starts = [];
+    let mm;
+    while ((mm = re.exec(raw)) !== null) {
+      starts.push(mm.index);
+    }
+    if (starts.length > n) {
+      const cut = starts[n];
+      return raw.slice(0, cut).trim() + "\n\n" + t("aiNearbyTruncatedNote");
+    }
+    const paras = raw
+      .split(/\n{2,}/)
+      .map(function (p) {
+        return p.trim();
+      })
+      .filter(Boolean);
+    if (paras.length > n) {
+      return paras.slice(0, n).join("\n\n").trim() + "\n\n" + t("aiNearbyTruncatedNote");
+    }
+    return raw;
+  }
+
+  async function pythonAgentFetchNearbyResourcesText(loc, needTnr, needVet) {
+    const geo = readGeoForPythonAgent();
+    const r = await fetch(pythonAgentBaseUrl() + "/v1/resources/nearby", {
+      method: "POST",
+      mode: "cors",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        location: loc,
+        need_tnr: !!needTnr,
+        need_vet: !!needVet,
+        lat: geo.lat,
+        lng: geo.lng
+      })
+    });
+    const txt = await r.text();
+    let data;
+    try {
+      data = JSON.parse(txt);
+    } catch (_e) {
+      throw new Error(txt.slice(0, 400) || "HTTP " + r.status);
+    }
+    if (!r.ok) {
+      const detail = data && data.detail != null ? data.detail : data;
+      const errText = typeof detail === "string" ? detail : JSON.stringify(detail).slice(0, 500);
+      throw new Error(errText || "HTTP " + r.status);
+    }
+    return String((data && data.text) != null ? data.text : "").trim();
+  }
+
+  async function pythonAgentBuildShelterNearbyAnswer(apiData, leadLine) {
+    const loc = (typeof addressInput !== "undefined" && addressInput && addressInput.value
+      ? addressInput.value
+      : ""
+    ).trim();
+    const needTnr = pythonAgentNeedTnrFromEarClip();
+    const healthStr = pickDeepField(apiData, "health", ["analysis_text"]);
+    const needVet = pythonAgentNeedVetFromHealth(healthStr);
+    const lead = leadLine || t("aiReplyShelterLead");
+    if (!loc) {
+      return lead + "\n\n" + t("aiNearbyNoAddress");
+    }
+    if (!needTnr && !needVet) {
+      return lead + "\n\n" + t("aiNearbySkipNoNeed");
+    }
+    try {
+      const body = await pythonAgentFetchNearbyResourcesText(loc, needTnr, needVet);
+      const trimmed = pythonAgentTruncateNearbyOrgsDisplay(body, 3);
+      return lead + "\n\n" + trimmed;
+    } catch (err) {
+      const msg = err && err.message ? err.message : String(err);
+      return lead + "\n\n" + msg;
+    }
+  }
+
+  function pythonAgentEarClipBannerText() {
+    const v = getEarClipForPython();
+    if (v === "yes") {
+      return t("aiEarClipYesBanner");
+    }
+    if (v === "no") {
+      return t("aiEarClipNoBanner");
+    }
+    return t("aiEarClipUnknownBanner");
+  }
+
+  function pythonAgentAnswerDanger(apiData) {
+    const b = pickDeepField(apiData, "behavior", ["behavior_analysis"]).trim();
+    if (b) {
+      return t("aiReplyDangerLead") + "\n\n" + b;
+    }
+    return t("aiReplyDangerLead") + "\n\n" + t("aiBehaviorMissing");
+  }
+
+  function pythonAgentAnswerKnowledge(apiData) {
+    const k = pythonAgentKnowledgeMerged(apiData);
+    return t("aiReplyKnowledgeLead") + "\n\n" + (k || t("aiFieldEmpty"));
+  }
+
+  function resolvePythonAgentQuestionRoute(qRaw) {
+    const q = String(qRaw || "").trim().toLowerCase();
+    if (!q) {
+      return "none";
+    }
+    if (
+      /喂|食|饿|吃粮|饥饿|粮|罐头|喂食/.test(q) ||
+      /\bfeed|feeding|hungry|hunger|meal|food\b/.test(q)
+    ) {
+      return "feed";
+    }
+    if (
+      /绝育|tnr|治疗|医院|诊所|兽医|机构|附近|手术|疫苗|急诊/.test(q) ||
+      /\bneuter|spay|tnr|vet|clinic|hospital|shelter|rescue|treatment|nearby\b/.test(q)
+    ) {
+      return "shelter";
+    }
+    if (
+      /危险|咬人|攻击|怕人|安全|抓人|凶|温顺|行为|应激/.test(q) ||
+      /\bdanger|dangerous|aggressive|bite|attack|scared|fear|behavior|safe\b/.test(q)
+    ) {
+      return "danger";
+    }
+    if (/知识|百科|注意|护理|病|伤/.test(q) || /\bknowledge|care|disease|injury guide\b/.test(q)) {
+      return "knowledge";
+    }
+    return "fallback";
+  }
+
+  function pythonAgentHomeChatCardHtml() {
+    return (
+      "<section id='pythonAgentChatCardHome' class='step-card python-agent-block python-agent-block--home' aria-label='home-chat'>" +
+      "<div class='python-agent-home-shell'>" +
+      "<h3 class='python-agent-home-title'>" + escapeHtml(t("aiDeepAnalysisTitle")) + "</h3>" +
+      "<p id='pythonAgentHomeHint' class='python-agent-home-hint'>" + escapeHtml(t("aiHomeChatHint")) + "</p>" +
+      "<div class='python-agent-chat python-agent-chat--home'>" +
+      "<div id='pythonAgentChatThreadHome' class='python-agent-chat-thread python-agent-chat-thread--home' aria-live='polite'></div>" +
+      "<div class='python-agent-chat-input-row python-agent-chat-input-row--home'>" +
+      "<input type='text' id='pythonAgentChatInputHome' autocomplete='off' placeholder='" + escapeHtml(t("aiChatPlaceholder")) + "' />" +
+      "<button type='button' class='btn' id='pythonAgentChatSendHome'>" + escapeHtml(t("aiChatSend")) + "</button>" +
+      "</div></div></div></section>"
+    );
+  }
+
+  function refreshPythonAgentHomeUi() {
+    const hint = document.getElementById("pythonAgentHomeHint");
+    if (hint) {
+      hint.textContent = t("aiHomeChatHint");
+    }
+    const titleEl = document.querySelector("#pythonAgentChatCardHome .python-agent-home-title");
+    if (titleEl) {
+      titleEl.textContent = t("aiDeepAnalysisTitle");
+    }
+    const inpH = document.getElementById("pythonAgentChatInputHome");
+    if (inpH) {
+      inpH.setAttribute("placeholder", t("aiChatPlaceholder"));
+    }
+    const sendH = document.getElementById("pythonAgentChatSendHome");
+    if (sendH) {
+      sendH.textContent = t("aiChatSend");
+    }
+  }
+
+  function mountPythonAgentHomeChat() {
+    const slot = document.getElementById("pythonAgentChatSlotHome");
+    if (!slot || slot.getAttribute("data-mounted") === "1") {
+      return;
+    }
+    slot.innerHTML = pythonAgentHomeChatCardHtml();
+    slot.setAttribute("data-mounted", "1");
+    const thread = document.getElementById("pythonAgentChatThreadHome");
+    if (thread) {
+      wirePythonAgentChatHandlers(thread, {
+        inputId: "pythonAgentChatInputHome",
+        sendId: "pythonAgentChatSendHome",
+        scrollCardId: "pythonAgentChatCardHome"
+      });
+    }
+    refreshPythonAgentHomeUi();
+  }
+
+  function pythonAgentChatCardHtml() {
+    return (
+      "<section id='pythonAgentChatCard' class='step-card python-agent-block' style='margin-top:14px'>" +
+      "<div class='step-head'><span class='step-num'>2</span><h3>" + escapeHtml(t("aiDeepAnalysisTitle")) + "</h3></div>" +
+      "<div class='python-agent-chat'>" +
+      "<div id='pythonAgentChatThread' class='python-agent-chat-thread' aria-live='polite'></div>" +
+      "<div class='python-agent-chat-input-row'>" +
+      "<input type='text' id='pythonAgentChatInput' autocomplete='off' placeholder='" + escapeHtml(t("aiChatPlaceholder")) + "' />" +
+      "<button type='button' class='btn' id='pythonAgentChatSend'>" + escapeHtml(t("aiChatSend")) + "</button>" +
+      "</div></div></section>"
+    );
+  }
+
+  function removePythonAgentUiBlocks() {
+    ["pythonAgentCta", "pythonAgentPending", "pythonAgentChatCard"].forEach(function (id) {
+      const el = document.getElementById(id);
+      if (el) {
+        el.remove();
+      }
+    });
+  }
+
+  function wirePythonAgentChatHandlers(threadEl, opts) {
+    opts = opts || {};
+    const inputId = opts.inputId || "pythonAgentChatInput";
+    const sendId = opts.sendId || "pythonAgentChatSend";
+    const scrollCardId = opts.scrollCardId || "pythonAgentChatCard";
+
+    const thread = threadEl || document.getElementById("pythonAgentChatThread");
+    if (!thread) {
+      return;
+    }
+    const sendBtn = document.getElementById(sendId);
+
+    async function streamAssistantReply(userLabel, streamBody) {
+      if (userLabel) {
+        pythonAgentAppendBubble(thread, "user", userLabel);
+      }
+      const bubble = pythonAgentAppendStreamingBubble(thread);
+      try {
+        const text = await streamPythonAgentChat(streamBody, bubble);
+        if (!text.trim()) {
+          bubble.innerHTML = escapeHtml(t("aiFieldEmpty"));
+        }
+      } catch (streamErr) {
+        const msg = streamErr && streamErr.message ? streamErr.message : String(streamErr);
+        bubble.innerHTML = escapeHtml(t("pythonErr") + msg);
+      }
+      thread.scrollTop = thread.scrollHeight;
+    }
+
+    async function onSend() {
+      const inpLive = document.getElementById(inputId);
+      const q = (inpLive && inpLive.value ? inpLive.value : "").trim();
+      if (!q) {
+        return;
+      }
+      inpLive.value = "";
+      const route = resolvePythonAgentQuestionRoute(q);
+      const needNearby = route === "shelter";
+      const historyBefore = collectPythonAgentHistoryFromThread(thread);
+      try {
+        await streamAssistantReply(
+          q,
+          buildPythonAgentStreamBody(q, { need_nearby: needNearby, history: historyBefore })
+        );
+      } catch (sErr) {
+        pythonAgentAppendBubble(thread, "assistant", sErr && sErr.message ? sErr.message : String(sErr));
+      }
+    }
+
+    if (sendBtn) {
+      sendBtn.replaceWith(sendBtn.cloneNode(true));
+    }
+    const inp = document.getElementById(inputId);
+    if (inp) {
+      inp.replaceWith(inp.cloneNode(true));
+    }
+    const sendBtn2 = document.getElementById(sendId);
+    const inp2 = document.getElementById(inputId);
+    if (sendBtn2) {
+      sendBtn2.addEventListener("click", function () {
+        void onSend();
+      });
+    }
+    if (inp2) {
+      inp2.addEventListener("keydown", function (ev) {
+        if (ev.key === "Enter") {
+          ev.preventDefault();
+          void onSend();
+        }
+      });
+    }
+
+    try {
+      const blk = scrollCardId ? document.getElementById(scrollCardId) : null;
+      if (blk) {
+        blk.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
+    } catch (_scroll) { /* ignore */ }
+  }
+
+  async function fetchAndAppendPythonAgent(file) {
+    if (!resultView) {
+      return;
+    }
+    removePythonAgentUiBlocks();
+    const slot = document.getElementById("pythonAgentChatSlot");
+    if (slot) {
+      slot.outerHTML = pythonAgentChatCardHtml();
+    } else {
+      resultView.insertAdjacentHTML("beforeend", pythonAgentChatCardHtml());
+    }
+
+    const thread = document.getElementById("pythonAgentChatThread");
+    if (!thread) {
+      pythonAgentReplaceActiveWithFail("chat UI mount failed");
+      return;
+    }
+
+    const bubble = pythonAgentAppendStreamingBubble(thread);
+    const streamBody = buildPythonAgentStreamBody(buildPythonAgentInitialMessage(), {
+      need_nearby: getEarClipForPython() === "no"
+    });
+
+    try {
+      await streamPythonAgentChat(streamBody, bubble);
+      wirePythonAgentChatHandlers(thread);
+    } catch (err) {
+      const msg = err && err.message ? err.message : String(err);
+      pythonAgentReplaceActiveWithFail(msg);
+    }
+  }
+
   function renderResult(data) {
     const isFailed = data.status === "FAILED";
     const labels = data.modelLabels || {};
@@ -6038,6 +6849,17 @@
       || (hpSevere != null && hpSevere >= 70);
     const needFeeding = Number(labels.needsFeedingConfidence || 0) >= THRESHOLD.feeding;
     const likelySterilized = !!labels.likelyAlreadySterilized;
+    __lastAssessmentTriageHasResult = !isFailed;
+    if (!isFailed) {
+      __lastAssessmentTriageModelSterilized = likelySterilized;
+    }
+    const earClipUser = getEarClipForPython();
+    let displaySterilized = likelySterilized;
+    if (earClipUser === "yes") {
+      displaySterilized = true;
+    } else if (earClipUser === "no") {
+      displaySterilized = false;
+    }
     const rationale = Array.isArray(labels.rationalePhrases) ? labels.rationalePhrases : [];
     const rescueNearby = Array.isArray(actions.rescueNearby) ? actions.rescueNearby : [];
     const tnrNearby = Array.isArray(actions.tnrNearby) ? actions.tnrNearby : [];
@@ -6055,15 +6877,26 @@
         "<div class='failure-hint'>" + t("inferenceFailedHint") + "</div></div>")
       : "";
 
-    const sterilizedBadge = likelySterilized
-      ? "<span class='chip ok'>" + t("badgeSterilizedModel") + "</span>"
-      : "<span class='chip no'>" + t("badgeUnknown") + "</span>";
+    const sterilizedBadge = buildNeuterAuxBadge(earClipUser, likelySterilized);
+    let sterilizedBanner = "";
+    if (!isFailed) {
+      if (earClipUser === "yes") {
+        sterilizedBanner =
+          "<div id='sterilizedBannerWrap' class='steri-banner confirmed'>" +
+          escapeHtml(t("earClipBannerUserTipped")) +
+          "</div>";
+      } else if (earClipUser === "unknown" && likelySterilized) {
+        sterilizedBanner =
+          "<div id='sterilizedBannerWrap' class='steri-banner confirmed'>" +
+          escapeHtml(t("bannerSterilizedOk")) +
+          "</div>";
+      } else {
+        sterilizedBanner =
+          "<div id='sterilizedBannerWrap' class='steri-banner confirmed' style='display:none'></div>";
+      }
+    }
 
-    const sterilizedBanner = !isFailed && likelySterilized
-      ? "<div class='steri-banner confirmed'>" + escapeHtml(t("bannerSterilizedOk")) + "</div>"
-      : "";
-
-    const tnrTitle = likelySterilized ? t("tnrListSuspected") : t("tnrList");
+    const tnrTitle = displaySterilized ? t("tnrListSuspected") : t("tnrList");
 
     const feedTriageInner = hasHealthScores
       ? "<span class='chip ok'>" + escapeHtml(t("triageFeedAutoLabel")) + "</span><div class='meta-line' style='font-size:12px;margin-top:6px'>" + escapeHtml(t("triageFeedAutoHint")) + "</div>"
@@ -6079,11 +6912,7 @@
       "<div class='triage'>" +
         "<div class='tile'><strong>" + t("triageSick") + "</strong><br>" + yesNoChip(likelySick) + "</div>" +
         "<div class='tile'><strong>" + t("triageFeed") + "</strong><br>" + feedTriageInner + "</div>" +
-        "<div class='tile'><strong>" + t("triageNeuter") + "</strong><br>" + yesNoChip(likelySterilized) + "<br>" + sterilizedBadge + "</div>" +
-      "</div>" +
-      healthScoresBlock +
-      "<div class='bars'>" +
-        legacyProbBars +
+        "<div class='tile' id='triageNeuterTile'><strong>" + t("triageNeuter") + "</strong><br>" + yesNoChip(displaySterilized) + "<br>" + sterilizedBadge + "</div>" +
       "</div>" +
       earTipMetaBlock +
       sterilizedBanner
@@ -6135,35 +6964,20 @@
       "<div class='meta-line'><span class='pill'>" + escapeHtml(branchLabel(data.branchType)) + "</span> · " +
       t("statusId") + ": " + escapeHtml(data.status) + " · " + t("idLabel") + ": " + escapeHtml(data.id) + "</div>";
 
-    const stepsWrap = isFailed
-      ? (
+    const stepsWrap =
       "<div class='step-flow'>" +
-        "<section class='step-card'><div class='step-head'><span class='step-num'>1</span><h3>" + t("stepStatus") + "</h3></div>" + stepStatusBody + "</section>" +
-      "</div>"
-      )
-      : (
-      "<div class='step-flow'>" +
-        "<section class='step-card'><div class='step-head'><span class='step-num'>1</span><h3>" + t("stepStatus") + "</h3></div>" + stepStatusBody + "</section>" +
-        "<section class='step-card'><div class='step-head'><span class='step-num'>2</span><h3>" + t("stepActions") + "</h3></div>" + stepActionsBody + "</section>" +
-        "<section class='step-card'><div class='step-head'><span class='step-num'>3</span><h3>" + t("stepResources") + "</h3></div>" + stepResourcesBody + "</section>" +
-      "</div>"
-      );
+      "<section class='step-card'><div class='step-head'><span class='step-num'>1</span><h3>" + t("stepStatus") + "</h3></div>" +
+      stepStatusBody +
+      "</section>" +
+      "<div id='pythonAgentChatSlot'></div>" +
+      "</div>";
 
     resultView.innerHTML =
       failureBanner +
-      autoAbnormalHint +
       renderDuplicateBanner(data.assessmentDuplicate) +
       renderTrackingBanner(data.trackingMatch) +
       metaHeader +
       stepsWrap;
-
-    if (!isFailed && severeAbnormal) {
-      setTimeout(() => {
-        alert(lang === "en"
-          ? "Abnormal risk > 70%. Nearby hospitals/TNR resources are shown. Please contact an organization."
-          : "异常风险超过70%，已显示附近医院/TNR机构，请尽快联系机构。");
-      }, 80);
-    }
 
     const copyPostBtn = document.getElementById("copyPostBtn");
     if (copyPostBtn) {
@@ -6423,8 +7237,11 @@
         statusEl.textContent = t("analyzeOk") + response.status;
         statusEl.className = "status success";
         lastAssessmentTracking = parsed.trackingMatch || null;
+        __lastAssessmentPayload = parsed;
+        let renderedOk = false;
         try {
           renderResult(parsed);
+          renderedOk = true;
         } catch (renderErr) {
           statusEl.textContent = (lang === "en" ? "UI render error: " : "界面渲染错误：") + (renderErr && renderErr.message ? renderErr.message : String(renderErr));
           statusEl.className = "status error";
@@ -6442,6 +7259,14 @@
           });
           localStorage.setItem(histKey, JSON.stringify(hist.slice(0, 15)));
         } catch (_ignore) { /* ignore */ }
+        const stOk = String(parsed.status || "").toUpperCase() !== "FAILED";
+        if (renderedOk && stOk) {
+          try {
+            void fetchAndAppendPythonAgent(file);
+          } catch (_py) {
+            console.warn(_py);
+          }
+        }
       }
 
       if (response.ok && isAssessmentPayload(parsed) && autoMatchAfterUploadInput.checked) {
@@ -6475,9 +7300,8 @@
         escapeHtml(t("netErrHint")) +
         "</div></div>";
       if (rawJsonEl) rawJsonEl.textContent = msg + "\n\n" + (err && err.stack ? err.stack : "");
-    } finally {
-      submitBtn.disabled = false;
     }
+    submitBtn.disabled = false;
   });
 
   (function bindImagePreview() {
@@ -6526,8 +7350,8 @@
   initReporterUserId();
   applyStaticI18n();
   applyTheme();
-  initApiBaseBanner();
   initHeroCarousel();
+  mountPythonAgentHomeChat();
   refreshImpactMetricsFromApi();
 
   try {

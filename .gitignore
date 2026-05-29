@@ -34,3 +34,7 @@ temp/
 node_modules/
 dist/
 build/
+
+# ===== Python cat-agent =====
+cat-agent/.venv/
+cat-agent/__pycache__/
