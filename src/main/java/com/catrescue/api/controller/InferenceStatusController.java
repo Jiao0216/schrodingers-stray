@@ -1,6 +1,5 @@
 package com.catrescue.api.controller;
 
-import com.catrescue.api.config.GeminiProperties;
 import com.catrescue.api.config.MultimodalProperties;
 import com.catrescue.api.config.OpenAiProperties;
 import com.catrescue.api.service.client.MultimodalClient;
@@ -23,18 +22,15 @@ public class InferenceStatusController {
     private final MultimodalClient multimodalClient;
     private final MultimodalProperties multimodalProperties;
     private final OpenAiProperties openAiProperties;
-    private final GeminiProperties geminiProperties;
 
     public InferenceStatusController(
             MultimodalClient multimodalClient,
             MultimodalProperties multimodalProperties,
-            OpenAiProperties openAiProperties,
-            GeminiProperties geminiProperties
+            OpenAiProperties openAiProperties
     ) {
         this.multimodalClient = multimodalClient;
         this.multimodalProperties = multimodalProperties;
         this.openAiProperties = openAiProperties;
-        this.geminiProperties = geminiProperties;
     }
 
     @CrossOrigin(origins = "*")
@@ -46,27 +42,18 @@ public class InferenceStatusController {
         m.put("usingStub", stub);
         m.put("multimodalProvider", multimodalProperties.getProvider());
         m.put("openaiModel", openAiProperties.getModel());
-        m.put("openaiBaseUrl", openAiProperties.getBaseUrl());
-        m.put("openaiKeyPresent", present(openAiProperties.getApiKey()));
-        m.put("geminiKeyPresent", present(geminiProperties.getApiKey()));
+        // 不在此接口暴露 baseUrl / 密钥是否配置等细节，避免被前端或第三方爬虫收集。
         if (stub) {
             m.put("hintZh",
-                    "当前未加载 OPENAI_API_KEY（或 provider 与密钥不匹配），正在使用本地 Stub，不是真模型。"
-                            + " 请在运行后端的终端执行: export OPENAI_API_KEY=sk-... 再 mvn spring-boot:run；"
-                            + " 若用 IDE 运行，在 Run Configuration → Environment 里添加 OPENAI_API_KEY。"
+                    "当前为本地 Stub 多模态客户端（未连接云端推理）。请在部署环境按仓库 .env.example / 运维文档配置凭证后重启服务；切勿在日志或截图中粘贴密钥。"
             );
             m.put("hintEn",
-                    "OPENAI_API_KEY is missing or mismatched with MULTIMODAL_PROVIDER — StubMultimodalClient is active (not real OpenAI). "
-                            + "Export OPENAI_API_KEY in the shell before mvn, or set env vars in your IDE run configuration."
+                    "Stub multimodal client is active (no remote LLM). Configure credentials per deployment docs / .env.example, restart the server, and never paste API keys into logs or screenshots."
             );
         } else {
-            m.put("hintZh", "已使用真实 MultimodalClient；若仍失败请查看终端 ERROR 与 OPENAI_BASE_URL 网络是否可达。");
-            m.put("hintEn", "Real multimodal client is wired; if calls fail, check server logs and OPENAI_BASE_URL reachability.");
+            m.put("hintZh", "已接入真实 MultimodalClient；若调用失败请查看服务端日志与网络连通性。");
+            m.put("hintEn", "Real multimodal client is active; if calls fail, check server logs and network reachability.");
         }
         return m;
-    }
-
-    private static boolean present(String k) {
-        return k != null && !k.isBlank();
     }
 }

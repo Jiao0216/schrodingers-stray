@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from typing import Any, AsyncIterator, Literal
 
 from fastapi import FastAPI
@@ -94,24 +95,35 @@ def _sse(payload: dict[str, Any]) -> str:
     return f"data: {json.dumps(payload, ensure_ascii=False)}\n\n"
 
 
+def _redact_secrets(text: str) -> str:
+    """避免异常正文或上游回包把 API Key 泄漏到 SSE / 日志。"""
+    if not text:
+        return text
+    t = text
+    t = re.sub(r"sk-[a-zA-Z0-9_-]{8,}", "sk-***REDACTED***", t, flags=re.I)
+    t = re.sub(r"Bearer\s+[a-zA-Z0-9._-]+", "Bearer ***REDACTED***", t, flags=re.I)
+    return t
+
+
 def _format_stream_error(exc: BaseException) -> str:
     """把 OpenAI 404 等错误展开成可读的排查提示。"""
-    parts = [str(exc).strip() or exc.__class__.__name__]
+    parts = [_redact_secrets(str(exc).strip() or exc.__class__.__name__)]
     body = getattr(exc, "body", None)
     if body is not None:
         try:
-            parts.append(json.dumps(body, ensure_ascii=False) if isinstance(body, dict) else str(body))
+            raw = json.dumps(body, ensure_ascii=False) if isinstance(body, dict) else str(body)
+            parts.append(_redact_secrets(raw))
         except Exception:  # noqa: BLE001
-            parts.append(str(body))
+            parts.append(_redact_secrets(str(body)))
     response = getattr(exc, "response", None)
     if response is not None:
         try:
             parts.append(f"HTTP {getattr(response, 'status_code', '?')}")
         except Exception:  # noqa: BLE001
             pass
-    hint = (
-        "若仍为 404：检查 OPENAI_BASE_URL（代理需可访问 /v1/chat/completions）、"
-        "OPENAI_MODEL 是否在该网关可用；与 Java 联调时可执行 echo $OPENAI_BASE_URL"
+    hint = _redact_secrets(
+        "若仍为 404：检查 LLM 网关 OPENAI_BASE_URL（需可访问 /v1/chat/completions）、"
+        "OPENAI_MODEL 是否可用；勿在日志或截图中粘贴密钥。"
     )
     return " | ".join(p for p in parts if p) + " — " + hint
 
@@ -308,10 +320,10 @@ async def health() -> dict[str, Any]:
         "status": "ok" if key_ok else "degraded",
         "agent": "openai-langgraph",
         "model": model,
-        "openaiKeyConfigured": key_ok,
+        "llmReady": key_ok,
         "hint": None
         if key_ok
-        else "Set a real OPENAI_API_KEY in .env.local, then source it before uvicorn.",
+        else "Configure the LLM credential in your environment (see .env.example), then restart uvicorn. Never expose API keys in logs or screenshots.",
     }
 
 

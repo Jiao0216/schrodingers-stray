@@ -18,7 +18,7 @@ export MYSQL_DATABASE=cat_rescue
 export MYSQL_USER=root
 export MYSQL_PASSWORD=your_password
 
-export OPENAI_API_KEY=your_sk_key
+export OPENAI_API_KEY='<your-secret>'
 export TRACKING_MOCK_FEATURE_EXTRACTION=true
 
 # HTTP 端口默认 8090（与 HttpPortConfiguration 一致）；不要用 SERVER_PORT，改用 CAT_RESCUE_HTTP_PORT

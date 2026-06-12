@@ -2307,7 +2307,7 @@
       analyzeOk: "分析完成: HTTP ",
       analyzeInferFailed: "推理失败（后端已调用模型，见下方原因）",
       inferenceFailedTitle: "模型推理失败",
-      inferenceFailedHint: "常见原因：未配置或错误的 OPENAI_API_KEY、API 配额/限流、网络超时、图片格式不被接受。若响应体含 failureReason 字段可从中查看原因。",
+      inferenceFailedHint: "常见原因：未正确配置模型凭证、API 配额/限流、网络超时、图片格式不被接受。若响应体含 failureReason 可从中查看原因；切勿在界面或日志中粘贴密钥。",
       netErr: "网络异常：",
       netEmpty: "无法连接到 API（请求未到达服务器或被浏览器拦截）。",
       netErrHint:
@@ -2690,7 +2690,7 @@
       analyzeOk: "Done: HTTP ",
       analyzeInferFailed: "Inference failed (model was called — see details below)",
       inferenceFailedTitle: "Model inference failed",
-      inferenceFailedHint: "Typical causes: missing/invalid OPENAI_API_KEY, quota/rate limits, timeout, or unsupported image. Check failureReason in the response body if present.",
+      inferenceFailedHint: "Typical causes: missing/invalid LLM credentials, quota/rate limits, timeout, or unsupported image. Check failureReason in the response if present; never paste API keys into the UI or logs.",
       netErr: "Network error: ",
       netEmpty: "Could not reach the API (request blocked or server down).",
       netErrHint:

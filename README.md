@@ -38,7 +38,7 @@ This project supports:
 Optional model/config variables:
 
 ```bash
-export OPENAI_API_KEY=your_sk_key
+export OPENAI_API_KEY='<your-secret>'
 export TRACKING_MOCK_FEATURE_EXTRACTION=true
 ```
 

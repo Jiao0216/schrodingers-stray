@@ -38,7 +38,7 @@ English: [README.md](README.md) | 中文
 模型与调试开关（可选）：
 
 ```bash
-export OPENAI_API_KEY=你的_sk_密钥
+export OPENAI_API_KEY='<your-secret>'
 export TRACKING_MOCK_FEATURE_EXTRACTION=true
 ```
 

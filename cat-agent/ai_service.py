@@ -43,19 +43,18 @@ def _openai_api_key() -> str:
     key = (os.getenv("OPENAI_API_KEY") or os.getenv("CAT_RESCUE_OPENAI_API_KEY") or "").strip()
     if not key:
         raise RuntimeError(
-            "Missing OPENAI_API_KEY (or CAT_RESCUE_OPENAI_API_KEY). "
-            "Export the same key you use for the Java backend."
+            "Missing LLM API credential (set OPENAI_API_KEY or CAT_RESCUE_OPENAI_API_KEY). "
+            "Use the same value as the Java backend; do not commit secrets."
         )
     lower = key.lower()
     if any(m in lower for m in _PLACEHOLDER_KEY_MARKERS) or key.startswith("replace_"):
         raise RuntimeError(
-            "OPENAI_API_KEY looks like a placeholder from .env.example "
-            "(e.g. replace_with_openai_key). Edit .env.local with a real sk-... key, "
-            "then: set -a && source .env.local && set +a && restart uvicorn."
+            "LLM API credential looks like a placeholder from .env.example. "
+            "Edit .env.local with a real key, then: set -a && source .env.local && set +a && restart uvicorn."
         )
     if not key.startswith("sk-") and len(key) < 20:
         raise RuntimeError(
-            "OPENAI_API_KEY does not look valid (expected sk-... from OpenAI). "
+            "LLM API credential does not look valid for this OpenAI-compatible client. "
             "Check .env.local and restart uvicorn after sourcing it."
         )
     return key

@@ -5,7 +5,7 @@
 #   1) Copy .env.example -> .env.local , fill MYSQL_PASSWORD and OPENAI_API_KEY , then:
 #        ./scripts/start-mysql-openai.sh
 #   2) Or export vars yourself, then run this script:
-#        export MYSQL_PASSWORD='...' OPENAI_API_KEY='sk-...'
+#        export MYSQL_PASSWORD='...' OPENAI_API_KEY='<your-secret>'
 #        ./scripts/start-mysql-openai.sh
 #
 # Ensure MySQL is running and database exists (ddl-auto=update will create tables).
@@ -39,7 +39,7 @@ fi
 
 if [[ -z "${OPENAI_API_KEY:-}" ]] && [[ -z "${CAT_RESCUE_OPENAI_API_KEY:-}" ]]; then
   echo "[start-mysql-openai] OPENAI_API_KEY (or CAT_RESCUE_OPENAI_API_KEY) is empty. Real vision calls will use Stub."
-  echo "[start-mysql-openai] Set OPENAI_API_KEY in ${ENV_FILE} or export OPENAI_API_KEY='sk-...'"
+  echo "[start-mysql-openai] Set OPENAI_API_KEY in ${ENV_FILE} or export OPENAI_API_KEY='<your-secret>'"
   exit 1
 fi
 
