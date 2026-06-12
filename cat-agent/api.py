@@ -1,7 +1,8 @@
 """
 FastAPI 入口：站长流式对话 + 与现有前端兼容的占位接口。
 
-启动：cd cat-agent && uvicorn api:app --host 127.0.0.1 --port 8000
+启动：在仓库根执行 ./scripts/dev-up.sh（会创建 cat-agent/.venv 并 pip install）。
+手动：cd cat-agent && .venv/bin/python -m uvicorn api:app --host 127.0.0.1 --port 8000
 """
 
 from __future__ import annotations
@@ -66,6 +67,18 @@ class ChatStreamRequest(BaseModel):
         None,
         description="界面语言，与 output_language 对齐时传 zh / en",
     )
+    cat_id: int | None = Field(
+        None,
+        description="当前聚焦的猫咪档案 ID（热力图/评估匹配），供其他节点使用",
+    )
+    assessment_id: str | None = Field(
+        None,
+        description="当前聚焦的评估 UUID（与页面最近一次评估一致），供档案详情类查询",
+    )
+    volunteer_user_id: int | None = Field(
+        None,
+        description="志愿者数字 ID（喂养打卡 POST /volunteers/me/feeding-checkins 使用）",
+    )
 
 
 class NearbyResourcesRequest(BaseModel):
@@ -121,6 +134,21 @@ def _chunk_content(chunk: Any) -> str:
     return str(content)
 
 
+def _yield_sse_token_chunks(text: str, step: int = 32):
+    """将完整回复拆成多帧 SSE token（与 web_search 补发逻辑一致）。"""
+    if not text:
+        return
+    for i in range(0, len(text), step):
+        yield _sse({"type": "token", "content": text[i : i + step]})
+
+
+# LangGraph astream_events(v2) 对图内节点往往不冒泡 on_chat_model_stream，只在 on_chain_end 给出 final_text
+#（例如 db_lookup_reply 早退路径不调 LLM）。此处在链结束且本轮未流式输出时补发 token，避免前端 acc 为空显示「暂无内容」。
+_FINAL_TEXT_CHAIN_NODES = frozenset(
+    {"db_lookup_reply", "education_reply", "shelter_reply", "iot_audit"},
+)
+
+
 async def _stream_graph_events(
     state: dict[str, Any],
 ) -> AsyncIterator[str]:
@@ -137,6 +165,7 @@ async def _stream_graph_events(
     route_emitted = False
     cards_emitted = False
     final_cards: list[dict[str, Any]] = []
+    chat_model_stream_had_tokens = False
 
     try:
         async for event in station_master_graph.astream_events(
@@ -163,20 +192,27 @@ async def _stream_graph_events(
                     cards_emitted = True
                     yield _sse({"type": "cards", "items": cards})
 
-            # 联网医院搜索节点不经过 LangChain stream，在此补发 token 供前端打字机展示
-            if kind == "on_chain_end" and name == "hospital_search":
+            # 联网搜索节点不经过 LangChain stream，在此补发 token 供前端打字机展示
+            if kind == "on_chain_end" and name == "web_search":
                 output = (event.get("data") or {}).get("output") or {}
                 text = (output.get("final_text") or "").strip()
-                if text:
-                    step = 32
-                    for i in range(0, len(text), step):
-                        yield _sse({"type": "token", "content": text[i : i + step]})
+                for frame in _yield_sse_token_chunks(text):
+                    yield frame
 
-            # Gemini 流式 token
+            # 图内回复节点：若 v2 未冒泡 on_chat_model_stream，用链结束时的 final_text 补发（含 db_lookup 固定句 / 缺参提示）
+            if kind == "on_chain_end" and name in _FINAL_TEXT_CHAIN_NODES:
+                output = (event.get("data") or {}).get("output") or {}
+                text = (output.get("final_text") or "").strip()
+                if text and not chat_model_stream_had_tokens:
+                    for frame in _yield_sse_token_chunks(text):
+                        yield frame
+
+            # LangChain / OpenAI 流式 token（若环境有冒泡则优先走增量；上面 on_chain_end 会因 flag 跳过重复）
             if kind == "on_chat_model_stream":
                 chunk = (event.get("data") or {}).get("chunk")
                 text = _chunk_content(chunk)
                 if text:
+                    chat_model_stream_had_tokens = True
                     yield _sse({"type": "token", "content": text})
 
         # 图跑完后补发卡片（若流式阶段未单独推送）
@@ -205,10 +241,13 @@ async def chat_stream(body: ChatStreamRequest) -> StreamingResponse:
         body.message.strip(),
         lat=body.lat,
         lng=body.lng,
+        volunteer_user_id=body.volunteer_user_id,
         iot_snapshot=body.iot_snapshot,
         assessment_context=(body.assessment_context or "").strip() or None,
         chat_history=history,
         output_language=ol,
+        focus_cat_id=body.cat_id,
+        focus_assessment_id=body.assessment_id,
     )
     if body.need_nearby and state.get("route") is None:
         # 覆盖路由：按钮「附近绝育」

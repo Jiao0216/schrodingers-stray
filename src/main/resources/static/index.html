@@ -562,6 +562,28 @@
         grid-template-columns: minmax(300px, 400px) minmax(0, 1fr);
         gap: 24px;
       }
+      .demo-layout--chat-primary {
+        grid-template-columns: minmax(280px, 380px) minmax(0, 1.15fr);
+      }
+    }
+
+    .step-flow--agent-only .python-agent-chat-thread {
+      max-height: min(56vh, 520px);
+    }
+    .python-agent-bubble--with-image {
+      padding: 8px 10px;
+    }
+    .python-agent-upload-thumb {
+      max-width: min(240px, 82vw);
+      max-height: 220px;
+      border-radius: 12px;
+      display: block;
+      object-fit: cover;
+    }
+    .python-agent-upload-caption {
+      margin-top: 6px;
+      font-size: 12px;
+      color: var(--muted);
     }
 
     .step-flow {
@@ -659,17 +681,6 @@
       background: rgba(251, 191, 36, 0.2);
       border-color: rgba(245, 158, 11, 0.42);
     }
-    .python-agent-quick-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 4px;
-      margin-bottom: 10px;
-    }
-    .python-agent-quick-row .btn.secondary {
-      flex: 1 1 auto;
-      min-width: min(100%, 148px);
-    }
     .python-agent-chat-input-row {
       display: flex;
       flex-wrap: wrap;
@@ -684,69 +695,41 @@
       flex: 0 0 auto;
     }
 
-    /* 首页 Hero 常驻站长对话（无消息时仅引导语 + 居中输入） */
-    .python-agent-slot-home {
-      width: 100%;
-      max-width: 720px;
-      margin: 28px auto 0;
-      padding: 0 12px;
-    }
-    .python-agent-block--home {
-      margin-top: 0 !important;
+    /* 分析结果下方：站长对话（沿用原 Hero 机器人卡片版式） */
+    #pythonAgentChatCard.python-agent-block--home {
+      margin-top: 14px;
       border-radius: 18px;
       background: rgba(255, 251, 235, 0.72);
       border: 1px solid rgba(120, 78, 50, 0.2);
       box-shadow: 0 12px 40px rgba(15, 23, 42, 0.08);
     }
-    body.theme-tech .python-agent-block--home {
+    body.theme-tech #pythonAgentChatCard.python-agent-block--home {
       background: rgba(15, 23, 42, 0.55);
       border-color: rgba(56, 189, 248, 0.22);
     }
-    .python-agent-home-shell {
+    #pythonAgentChatCard .python-agent-home-shell {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 16px;
-      padding: 20px 16px 22px;
+      gap: 10px;
+      padding: 14px 14px 18px;
     }
-    .python-agent-home-title {
-      margin: 0;
-      font-size: 1.05rem;
-      font-weight: 700;
-      text-align: center;
-      color: var(--text);
-    }
-    .python-agent-home-hint {
-      margin: 0;
-      text-align: center;
-      font-size: 0.95rem;
-      line-height: 1.55;
-      color: var(--text);
-      opacity: 0.88;
-      max-width: 34rem;
-    }
-    .python-agent-block--home.python-agent-home--has-messages .python-agent-home-hint {
-      display: none;
-    }
-    .python-agent-chat--home {
+    #pythonAgentChatCard .python-agent-chat--home {
       width: 100%;
       max-width: 640px;
     }
-    .python-agent-block--home .python-agent-chat-thread--home {
+    #pythonAgentChatCard .python-agent-chat-thread--home {
       max-height: min(46vh, 340px);
       width: 100%;
       margin-bottom: 4px;
     }
-    .python-agent-block--home:not(.python-agent-home--has-messages) .python-agent-chat-thread--home {
-      display: none;
-    }
-    .python-agent-chat-input-row--home {
+    #pythonAgentChatCard .python-agent-chat-input-row--home {
       width: 100%;
       max-width: 640px;
       margin: 0 auto;
       justify-content: center;
     }
-    .python-agent-chat-input-row--home input[type="text"] {
+    #pythonAgentChatCard .python-agent-chat-input-row--home input[type="text"] {
       flex: 1 1 280px;
       max-width: 100%;
       min-height: 44px;
@@ -979,6 +962,7 @@
     }
     .timeline-list li { margin-bottom: 8px; }
 
+    .dup-banner--timeline-only .dup-timeline-details { margin-top: 4px; }
     .dup-timeline-details {
       margin-top: 10px;
       border-radius: 10px;
@@ -1432,6 +1416,9 @@
     }
     .center-title { font-weight: 700; margin: 0 0 4px; font-size: 14px; color: #f1f5f9; }
     body:not(.theme-tech) .center-title { color: var(--text); }
+    .center-addr-line, .center-phone-line { margin-top: 6px; font-size: 13px; line-height: 1.45; }
+    .center-maps-link, .center-tel-link { color: var(--cyan); text-decoration: none; }
+    .center-maps-link:hover, .center-tel-link:hover { text-decoration: underline; }
     .center-meta { font-size: 12px; color: var(--muted); margin: 4px 0; }
     .center-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; font-size: 12px; }
     .center-actions a { color: var(--cyan); text-decoration: none; }
@@ -1810,7 +1797,6 @@
         <a class="btn hero-cta-secondary" href="mailto:zhang.jiao2@northeastern.edu?subject=%E6%9C%BA%E6%9E%84%E5%90%88%E4%BD%9C%E7%94%B3%E8%AF%B7" data-i18n="heroBtnOrg">申请机构合作</a>
         <a class="hero-cta-text" href="mailto:zhang.jiao2@northeastern.edu?subject=%E6%8A%95%E8%B5%84%E4%BA%BA%E5%90%88%E4%BD%9C" data-i18n="heroBtnInvestor">投资人联系</a>
       </div>
-      <div id="pythonAgentChatSlotHome" class="python-agent-slot-home" aria-label="Station chat"></div>
     </div>
   </section>
 
@@ -1825,7 +1811,7 @@
   </nav>
 
   <div id="panel-upload" class="main-panel">
-  <div class="demo-layout">
+  <div class="demo-layout demo-layout--chat-primary">
     <section class="glass panel-upload">
       <form id="assessmentForm">
         <input type="hidden" id="endpoint" value="/api/v1/assessments">
@@ -2333,6 +2319,9 @@
       copyOkFb: "文案已复制，正在打开 Facebook。",
       copyOkClip: "已复制到剪贴板。",
       copyFailClip: "复制失败，请手动复制。",
+      heicConverting: "正在将 HEIC/HEIF 转为 JPEG（OpenAI 仅支持 png/jpeg/gif/webp）…",
+      heicConvertFail: "HEIC 转换失败：",
+      heicScriptFail: "无法加载 HEIC 转换脚本（请检查网络或改用 JPG/PNG 上传）。",
       branchRESCUE: "疑似伤病（救助优先）",
       branchFEED: "建议社区喂养协作",
       branchTNR: "建议绝育 / TNR",
@@ -2573,7 +2562,7 @@
       communityFilterHealthy: "健康",
       dupBannerTitle: "疑似同一只猫",
       dupBannerLine: "我们曾在 {date} 于 {loc} 见过极为相似的猫咪（相似度约 {pct}%）。",
-      timelineSummary: "出现记录时间线（{n} 条，点击展开）",
+      timelineSummary: "出现记录时间线（共 {n} 条）",
       locUnknown: "位置未记录",
       earClipLabel: "剪耳（TNR 标记）",
       earClipYes: "已剪耳",
@@ -2593,7 +2582,8 @@
       aiQuickDanger: "这只猫危险吗？",
       aiChatPlaceholder: "输入你的问题…",
       aiChatSend: "发送",
-      aiHomeChatHint: "直接向救助站站长提问：喂食、TNR、附近医院或收容所等。无需先上传照片；上传分析后仍可在下方继续追问。",
+      aiPythonAutoFirstMessage: "请根据这只猫的分析结果，给我一个总结和建议",
+      aiUserUploadedPhoto: "📷 已上传照片",
       aiFieldEmpty: "（该字段暂无内容）",
       aiNoMatch: "暂时无法从本次分析结果里匹配到对应说明，可以试试下方的快捷问题。",
       aiBehaviorMissing: "本次未返回行为解读文本；请确认 Agent 已开启行为分析（include_behavior）或稍后再试。",
@@ -2712,6 +2702,9 @@
       copyOkFb: "Copied. Opening Facebook…",
       copyOkClip: "Copied to clipboard.",
       copyFailClip: "Copy failed.",
+      heicConverting: "Converting HEIC/HEIF to JPEG (OpenAI accepts png/jpeg/gif/webp only)…",
+      heicConvertFail: "HEIC conversion failed: ",
+      heicScriptFail: "Could not load HEIC converter (check network or upload JPG/PNG).",
       branchRESCUE: "Rescue priority (illness/injury)",
       branchFEED: "Feeding outreach",
       branchTNR: "Spay-neuter / TNR",
@@ -2952,7 +2945,7 @@
       communityFilterHealthy: "Healthy",
       dupBannerTitle: "Same cat likely",
       dupBannerLine: "We've seen a very similar cat on {date} near {loc} (similarity ~{pct}%).",
-      timelineSummary: "Sighting timeline ({n} records — tap to expand)",
+      timelineSummary: "Sighting timeline ({n} records)",
       locUnknown: "Location not recorded",
       earClipLabel: "Ear tip (TNR marker)",
       earClipYes: "Tipped",
@@ -2972,7 +2965,8 @@
       aiQuickDanger: "Is this cat dangerous?",
       aiChatPlaceholder: "Type a question…",
       aiChatSend: "Send",
-      aiHomeChatHint: "Ask the station lead about feeding, TNR, nearby clinics or shelters—no photo upload required. After you run an assessment, you can keep chatting below.",
+      aiPythonAutoFirstMessage: "Please summarize the analysis and give recommendations",
+      aiUserUploadedPhoto: "📷 Photo uploaded",
       aiFieldEmpty: "(No text in this field.)",
       aiNoMatch: "I couldn’t map that to a field in this run—try a quick button below.",
       aiBehaviorMissing: "No behavior text was returned; ensure the agent enables behavior analysis (include_behavior) or try again later.",
@@ -3151,7 +3145,7 @@
     refreshTrackingUserNote();
     renderImpactDashFromCache();
     refreshImpactDashFootnote();
-    refreshPythonAgentHomeUi();
+    refreshPythonAgentResultChatUi();
   }
 
   function applyTheme() {
@@ -4281,36 +4275,26 @@
 
   function renderDuplicateBanner(dup) {
     if (!dup || dup.matchedAssessmentId == null) return "";
-    const pct = Math.round((Number(dup.similarityScore) || 0) * 100);
-    const when = dup.matchedCreatedAt ? formatIsoLocal(dup.matchedCreatedAt) : "—";
-    const loc = dup.matchedLocationSummary || t("locUnknown");
-    const line = t("dupBannerLine")
-      .replace("{date}", when)
-      .replace("{loc}", loc)
-      .replace("{pct}", String(pct));
-    let timeline = "";
-    if (Array.isArray(dup.clusterSightings) && dup.clusterSightings.length > 0) {
-      const items = dup.clusterSightings.map((s) => {
-        const tl = s.createdAt ? formatIsoLocal(s.createdAt) : "—";
-        const sl = s.locationSummary || t("locUnknown");
-        return "<li>" + escapeHtml(tl) + " — " + escapeHtml(sl) + " · " + escapeHtml(s.healthStatus || "") + "</li>";
-      }).join("");
-      const n = dup.clusterSightings.length;
-      timeline =
-        "<details class='dup-timeline-details'>" +
-        "<summary class='dup-timeline-summary'>" +
-        escapeHtml(t("timelineSummary").replace("{n}", String(n))) +
-        "</summary>" +
-        "<ul class='timeline-list dup-timeline-list'>" +
-        items +
-        "</ul></details>";
+    if (!Array.isArray(dup.clusterSightings) || dup.clusterSightings.length === 0) {
+      return "";
     }
+    const items = dup.clusterSightings.map((s) => {
+      const tl = s.createdAt ? formatIsoLocal(s.createdAt) : "—";
+      const sl = s.locationSummary || t("locUnknown");
+      return "<li>" + escapeHtml(tl) + " — " + escapeHtml(sl) + " · " + escapeHtml(s.healthStatus || "") + "</li>";
+    }).join("");
+    const n = dup.clusterSightings.length;
+    const timeline =
+      "<details class='dup-timeline-details' open>" +
+      "<summary class='dup-timeline-summary'>" +
+      escapeHtml(t("timelineSummary").replace("{n}", String(n))) +
+      "</summary>" +
+      "<ul class='timeline-list dup-timeline-list'>" +
+      items +
+      "</ul></details>";
     return (
-      "<div class='dup-banner' role='status'><strong>⚠️ " +
-      escapeHtml(t("dupBannerTitle")) +
-      "</strong><div>" +
-      escapeHtml(line) +
-      "</div>" +
+      "<div class='dup-banner dup-banner--timeline-only' role='status'>" +
+      "<strong>⚠️ " + escapeHtml(t("dupBannerTitle")) + "</strong>" +
       timeline +
       "</div>"
     );
@@ -5823,6 +5807,52 @@
     };
   }
 
+  /** OpenAI Vision / 同猫特征提取仅接受 jpeg/png/gif/webp；iPhone HEIC 需先转 JPEG。 */
+  var __heic2anyScriptPromise = null;
+  function isHeicLikeImageFile(file) {
+    if (!file) return false;
+    var t = (file.type || "").toLowerCase();
+    if (t === "image/heic" || t === "image/heif") return true;
+    return /\.(heic|heif)$/i.test(file.name || "");
+  }
+  function isOpenAiVisionImageMime(file) {
+    var t = (file.type || "").toLowerCase();
+    return t === "image/jpeg" || t === "image/png" || t === "image/gif" || t === "image/webp";
+  }
+  function loadHeic2AnyScript() {
+    if (typeof window.heic2any === "function") {
+      return Promise.resolve();
+    }
+    if (__heic2anyScriptPromise) return __heic2anyScriptPromise;
+    __heic2anyScriptPromise = new Promise(function (resolve, reject) {
+      var s = document.createElement("script");
+      s.src = "https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js";
+      s.async = true;
+      s.onload = function () { resolve(); };
+      s.onerror = function () { reject(new Error("heic2any script")); };
+      document.head.appendChild(s);
+    });
+    return __heic2anyScriptPromise;
+  }
+  /**
+   * 将 HEIC/HEIF 转为 JPEG File；已是 OpenAI 支持的类型则原样返回。
+   * 依赖 CDN 上的 heic2any（需联网一次）。
+   */
+  async function ensureUploadableImageFile(file) {
+    if (!file) return file;
+    if (isOpenAiVisionImageMime(file)) return file;
+    if (!isHeicLikeImageFile(file)) return file;
+    await loadHeic2AnyScript();
+    if (typeof window.heic2any !== "function") {
+      throw new Error("heic2any");
+    }
+    var conv = await window.heic2any({ blob: file, toType: "image/jpeg", quality: 0.92 });
+    var blob = Array.isArray(conv) ? conv[0] : conv;
+    var base = String(file.name || "photo").replace(/\.(heic|heif)$/i, "");
+    if (!base.trim()) base = "photo";
+    return new File([blob], base + ".jpg", { type: "image/jpeg", lastModified: Date.now() });
+  }
+
   async function copyText(text, okMsg, failMsg) {
     try {
       await navigator.clipboard.writeText(text || "");
@@ -5978,9 +6008,26 @@
     statusEl.textContent = t("sameCatSearching");
     statusEl.className = "status";
 
+    var uploadFile;
+    try {
+      if (isHeicLikeImageFile(file)) {
+        statusEl.textContent = t("heicConverting");
+      }
+      uploadFile = await ensureUploadableImageFile(file);
+    } catch (convErr) {
+      var cmsg = convErr && convErr.message ? String(convErr.message) : String(convErr);
+      if (cmsg.indexOf("heic2any script") >= 0) {
+        statusEl.textContent = t("heicScriptFail");
+      } else {
+        statusEl.textContent = t("heicConvertFail") + cmsg;
+      }
+      statusEl.className = "status error";
+      return null;
+    }
+
     const formData = new FormData();
     formData.append("reporterUserId", String(reporterUserId));
-    formData.append("image", file);
+    formData.append("image", uploadFile);
     formData.append("latitude", String(coords.lat));
     formData.append("longitude", String(coords.lng));
     if (addressInput.value) {
@@ -6043,13 +6090,52 @@
       const detailHref = buildDirectoryDetailUrl(kind, x.id || "", refLat, refLng);
       const phone = (x.phone || "").trim();
       const email = (x.email || "").trim();
-      const contactHref = phone ? ("tel:" + phone) : (email ? ("mailto:" + email) : "");
+      const street = (x.streetAddress || "").trim();
+      const city = (x.city || "").trim();
+      const addrLine = [street, city].filter(Boolean).join(" · ");
+      const addrLabel = addrLine || (lang === "en" ? "Open in maps" : "在地图中打开");
+      const latN = Number(x.latitude);
+      const lngN = Number(x.longitude);
+      let mapsHref = "";
+      const nav = x.navigationUrl != null ? String(x.navigationUrl).trim() : "";
+      if (nav) {
+        mapsHref = nav;
+      } else if (Number.isFinite(latN) && Number.isFinite(lngN)) {
+        mapsHref = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(latN + "," + lngN);
+      } else if (addrLine) {
+        mapsHref = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(addrLine);
+      } else {
+        mapsHref = detailHref;
+      }
+      const telHref = phone ? ("tel:" + phone.replace(/\s+/g, "")) : "";
+      const mailHref = email ? ("mailto:" + email) : "";
+      const contactHref = telHref || mailHref;
+      const hasMapPoint = Number.isFinite(latN) && Number.isFinite(lngN);
+      const addrBlock = (addrLine || hasMapPoint)
+        ? (
+          "<div class='center-addr-line'>" +
+            "<a class='center-maps-link' target='_blank' rel='noopener noreferrer' href='" + escapeHtml(mapsHref) + "'>" +
+            "<strong>" + escapeHtml(addrLabel) + "</strong></a>" +
+          "</div>"
+          )
+        : "";
+      const phoneBlock = phone
+        ? (
+          "<div class='center-phone-line'>" +
+            "<a class='center-tel-link' href='" + escapeHtml(telHref) + "'><strong>" + escapeHtml(phone) + "</strong></a>" +
+          "</div>"
+          )
+        : "";
       return (
         "<div class='center-item'>" +
           "<div class='center-title'>" + escapeHtml(x.name) + " " + distance + "</div>" +
+          addrBlock +
+          phoneBlock +
           "<div class='center-actions'>" +
             "<a class='btn secondary' href='" + escapeHtml(detailHref) + "'>" + escapeHtml(t("viewDetail")) + "</a>" +
-            (contactHref ? "<a class='btn secondary' href='" + escapeHtml(contactHref) + "' style='margin-left:6px;'>" + escapeHtml(lang === "en" ? "Contact Org" : "联系机构") + "</a>" : "") +
+            (contactHref && !phone
+              ? "<a class='btn secondary' href='" + escapeHtml(contactHref) + "' style='margin-left:6px;'>" + escapeHtml(lang === "en" ? "Contact Org" : "联系机构") + "</a>"
+              : "") +
           "</div>" +
         "</div>"
       );
@@ -6057,28 +6143,6 @@
     return "<div><strong>" + escapeHtml(title) + "</strong><div class='center-list'>" + html + "</div></div>";
   }
 
-  function renderTrackingBanner(tm) {
-    if (!tm || tm.sightingId == null) {
-      return "";
-    }
-    const cid = tm.catId != null ? String(tm.catId) : (tm.suggestedCatId != null ? String(tm.suggestedCatId) + "?" : "—");
-    const near = tm.otherCatsNearbyApprox != null ? tm.otherCatsNearbyApprox : 0;
-    const st = String(tm.dedupStatus || "");
-    let msg;
-    if (st === "PENDING_REVIEW") {
-      const scorePct = tm.similarityScore != null
-        ? Math.round(Number(tm.similarityScore) * 100) + "%"
-        : "—";
-      msg = t("trackingDupPending").replace("{score}", scorePct).replace("{id}", cid);
-    } else if (st === "NEW_CONFIRMED") {
-      msg = t("trackingNewCat").replace("{id}", cid).replace("{near}", String(near));
-    } else {
-      msg = t("trackingRecorded").replace("{id}", cid).replace("{near}", String(near));
-    }
-    return "<div class='tracking-banner'><strong>" + t("trackingTitle") + "</strong><div class='meta-line'>" + escapeHtml(msg) + "</div></div>";
-  }
-
-  /** True when body looks like GET/POST /api/v1/assessments JSON (not an error ProblemDetail). */
   function isAssessmentPayload(obj) {
     return obj && obj.id != null && typeof obj.status === "string";
   }
@@ -6120,14 +6184,43 @@
     return pythonAgentBaseUrl() + "/api/ai/chat-stream";
   }
 
+  /**
+   * 供 Python Agent 请求体使用：尽量带上用户/本次评估的经纬度。
+   * 顺序：评估表单隐藏域 #latitude/#longitude → 最近一次评估 JSON → 志愿者面板坐标框。
+   */
   function readGeoForPythonAgent() {
-    const latEl = document.getElementById("latitude");
-    const lngEl = document.getElementById("longitude");
-    const lat = latEl && latEl.value ? Number(latEl.value) : NaN;
-    const lng = lngEl && lngEl.value ? Number(lngEl.value) : NaN;
-    if (Number.isFinite(lat) && Number.isFinite(lng)) {
-      return { lat: lat, lng: lng };
+    function pickFromElementIds(latId, lngId) {
+      const latEl = document.getElementById(latId);
+      const lngEl = document.getElementById(lngId);
+      const lat = latEl && latEl.value ? Number(latEl.value) : NaN;
+      const lng = lngEl && lngEl.value ? Number(lngEl.value) : NaN;
+      if (Number.isFinite(lat) && Number.isFinite(lng)) {
+        return { lat: lat, lng: lng };
+      }
+      return null;
     }
+
+    const fromForm = pickFromElementIds("latitude", "longitude");
+    if (fromForm) {
+      return fromForm;
+    }
+
+    const p = typeof __lastAssessmentPayload !== "undefined" && __lastAssessmentPayload
+      ? __lastAssessmentPayload
+      : null;
+    if (p && p.latitude != null && p.longitude != null) {
+      const la = Number(p.latitude);
+      const ln = Number(p.longitude);
+      if (Number.isFinite(la) && Number.isFinite(ln)) {
+        return { lat: la, lng: ln };
+      }
+    }
+
+    const fromVolunteer = pickFromElementIds("volunteerSvcLat", "volunteerSvcLng");
+    if (fromVolunteer) {
+      return fromVolunteer;
+    }
+
     return { lat: null, lng: null };
   }
 
@@ -6155,6 +6248,10 @@
     const rationale = Array.isArray(labels.rationalePhrases) ? labels.rationalePhrases : [];
     if (rationale.length) {
       parts.push((en ? "Model rationale: " : "模型依据：") + rationale.slice(0, 4).join("；"));
+    }
+    const cap = String(labels.captureAdvice || "").trim();
+    if (cap) {
+      parts.push((en ? "Capture / handling advice: " : "处置建议：") + cap);
     }
     const lines = Array.isArray(actions.healthGuidanceLines) ? actions.healthGuidanceLines : [];
     if (lines.length) {
@@ -6191,8 +6288,27 @@
     return turns.slice(-10);
   }
 
+  function resolvePythonAgentFocusCatId() {
+    const heatEl = document.getElementById("heatmapCatId");
+    if (heatEl && heatEl.value && /^\d+$/.test(String(heatEl.value).trim())) {
+      return Number(String(heatEl.value).trim());
+    }
+    const p = __lastAssessmentPayload;
+    if (p && p.trackingMatch) {
+      const tm = p.trackingMatch;
+      if (tm.catId != null && /^\d+$/.test(String(tm.catId))) {
+        return Number(tm.catId);
+      }
+      if (tm.suggestedCatId != null && /^\d+$/.test(String(tm.suggestedCatId))) {
+        return Number(tm.suggestedCatId);
+      }
+    }
+    return null;
+  }
+
   function buildPythonAgentStreamBody(userMessage, extra) {
     const geo = readGeoForPythonAgent();
+    // 与 FastAPI ChatStreamRequest 对齐：始终带 lat/lng 键（无坐标时为 null）
     const body = {
       message: userMessage,
       lat: geo.lat,
@@ -6202,8 +6318,38 @@
       locale: lang,
       output_language: lang
     };
+    const vidRaw = (function () {
+      const vEl = document.getElementById("volunteerUserIdInput");
+      if (vEl && vEl.value && String(vEl.value).trim()) {
+        return String(vEl.value).trim();
+      }
+      if (typeof trackingUserIdInput !== "undefined" && trackingUserIdInput && trackingUserIdInput.value) {
+        return String(trackingUserIdInput.value).trim();
+      }
+      return "";
+    })();
+    const vidNum = Number(vidRaw);
+    if (Number.isFinite(vidNum) && vidNum > 0) {
+      body.volunteer_user_id = vidNum;
+    }
+    const cid = resolvePythonAgentFocusCatId();
+    if (cid != null) {
+      body.cat_id = cid;
+    }
+    const ap = typeof __lastAssessmentPayload !== "undefined" ? __lastAssessmentPayload : null;
+    if (ap && ap.id) {
+      const sid = String(ap.id).trim();
+      if (/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/i.test(sid)) {
+        body.assessment_id = sid;
+      }
+    }
     const ctx = buildPythonAgentAssessmentContext();
-    if (ctx) {
+    if (extra && Object.prototype.hasOwnProperty.call(extra, "assessment_context")) {
+      const ac = extra.assessment_context;
+      if (ac != null && String(ac).trim()) {
+        body.assessment_context = String(ac).trim();
+      }
+    } else if (ctx) {
       body.assessment_context = ctx;
     }
     if (extra && extra.iot_snapshot) {
@@ -6212,11 +6358,8 @@
     return body;
   }
 
-  function buildPythonAgentInitialMessage() {
-    const en = lang === "en";
-    return en
-      ? "I just finished a stray-cat photo assessment on this platform. As the rescue station lead, give warm, practical follow-up advice—no form-style “cannot tell” checklists."
-      : "我刚在本平台完成一次流浪猫照片评估。请以救助站站长身份，给出温暖、可执行的后续建议，不要填表式罗列「无法判断」。";
+  function buildPythonAgentAutoFirstUserMessage() {
+    return t("aiPythonAutoFirstMessage");
   }
 
   async function consumePythonAgentSse(response, handlers) {
@@ -6297,12 +6440,6 @@
     bubble.textContent = t("aiDeepAnalysisStreaming");
     row.appendChild(bubble);
     threadEl.appendChild(row);
-    if (threadEl.id === "pythonAgentChatThreadHome") {
-      const card = document.getElementById("pythonAgentChatCardHome");
-      if (card) {
-        card.classList.add("python-agent-home--has-messages");
-      }
-    }
     return bubble;
   }
 
@@ -6413,15 +6550,38 @@
     bubble.innerHTML = s ? escapeHtml(s).replace(/\n/g, "<br>") : escapeHtml(t("aiFieldEmpty"));
     row.appendChild(bubble);
     threadEl.appendChild(row);
-    if (threadEl.id === "pythonAgentChatThreadHome") {
-      const card = document.getElementById("pythonAgentChatCardHome");
-      if (card) {
-        card.classList.add("python-agent-home--has-messages");
-      }
-    }
     try {
       threadEl.scrollTop = threadEl.scrollHeight;
     } catch (_e) { /* ignore */ }
+  }
+
+  function pythonAgentAppendUserImageBubble(threadEl, file) {
+    if (!threadEl || !file) {
+      return;
+    }
+    const row = document.createElement("div");
+    row.className = "python-agent-msg python-agent-msg--user python-agent-msg--with-image";
+    const wrap = document.createElement("div");
+    wrap.className = "python-agent-bubble python-agent-bubble--user python-agent-bubble--with-image";
+    try {
+      const url = URL.createObjectURL(file);
+      const img = document.createElement("img");
+      img.className = "python-agent-upload-thumb";
+      img.alt = "uploaded cat photo";
+      img.src = url;
+      wrap.appendChild(img);
+    } catch (_e) {
+      wrap.textContent = "📷";
+    }
+    const cap = document.createElement("div");
+    cap.className = "python-agent-upload-caption";
+    cap.textContent = t("aiUserUploadedPhoto");
+    wrap.appendChild(cap);
+    row.appendChild(wrap);
+    threadEl.appendChild(row);
+    try {
+      threadEl.scrollTop = threadEl.scrollHeight;
+    } catch (_e2) { /* ignore */ }
   }
 
   function pythonAgentAnswerFeeding(apiData) {
@@ -6562,15 +6722,39 @@
     if (!q) {
       return "none";
     }
+    // 判断「是否已绝育 / 剪耳」等科普问法：勿标 shelter，否则会 need_nearby 强行走目录（误伤「怎么看有没有绝育」）
+    if (
+      (/怎么看|怎样看|如何分辨|怎么分辨|怎么判断|如何判断|如何看|怎样判断|是不是|有没(有)?|有没有|做过吗|剪耳|耳标|耳尖|征兆|表现|辨认/.test(q) &&
+        /绝育|tnr|剪耳|耳标|耳尖|结扎|spay|neuter/.test(q)) ||
+      /绝育(了|过)?吗|有没有.{0,4}绝育|有没(有)?.{0,4}绝育/.test(q)
+    ) {
+      return "knowledge";
+    }
+    if (
+      /\b(how to tell|how can i tell|is (the )?cat neutered|ear tip|tipped ear|eartip)\b/i.test(q)
+    ) {
+      return "knowledge";
+    }
     if (
       /喂|食|饿|吃粮|饥饿|粮|罐头|喂食/.test(q) ||
       /\bfeed|feeding|hungry|hunger|meal|food\b/.test(q)
     ) {
       return "feed";
     }
+    // 明显在问「附近 / 去哪」的机构或医疗资源时才触发 need_nearby
     if (
-      /绝育|tnr|治疗|医院|诊所|兽医|机构|附近|手术|疫苗|急诊/.test(q) ||
-      /\bneuter|spay|tnr|vet|clinic|hospital|shelter|rescue|treatment|nearby\b/.test(q)
+      /附近|就近|周边|离我|离我近|周围|同城|片区|公里|\bkm\b|closest|near me|nearby|local|where (can|to|do|i find|are)/i.test(q) &&
+      (/绝育|tnr|治疗|医院|诊所|兽医|机构|手术|疫苗|急诊|收容|救助/.test(q) ||
+        /\b(neuter|spay|tnr|vet|clinic|hospital|shelter|rescue|treatment)\b/i.test(q))
+    ) {
+      return "shelter";
+    }
+    if (
+      /哪(里|儿).{0,12}(可以|能|有).{0,12}(绝育|tnr|手术|医院|诊所|收容|救助|兽医)/.test(q) ||
+      /在.{0,3}哪.{0,12}(可以|能|做|有).{0,12}(绝育|tnr|手术|医院|诊所|收容|救助)/.test(q) ||
+      /绝育.{0,8}(哪|机构|去哪|地点|医院|诊所)/.test(q) ||
+      /(医院|诊所|收容|救助).{0,12}(在哪|哪里|哪家|电话|地址|推荐)/.test(q) ||
+      /\b(where (is|are)|which).{0,20}(hospital|clinic|shelter|vet|tnr)\b/i.test(q)
     ) {
       return "shelter";
     }
@@ -6586,68 +6770,31 @@
     return "fallback";
   }
 
-  function pythonAgentHomeChatCardHtml() {
-    return (
-      "<section id='pythonAgentChatCardHome' class='step-card python-agent-block python-agent-block--home' aria-label='home-chat'>" +
-      "<div class='python-agent-home-shell'>" +
-      "<h3 class='python-agent-home-title'>" + escapeHtml(t("aiDeepAnalysisTitle")) + "</h3>" +
-      "<p id='pythonAgentHomeHint' class='python-agent-home-hint'>" + escapeHtml(t("aiHomeChatHint")) + "</p>" +
-      "<div class='python-agent-chat python-agent-chat--home'>" +
-      "<div id='pythonAgentChatThreadHome' class='python-agent-chat-thread python-agent-chat-thread--home' aria-live='polite'></div>" +
-      "<div class='python-agent-chat-input-row python-agent-chat-input-row--home'>" +
-      "<input type='text' id='pythonAgentChatInputHome' autocomplete='off' placeholder='" + escapeHtml(t("aiChatPlaceholder")) + "' />" +
-      "<button type='button' class='btn' id='pythonAgentChatSendHome'>" + escapeHtml(t("aiChatSend")) + "</button>" +
-      "</div></div></div></section>"
-    );
-  }
-
-  function refreshPythonAgentHomeUi() {
-    const hint = document.getElementById("pythonAgentHomeHint");
-    if (hint) {
-      hint.textContent = t("aiHomeChatHint");
-    }
-    const titleEl = document.querySelector("#pythonAgentChatCardHome .python-agent-home-title");
-    if (titleEl) {
-      titleEl.textContent = t("aiDeepAnalysisTitle");
-    }
-    const inpH = document.getElementById("pythonAgentChatInputHome");
-    if (inpH) {
-      inpH.setAttribute("placeholder", t("aiChatPlaceholder"));
-    }
-    const sendH = document.getElementById("pythonAgentChatSendHome");
-    if (sendH) {
-      sendH.textContent = t("aiChatSend");
-    }
-  }
-
-  function mountPythonAgentHomeChat() {
-    const slot = document.getElementById("pythonAgentChatSlotHome");
-    if (!slot || slot.getAttribute("data-mounted") === "1") {
+  function refreshPythonAgentResultChatUi() {
+    const card = document.getElementById("pythonAgentChatCard");
+    if (!card) {
       return;
     }
-    slot.innerHTML = pythonAgentHomeChatCardHtml();
-    slot.setAttribute("data-mounted", "1");
-    const thread = document.getElementById("pythonAgentChatThreadHome");
-    if (thread) {
-      wirePythonAgentChatHandlers(thread, {
-        inputId: "pythonAgentChatInputHome",
-        sendId: "pythonAgentChatSendHome",
-        scrollCardId: "pythonAgentChatCardHome"
-      });
+    const inp = document.getElementById("pythonAgentChatInput");
+    if (inp) {
+      inp.setAttribute("placeholder", t("aiChatPlaceholder"));
     }
-    refreshPythonAgentHomeUi();
+    const send = document.getElementById("pythonAgentChatSend");
+    if (send) {
+      send.textContent = t("aiChatSend");
+    }
   }
 
   function pythonAgentChatCardHtml() {
     return (
-      "<section id='pythonAgentChatCard' class='step-card python-agent-block' style='margin-top:14px'>" +
-      "<div class='step-head'><span class='step-num'>2</span><h3>" + escapeHtml(t("aiDeepAnalysisTitle")) + "</h3></div>" +
-      "<div class='python-agent-chat'>" +
-      "<div id='pythonAgentChatThread' class='python-agent-chat-thread' aria-live='polite'></div>" +
-      "<div class='python-agent-chat-input-row'>" +
+      "<section id='pythonAgentChatCard' class='step-card python-agent-block python-agent-block--home python-agent-home--has-messages' aria-label='station-lead-chat'>" +
+      "<div class='python-agent-home-shell'>" +
+      "<div class='python-agent-chat python-agent-chat--home'>" +
+      "<div id='pythonAgentChatThread' class='python-agent-chat-thread python-agent-chat-thread--home' aria-live='polite'></div>" +
+      "<div class='python-agent-chat-input-row python-agent-chat-input-row--home'>" +
       "<input type='text' id='pythonAgentChatInput' autocomplete='off' placeholder='" + escapeHtml(t("aiChatPlaceholder")) + "' />" +
       "<button type='button' class='btn' id='pythonAgentChatSend'>" + escapeHtml(t("aiChatSend")) + "</button>" +
-      "</div></div></section>"
+      "</div></div></div></section>"
     );
   }
 
@@ -6735,9 +6882,18 @@
     try {
       const blk = scrollCardId ? document.getElementById(scrollCardId) : null;
       if (blk) {
-        blk.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        blk.scrollIntoView({ behavior: "smooth", block: "center" });
       }
     } catch (_scroll) { /* ignore */ }
+  }
+
+  function scrollPythonAgentChatIntoView() {
+    try {
+      const card = document.getElementById("pythonAgentChatCard");
+      if (card) {
+        card.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    } catch (_e) { /* ignore */ }
   }
 
   async function fetchAndAppendPythonAgent(file) {
@@ -6758,14 +6914,30 @@
       return;
     }
 
+    requestAnimationFrame(function () {
+      requestAnimationFrame(scrollPythonAgentChatIntoView);
+    });
+
+    pythonAgentAppendUserImageBubble(thread, file);
+
     const bubble = pythonAgentAppendStreamingBubble(thread);
-    const streamBody = buildPythonAgentStreamBody(buildPythonAgentInitialMessage(), {
-      need_nearby: getEarClipForPython() === "no"
+    const streamBody = buildPythonAgentStreamBody(buildPythonAgentAutoFirstUserMessage(), {
+      need_nearby: false
     });
 
     try {
       await streamPythonAgentChat(streamBody, bubble);
       wirePythonAgentChatHandlers(thread);
+      const inpFocus = document.getElementById("pythonAgentChatInput");
+      if (inpFocus) {
+        try {
+          inpFocus.focus({ preventScroll: true });
+        } catch (_f1) {
+          try {
+            inpFocus.focus();
+          } catch (_f2) { /* ignore */ }
+        }
+      }
     } catch (err) {
       const msg = err && err.message ? err.message : String(err);
       pythonAgentReplaceActiveWithFail(msg);
@@ -6938,7 +7110,12 @@
     let refLat = "37.3382";
     let refLng = "-121.8863";
     try {
-      if (latInput.value && lngInput.value) {
+      const apiLa = data.latitude != null ? Number(data.latitude) : NaN;
+      const apiLn = data.longitude != null ? Number(data.longitude) : NaN;
+      if (Number.isFinite(apiLa) && Number.isFinite(apiLn)) {
+        refLat = String(apiLa);
+        refLng = String(apiLn);
+      } else if (latInput.value && lngInput.value) {
         const la = Number(latInput.value);
         const ln = Number(lngInput.value);
         if (Number.isFinite(la) && Number.isFinite(ln)) {
@@ -6960,23 +7137,58 @@
         "</div></div>"
       : "";
 
-    const metaHeader =
-      "<div class='meta-line'><span class='pill'>" + escapeHtml(branchLabel(data.branchType)) + "</span> · " +
-      t("statusId") + ": " + escapeHtml(data.status) + " · " + t("idLabel") + ": " + escapeHtml(data.id) + "</div>";
+    const stepActionsSection = !isFailed
+      ? (
+        "<section class='step-card'>" +
+        "<div class='step-head'><span class='step-num'>2</span><h3>" + escapeHtml(t("stepActions")) + "</h3></div>" +
+        stepActionsBody +
+        "</section>"
+        )
+      : "";
+    const stepResourcesSection = !isFailed
+      ? (
+        "<section class='step-card'>" +
+        "<div class='step-head'><span class='step-num'>3</span><h3>" + escapeHtml(t("stepResources")) + "</h3></div>" +
+        stepResourcesBody +
+        "</section>"
+        )
+      : "";
 
-    const stepsWrap =
+    let stepsWrap =
       "<div class='step-flow'>" +
       "<section class='step-card'><div class='step-head'><span class='step-num'>1</span><h3>" + t("stepStatus") + "</h3></div>" +
       stepStatusBody +
       "</section>" +
+      autoAbnormalHint +
+      stepActionsSection +
+      stepResourcesSection +
       "<div id='pythonAgentChatSlot'></div>" +
       "</div>";
+
+    if (!isFailed) {
+      const abnormalLine = severeAbnormal
+        ? ("<p class='meta-line' style='color:var(--danger);font-weight:600;margin-bottom:8px;'>" +
+          escapeHtml(lang === "en"
+            ? "Elevated injury or malnutrition risk — ask the assistant for nearby clinics or TNR."
+            : "模型提示伤病或严重营养不良风险偏高，可在下方对话追问附近医院或绝育资源。") +
+          "</p>")
+        : "";
+      stepsWrap =
+        "<div class='step-flow step-flow--agent-only'>" +
+        abnormalLine +
+        "<div id='pythonAgentChatSlot'></div>" +
+        "</div>";
+    } else {
+      stepsWrap =
+        "<div class='step-flow step-flow--agent-only'>" +
+        "<p class='meta-line'>" + escapeHtml(t("analysisIncomplete")) + "</p>" +
+        "<div id='pythonAgentChatSlot'></div>" +
+        "</div>";
+    }
 
     resultView.innerHTML =
       failureBanner +
       renderDuplicateBanner(data.assessmentDuplicate) +
-      renderTrackingBanner(data.trackingMatch) +
-      metaHeader +
       stepsWrap;
 
     const copyPostBtn = document.getElementById("copyPostBtn");
@@ -7144,21 +7356,50 @@
       statusEl.className = "status error";
       return;
     }
+    var uploadFile;
+    try {
+      if (isHeicLikeImageFile(file)) {
+        statusEl.textContent = t("heicConverting");
+        statusEl.className = "status";
+      }
+      uploadFile = await ensureUploadableImageFile(file);
+    } catch (convErr) {
+      var cmsg = convErr && convErr.message ? String(convErr.message) : String(convErr);
+      if (cmsg.indexOf("heic2any script") >= 0) {
+        statusEl.textContent = t("heicScriptFail");
+      } else {
+        statusEl.textContent = t("heicConvertFail") + cmsg;
+      }
+      statusEl.className = "status error";
+      return;
+    }
+    submitBtn.disabled = true;
     const endpoint = (endpointInput.value || "").trim() || "/api/v1/assessments";
+    const addrTxt = (addressInput.value || "").trim();
+    if (addrTxt && (!String(latInput.value || "").trim() || !String(lngInput.value || "").trim())) {
+      statusEl.textContent = t("addrResolve");
+      statusEl.className = "status";
+      try {
+        const pos = await forwardGeocode(addrTxt);
+        latInput.value = String(pos.lat);
+        lngInput.value = String(pos.lng);
+      } catch (_ge) {
+        /* 无坐标时后端会用默认参考点；仍继续提交 */
+      }
+    }
+
     const formData = new FormData();
-    formData.append("image", file);
+    formData.append("image", uploadFile);
     if (latInput.value) formData.append("latitude", latInput.value);
     if (lngInput.value) formData.append("longitude", lngInput.value);
     const reporterRaw = (trackingUserIdInput.value || "").trim();
     if (reporterRaw && /^[1-9]\d*$/.test(reporterRaw)) {
       formData.append("reporterUserId", reporterRaw);
     }
-    const addrTxt = (addressInput.value || "").trim();
     if (addrTxt) {
       formData.append("addressText", addrTxt);
     }
 
-    submitBtn.disabled = true;
     statusEl.textContent = t("analyzing");
     statusEl.className = "status";
     resultView.innerHTML =
@@ -7262,7 +7503,12 @@
         const stOk = String(parsed.status || "").toUpperCase() !== "FAILED";
         if (renderedOk && stOk) {
           try {
-            void fetchAndAppendPythonAgent(file);
+            await new Promise(function (resolve) {
+              requestAnimationFrame(function () {
+                requestAnimationFrame(resolve);
+              });
+            });
+            await fetchAndAppendPythonAgent(file);
           } catch (_py) {
             console.warn(_py);
           }
@@ -7351,7 +7597,6 @@
   applyStaticI18n();
   applyTheme();
   initHeroCarousel();
-  mountPythonAgentHomeChat();
   refreshImpactMetricsFromApi();
 
   try {
@@ -7365,12 +7610,8 @@
   } catch (_e) {}
 
   try {
-    const p = new URLSearchParams(window.location.search || "");
-    const panel = p.get("panel");
-    const allow = new Set(["panel-upload", "panel-community", "panel-volunteer", "panel-assessment-map", "panel-cat-profile"]);
-    if (panel && allow.has(panel)) {
-      switchMainTab(panel);
-    }
+    // 刷新后固定打开「上传/分析」分栏（不再从 ?panel= 恢复上次 tab，避免 F5 仍停在社区/热力图等）
+    switchMainTab("panel-upload");
   } catch (_e) {}
 
   initHeatmapMap();
@@ -7412,7 +7653,7 @@
       if (!picked) {
         return;
       }
-      if (!picked.type.startsWith("image/")) {
+      if (!picked.type.startsWith("image/") && !isHeicLikeImageFile(picked)) {
         if (catPhotoMatchStatusEl) catPhotoMatchStatusEl.textContent = t("catPhotoMatchNeedImage");
         return;
       }
@@ -7422,12 +7663,25 @@
       }
       if (catPhotoMatchResultsEl) catPhotoMatchResultsEl.innerHTML = "";
       if (catPhotoMatchStatusEl) catPhotoMatchStatusEl.textContent = t("catPhotoMatchLoading");
+      var uploadPick;
+      try {
+        if (isHeicLikeImageFile(picked) && catPhotoMatchStatusEl) {
+          catPhotoMatchStatusEl.textContent = t("heicConverting");
+        }
+        uploadPick = await ensureUploadableImageFile(picked);
+      } catch (convErr) {
+        var cmsg2 = convErr && convErr.message ? String(convErr.message) : String(convErr);
+        if (catPhotoMatchStatusEl) {
+          catPhotoMatchStatusEl.textContent = (cmsg2.indexOf("heic2any script") >= 0 ? t("heicScriptFail") : t("heicConvertFail") + cmsg2);
+        }
+        return;
+      }
       const paths = ["/api/v1/cats/match-by-photo", "/cats/match-by-photo"];
       let lastErr = "";
       let data = null;
       for (const p of paths) {
         const fd = new FormData();
-        fd.append("file", picked);
+        fd.append("file", uploadPick);
         try {
           const r = await fetch(apiFetchUrl(p), {
             method: "POST",

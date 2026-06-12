@@ -60,14 +60,40 @@ export CAT_RESCUE_HTTP_PORT=8090
 
 ### 2.3 启动
 
+推荐一键脚本（先起 MySQL，再执行；会等待数据库端口、可选后台启动 **cat-agent:8000**，再启动 Spring）：
+
+```bash
+./scripts/start-all.sh
+```
+
+日常可只用等价入口：`./scripts/dev-up.sh`（参数与 `start-all.sh` 相同，如 `--skip-agent`）。
+
+仅 Java API（与原先一致）：
+
 ```bash
 mvn spring-boot:run
 ```
+
+或沿用加载 `.env.local` 的脚本：
+
+```bash
+./scripts/start-dev.sh
+```
+
+停止本脚本拉起的 cat-agent：`./scripts/stop-all.sh`（Spring 请在运行 `mvn` 的终端里 Ctrl+C）。
 
 访问地址（默认 HTTP 端口 **8090**，可用环境变量 `CAT_RESCUE_HTTP_PORT` 修改）：
 
 - 前端页面：`http://localhost:8090/`
 - 健康检查：`http://localhost:8090/actuator/health`
+
+### 2.4 站长 Agent（cat-agent）与图片格式
+
+- **虚拟环境**：`cat-agent/.venv` 已加入 `.gitignore`，勿提交。使用 **`./scripts/dev-up.sh`** / `start-all.sh` 时会**自动**创建 `.venv` 并执行 `pip install -r cat-agent/requirements.txt`（解决 Homebrew Python 的 PEP 668，勿对系统 `python3` 全局 `pip install`）。若只手动起 agent：  
+  `cd cat-agent && python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt && uvicorn api:app --host 127.0.0.1 --port 8000`
+- **HEIC / iPhone 照片**：上传分析、同猫检索、按图找猫前，前端会尝试用 **heic2any**（CDN 加载，需联网）转为 **JPEG**，以满足 OpenAI Vision 仅支持 `png/jpeg/gif/webp` 的限制。
+- **附近机构推荐逻辑**（评估列表 + Agent 调用的 nearest 接口）：见 [`docs/recommendation-engine.zh-CN.md`](docs/recommendation-engine.zh-CN.md)。
+- **3 分钟产品 Demo 剧本**（单对话框、工具 / 联网 / RAG 分工）：见 [`docs/agent_demo.md`](docs/agent_demo.md)。
 
 ---
 

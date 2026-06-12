@@ -5,7 +5,9 @@ import com.catrescue.api.security.data.DataAccessResolver;
 import com.catrescue.api.security.data.DataAccessTier;
 import com.catrescue.api.security.data.DataMaskingService;
 import com.catrescue.api.service.AssessmentService;
+import com.catrescue.api.tracking.dto.CatHistoryResponse;
 import com.catrescue.api.tracking.dto.CatLastSeenResponse;
+import com.catrescue.api.tracking.dto.CatLookupResponse;
 import com.catrescue.api.tracking.dto.CatProfileResponse;
 import com.catrescue.api.tracking.dto.HeatmapPointDto;
 import com.catrescue.api.tracking.dto.HeatmapSampleResponse;
@@ -26,7 +28,7 @@ import java.util.List;
  * Coordinate precision and profile fields depend on {@link DataAccessTier} (see headers on {@link DataAccessResolver}).
  */
 @RestController
-@RequestMapping({"/api/v1/cats", "/cats"})
+@RequestMapping({"/api/v1/cats", "/cats", "/api/cats"})
 public class CatTrackingController {
 
     private final CatHeatmapService catHeatmapService;
@@ -44,6 +46,32 @@ public class CatTrackingController {
         this.dataAccessResolver = dataAccessResolver;
         this.dataMaskingService = dataMaskingService;
         this.assessmentService = assessmentService;
+    }
+
+    /**
+     * Nearby cats with archive (sightings in radius, last year). Used by station-lead AI lookup.
+     */
+    @GetMapping("/lookup")
+    public CatLookupResponse lookupCats(
+            @RequestParam double lat,
+            @RequestParam double lng,
+            @RequestParam(name = "radius", defaultValue = "100") double radiusMeters
+    ) {
+        double r = Math.min(Math.max(radiusMeters, 10.0), 5_000.0);
+        return catHeatmapService.lookupNear(lat, lng, r);
+    }
+
+    /**
+     * Recent sightings + public profile header for one cat (for “有档案吗” style questions).
+     */
+    @GetMapping("/{id}/history")
+    public ResponseEntity<CatHistoryResponse> catHistory(
+            @PathVariable("id") Long catId,
+            @RequestParam(name = "limit", defaultValue = "20") int limit
+    ) {
+        return catHeatmapService.buildCatHistory(catId, limit)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @GetMapping("/heatmap")

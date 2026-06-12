@@ -1,7 +1,11 @@
 package com.catrescue.api.tracking.service;
 
 import com.catrescue.api.tracking.dto.CatHeatmapResponse;
+import com.catrescue.api.tracking.dto.CatHistoryResponse;
+import com.catrescue.api.tracking.dto.CatHistorySightingDto;
 import com.catrescue.api.tracking.dto.CatLastSeenResponse;
+import com.catrescue.api.tracking.dto.CatLookupHitDto;
+import com.catrescue.api.tracking.dto.CatLookupResponse;
 import com.catrescue.api.tracking.dto.CatProfileResponse;
 import com.catrescue.api.tracking.dto.HeatmapPointDto;
 import com.catrescue.api.tracking.dto.HeatmapSightingResponse;
@@ -18,8 +22,11 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -309,6 +316,108 @@ public class CatHeatmapService {
                 CoordinatePrecision.roundDegrees(p.lastSeenLongitude(), PUBLIC_PROFILE_COORD_DECIMALS),
                 p.sightingsInWindowDays(),
                 null
+        ));
+    }
+
+    private static double haversineMeters(double lat1, double lon1, double lat2, double lon2) {
+        final double r = 6_371_000.0;
+        double p1 = Math.toRadians(lat1);
+        double p2 = Math.toRadians(lat2);
+        double dp = Math.toRadians(lat2 - lat1);
+        double dl = Math.toRadians(lon2 - lon1);
+        double a = Math.sin(dp / 2) * Math.sin(dp / 2)
+                + Math.cos(p1) * Math.cos(p2) * Math.sin(dl / 2) * Math.sin(dl / 2);
+        return 2 * r * Math.asin(Math.min(1.0, Math.sqrt(a)));
+    }
+
+    /**
+     * Cats with assigned {@code catId} seen within {@code radiusMeters} of the point in the last year.
+     */
+    public CatLookupResponse lookupNear(double lat, double lng, double radiusMeters) {
+        Instant since = Instant.now().minus(365, ChronoUnit.DAYS);
+        List<SightingEntity> rows = sightingJpaRepository.findCandidatesWithinRadiusAndTime(lat, lng, since, radiusMeters);
+        Map<Long, SightingEntity> latestByCat = new HashMap<>();
+        for (SightingEntity s : rows) {
+            if (s.getCatId() == null) {
+                continue;
+            }
+            SightingEntity prev = latestByCat.get(s.getCatId());
+            if (prev == null || s.getOccurredAt().isAfter(prev.getOccurredAt())) {
+                latestByCat.put(s.getCatId(), s);
+            }
+        }
+        List<CatLookupHitDto> hits = new ArrayList<>();
+        for (SightingEntity s : latestByCat.values()) {
+            Long cid = s.getCatId();
+            double dist = haversineMeters(lat, lng, s.getLatitude(), s.getLongitude());
+            String displayName = "";
+            String st = "UNKNOWN";
+            CatEntity cat = catJpaRepository.findById(cid).orElse(null);
+            if (cat != null) {
+                displayName = nz(cat.getDisplayName());
+                st = cat.getSterilizationStatus() != null ? cat.getSterilizationStatus().name() : "UNKNOWN";
+            }
+            hits.add(new CatLookupHitDto(
+                    cid,
+                    s.getOccurredAt(),
+                    s.getLatitude(),
+                    s.getLongitude(),
+                    dist,
+                    s.getAddressText() != null ? s.getAddressText() : "",
+                    s.isEarTipped(),
+                    s.getEarTippedConfidence(),
+                    displayName,
+                    st
+            ));
+        }
+        hits.sort(Comparator.comparing(CatLookupHitDto::lastSeenAt).reversed());
+        int cap = 10;
+        if (hits.size() > cap) {
+            hits = new ArrayList<>(hits.subList(0, cap));
+        }
+        return new CatLookupResponse(hits);
+    }
+
+    /**
+     * Recent sightings + public header fields for station-lead / AI tools.
+     */
+    public Optional<CatHistoryResponse> buildCatHistory(long catId, int maxSightings) {
+        if (catJpaRepository.findById(catId).isEmpty()) {
+            return Optional.empty();
+        }
+        Optional<CatProfileResponse> pub = buildPublicProfile(catId);
+        if (pub.isEmpty()) {
+            return Optional.empty();
+        }
+        CatProfileResponse p = pub.get();
+        int n = Math.min(Math.max(maxSightings, 1), 50);
+        List<SightingEntity> rows = sightingJpaRepository.findByCatIdAndOccurredAtGreaterThanEqualOrderByOccurredAtDesc(
+                catId,
+                Instant.EPOCH
+        );
+        List<CatHistorySightingDto> sightDtos = new ArrayList<>();
+        for (int i = 0; i < rows.size() && sightDtos.size() < n; i++) {
+            SightingEntity s = rows.get(i);
+            sightDtos.add(new CatHistorySightingDto(
+                    s.getId(),
+                    s.getOccurredAt(),
+                    s.getLatitude(),
+                    s.getLongitude(),
+                    s.getAddressText() != null ? s.getAddressText() : "",
+                    s.isEarTipped(),
+                    s.getEarTippedConfidence()
+            ));
+        }
+        return Optional.of(new CatHistoryResponse(
+                p.id(),
+                p.displayName(),
+                p.earTipped(),
+                p.sterilizationStatus(),
+                p.firstSeenAt(),
+                p.lastSeenAt(),
+                p.lastSeenLatitude(),
+                p.lastSeenLongitude(),
+                sightDtos
         ));
     }
 }

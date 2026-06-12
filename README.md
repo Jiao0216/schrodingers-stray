@@ -60,14 +60,34 @@ export CAT_RESCUE_HTTP_PORT=8090
 
 ### 2.3 Run
 
+One-shot local dev (waits for MySQL TCP, optionally starts **cat-agent** on :8000, then runs Spring like `start-dev.sh`):
+
+```bash
+./scripts/start-all.sh
+```
+
+Same behavior, shorter name: `./scripts/dev-up.sh` (forwards the same options, e.g. `--skip-agent`).
+
+Plain Spring only:
+
 ```bash
 mvn spring-boot:run
 ```
+
+Stop cat-agent started by the script: `./scripts/stop-all.sh` (stop Spring in the terminal running Maven).
 
 Then visit (default HTTP port **8090**; override with env `CAT_RESCUE_HTTP_PORT`):
 
 - Frontend: `http://localhost:8090/`
 - Health check: `http://localhost:8090/actuator/health`
+
+### 2.4 cat-agent, HEIC, and “recommendation”
+
+- **Virtualenv**: `cat-agent/.venv` is gitignored. **`./scripts/dev-up.sh`** / `start-all.sh` will **auto-create** `.venv` and run `pip install -r cat-agent/requirements.txt` (avoids Homebrew PEP 668 “externally-managed-environment”; do not `pip install` into system Python). To run uvicorn only by hand:  
+  `cd cat-agent && python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt && uvicorn api:app --host 127.0.0.1 --port 8000`
+- **HEIC / iPhone photos**: before assessment upload, same-cat upload, and match-by-photo, the UI tries **heic2any** (loaded from a CDN; needs network once) to convert to **JPEG** for OpenAI Vision (`png`/`jpeg`/`gif`/`webp` only).
+- **Nearby org “recommendation”** (assessment lists + agent): see [`docs/recommendation-engine.zh-CN.md`](docs/recommendation-engine.zh-CN.md) (Chinese; covers Java `nearest` + UI).
+- **3-minute demo script** (single chat entry, tools vs web vs RAG): see [`docs/agent_demo.md`](docs/agent_demo.md) (Chinese).
 
 ---
 

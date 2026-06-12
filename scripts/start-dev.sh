@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# 启动 Spring Boot 前会尝试结束占用 CAT_RESCUE_HTTP_PORT（默认 8090）的监听进程；
+# 设 CAT_RESCUE_DEV_NO_KILL=1 可关闭。依赖 scripts/lib-dev-ports.sh。
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -53,6 +55,10 @@ if [[ "${MULTIMODAL_PROVIDER}" == "gemini" ]] && [[ -z "${GEMINI_API_KEY:-}" ]];
 fi
 
 LISTEN_PORT="${CAT_RESCUE_HTTP_PORT:-8090}"
+# shellcheck disable=SC1091
+source "${SCRIPT_DIR}/lib-dev-ports.sh"
+kill_tcp_listen_port "${LISTEN_PORT}" "HTTP (CAT_RESCUE_HTTP_PORT)"
+
 if lsof -nP -iTCP:"${LISTEN_PORT}" -sTCP:LISTEN >/dev/null 2>&1; then
   echo "[start-dev] Port ${LISTEN_PORT} is already in use (CAT_RESCUE_HTTP_PORT). Stop the other process or pick another port."
   echo "[start-dev] Example: export CAT_RESCUE_HTTP_PORT=8091"
