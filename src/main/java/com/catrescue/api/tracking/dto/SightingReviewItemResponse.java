@@ -24,6 +24,7 @@ public record SightingReviewItemResponse(
         Long suggestedCatId,
         Long duplicateOfSightingId,
         Double similarityScore,
+        Double clipDistance,
         String dedupReason,
         Instant createdAt
 ) {

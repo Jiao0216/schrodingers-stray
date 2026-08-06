@@ -1,66 +1,87 @@
 package com.catrescue.api.tracking.service;
 
-import com.catrescue.api.tracking.domain.DedupStatus;
-import com.catrescue.api.tracking.domain.SterilizationStatus;
-import com.catrescue.api.tracking.domain.UserRole;
-import com.catrescue.api.tracking.dto.CatFeatureVector;
+import com.catrescue.api.service.client.ClipEmbeddingClient;
+import com.catrescue.api.tracking.dto.ClipDedupDecision;
 import com.catrescue.api.tracking.dto.DedupDecision;
 import com.catrescue.api.tracking.dto.NewSightingCommand;
 import com.catrescue.api.tracking.dto.SightingReviewItemResponse;
 import com.catrescue.api.tracking.event.TrackingSightingRecordedEvent;
 import com.catrescue.api.tracking.persistence.CatEntity;
+import com.catrescue.api.tracking.persistence.CatMatchFeedbackEntity;
 import com.catrescue.api.tracking.persistence.SightingEntity;
 import com.catrescue.api.tracking.persistence.UserEntity;
 import com.catrescue.api.tracking.repository.CatJpaRepository;
+import com.catrescue.api.tracking.repository.CatMatchFeedbackJpaRepository;
 import com.catrescue.api.tracking.repository.SightingJpaRepository;
 import com.catrescue.api.tracking.repository.UserJpaRepository;
+import com.catrescue.api.tracking.domain.DedupStatus;
+import com.catrescue.api.tracking.domain.SterilizationStatus;
+import com.catrescue.api.tracking.domain.UserRole;
+import com.catrescue.api.tracking.dto.CatFeatureVector;
+import com.catrescue.api.tracking.vector.StrayCatVectorMetadata;
+import com.catrescue.api.tracking.vector.VectorClient;
+import com.catrescue.api.tracking.vector.VectorMatchResult;
+import com.catrescue.api.util.CoordinatePrecision;
 import jakarta.transaction.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
-import java.time.Duration;
-import java.time.Instant;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Base64;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 public class SightingDeduplicationService {
 
+    private static final Logger log = LoggerFactory.getLogger(SightingDeduplicationService.class);
+
     public static final double DUP_RADIUS_METERS = 500.0;
     public static final Duration DUP_WINDOW = Duration.ofHours(48);
     public static final double DUP_THRESHOLD = 0.72;
-    // Keep image_url short for legacy DB schemas (often VARCHAR(255/512)).
-    // Real image bytes are persisted separately in imageBytes.
+    public static final int CLIP_QUERY_TOP_K = 5;
     public static final int MAX_STORED_IMAGE_URL_CHARS = 240;
 
     private final SightingJpaRepository sightingJpaRepository;
     private final CatJpaRepository catJpaRepository;
     private final UserJpaRepository userJpaRepository;
+    private final CatMatchFeedbackJpaRepository catMatchFeedbackJpaRepository;
     private final CatFeatureExtractionService featureExtractionService;
+    private final ClipEmbeddingClient clipEmbeddingClient;
+    private final VectorClient vectorClient;
     private final ApplicationEventPublisher applicationEventPublisher;
 
     public SightingDeduplicationService(
             SightingJpaRepository sightingJpaRepository,
             CatJpaRepository catJpaRepository,
             UserJpaRepository userJpaRepository,
+            CatMatchFeedbackJpaRepository catMatchFeedbackJpaRepository,
             CatFeatureExtractionService featureExtractionService,
+            ClipEmbeddingClient clipEmbeddingClient,
+            VectorClient vectorClient,
             ApplicationEventPublisher applicationEventPublisher
     ) {
         this.sightingJpaRepository = sightingJpaRepository;
         this.catJpaRepository = catJpaRepository;
         this.userJpaRepository = userJpaRepository;
+        this.catMatchFeedbackJpaRepository = catMatchFeedbackJpaRepository;
         this.featureExtractionService = featureExtractionService;
+        this.clipEmbeddingClient = clipEmbeddingClient;
+        this.vectorClient = vectorClient;
         this.applicationEventPublisher = applicationEventPublisher;
     }
 
@@ -71,13 +92,30 @@ public class SightingDeduplicationService {
         }
         ensureReporterUserExists(cmd.reporterUserId());
         Instant occurredAt = cmd.occurredAt() != null ? cmd.occurredAt() : Instant.now();
-        CatFeatureVector incoming = featureExtractionService.extractFromImage(cmd.imageUrl());
-        DedupDecision decision = detectDuplicate(cmd.latitude(), cmd.longitude(), occurredAt, incoming);
+
+        ParsedDataImage parsedDataImage = parseDataImage(cmd.imageUrl());
+        final byte[] imageBytes = parsedDataImage != null ? parsedDataImage.bytes() : null;
+        final String imageContentType = parsedDataImage != null ? parsedDataImage.contentType() : "image/jpeg";
+
+        CompletableFuture<CatFeatureVector> featureFuture = CompletableFuture.supplyAsync(
+                () -> featureExtractionService.extractFromImage(cmd.imageUrl())
+        );
+        CompletableFuture<ClipDedupOutcome> clipFuture = CompletableFuture.supplyAsync(
+                () -> evaluateClipDedup(imageBytes, imageContentType)
+        );
+
+        CatFeatureVector incoming = featureFuture.join();
+        ClipDedupOutcome clipOutcome = clipFuture.join();
+
+        DedupDecision featureDecision = detectDuplicate(cmd.latitude(), cmd.longitude(), occurredAt, incoming);
+        DedupSignalMerger.CombinedDedupDecision combined = DedupSignalMerger.merge(
+                featureDecision,
+                clipOutcome.decision()
+        );
 
         SightingEntity entity = new SightingEntity();
         entity.setReporterUserId(cmd.reporterUserId());
         entity.setImageUrl(safeImageReferenceForStorage(cmd.imageUrl()));
-        ParsedDataImage parsedDataImage = parseDataImage(cmd.imageUrl());
         if (parsedDataImage != null) {
             entity.setImageBytes(parsedDataImage.bytes());
             entity.setImageContentType(parsedDataImage.contentType());
@@ -94,22 +132,27 @@ public class SightingDeduplicationService {
         entity.setEarTippedConfidence(incoming.earTippedConfidence());
         entity.setFeatureExtractionConfidence(incoming.extractionConfidence());
 
-        if (decision.duplicateLikely()) {
+        if (combined.pendingReview()) {
             entity.setDedupStatus(DedupStatus.PENDING_REVIEW);
-            entity.setSuggestedCatId(decision.suggestedCatId());
-            entity.setDuplicateOfSightingId(decision.matchedSightingId());
-            entity.setSimilarityScore(decision.bestSimilarityScore());
-            entity.setDedupReason(decision.reason());
+            entity.setSuggestedCatId(combined.suggestedCatId());
+            entity.setDuplicateOfSightingId(combined.duplicateOfSightingId());
+            entity.setSimilarityScore(combined.featureSimilarityScore());
+            entity.setDedupReason(combined.dedupReason());
         } else {
             CatEntity cat = createNewCat(cmd, incoming, occurredAt);
             entity.setCatId(cat.getId());
             entity.setDedupStatus(DedupStatus.NEW_CONFIRMED);
-            entity.setDedupReason("No similar sighting within 500m/48h over threshold");
+            entity.setSimilarityScore(combined.featureSimilarityScore());
+            entity.setDedupReason(combined.dedupReason());
         }
 
         entity.setCreatedAt(Instant.now());
         entity.setUpdatedAt(Instant.now());
         SightingEntity saved = sightingJpaRepository.save(entity);
+
+        saveMatchFeedback(saved.getId(), featureDecision, clipOutcome.decision());
+        indexSightingInChroma(saved, clipOutcome.embedding(), cmd.imageUrl());
+
         applicationEventPublisher.publishEvent(new TrackingSightingRecordedEvent(this, saved.getId()));
         return saved;
     }
@@ -129,6 +172,7 @@ public class SightingDeduplicationService {
 
         mergeSightingIntoCatProfile(cat, sighting);
         catJpaRepository.save(cat);
+        updateVolunteerFeedback(sightingId, true, null);
         return sightingJpaRepository.save(sighting);
     }
 
@@ -169,6 +213,7 @@ public class SightingDeduplicationService {
         sighting.setDuplicateOfSightingId(null);
         sighting.setDedupReason(reason != null ? reason : "Volunteer rejected duplicate suggestion");
         sighting.setUpdatedAt(Instant.now());
+        updateVolunteerFeedback(sightingId, false, null);
         return sightingJpaRepository.save(sighting);
     }
 
@@ -202,6 +247,91 @@ public class SightingDeduplicationService {
         );
     }
 
+    ClipDedupOutcome evaluateClipDedup(byte[] imageBytes, String contentType) {
+        if (!clipEmbeddingClient.isEnabled()) {
+            return new ClipDedupOutcome(ClipDedupDecision.unavailable("CLIP service disabled"), null);
+        }
+        if (imageBytes == null || imageBytes.length == 0) {
+            return new ClipDedupOutcome(ClipDedupDecision.unavailable("No image bytes for CLIP"), null);
+        }
+
+        Optional<float[]> embedding = clipEmbeddingClient.embedBytes(imageBytes, "upload.jpg", contentType);
+        if (embedding.isEmpty()) {
+            return new ClipDedupOutcome(ClipDedupDecision.unavailable("CLIP embed unavailable"), null);
+        }
+
+        List<VectorMatchResult> matches = vectorClient.queryTopK(embedding.get(), CLIP_QUERY_TOP_K, null);
+        if (matches.isEmpty()) {
+            return new ClipDedupOutcome(
+                    new ClipDedupDecision(false, null, null, null, "No CLIP vector candidates"),
+                    embedding.get()
+            );
+        }
+
+        VectorMatchResult best = matches.get(0);
+        double threshold = clipEmbeddingClient.distanceThreshold();
+        boolean hit = best.distance() < threshold;
+        String reason = hit
+                ? "CLIP candidate distance=" + String.format(Locale.ROOT, "%.3f", best.distance())
+                : "Best CLIP distance below threshold";
+        ClipDedupDecision decision = new ClipDedupDecision(
+                hit,
+                best.distance(),
+                best.sightingId() > 0 ? best.sightingId() : null,
+                best.catId(),
+                reason
+        );
+        return new ClipDedupOutcome(decision, embedding.get());
+    }
+
+    private void saveMatchFeedback(Long sightingId, DedupDecision feature, ClipDedupDecision clip) {
+        CatMatchFeedbackEntity row = new CatMatchFeedbackEntity();
+        row.setSightingId(sightingId);
+        row.setMatchedSightingId(firstNonNull(feature.matchedSightingId(), clip.matchedSightingId()));
+        row.setMatchedCatId(firstNonNull(feature.suggestedCatId(), clip.matchedCatId()));
+        row.setFeatureSimilarity(feature.bestSimilarityScore());
+        row.setClipDistance(clip.bestDistance());
+        row.setVolunteerConfirmed(null);
+        row.setCreatedAt(Instant.now());
+        catMatchFeedbackJpaRepository.save(row);
+    }
+
+    private void updateVolunteerFeedback(Long sightingId, boolean confirmed, String confirmedBy) {
+        catMatchFeedbackJpaRepository.findFirstBySightingIdOrderByIdDesc(sightingId).ifPresent(row -> {
+            if (row.getVolunteerConfirmed() != null) {
+                return;
+            }
+            row.setVolunteerConfirmed(confirmed);
+            row.setConfirmedAt(Instant.now());
+            row.setConfirmedBy(confirmedBy);
+            catMatchFeedbackJpaRepository.save(row);
+        });
+    }
+
+    private void indexSightingInChroma(SightingEntity saved, float[] embedding, String rawImageUrl) {
+        if (embedding == null || !vectorClient.isEnabled()) {
+            return;
+        }
+        String chromaId = "sighting_" + saved.getId();
+        double lat = CoordinatePrecision.roundDegrees(saved.getLatitude(), 2);
+        double lng = CoordinatePrecision.roundDegrees(saved.getLongitude(), 2);
+        StrayCatVectorMetadata metadata = new StrayCatVectorMetadata(
+                saved.getId(),
+                saved.getCatId(),
+                saved.getOccurredAt().toString(),
+                lat + "," + lng,
+                safeImageReferenceForStorage(rawImageUrl)
+        );
+        boolean ok = vectorClient.add(chromaId, embedding, metadata);
+        if (!ok) {
+            log.warn("Failed to index sighting {} in Chroma", saved.getId());
+        }
+    }
+
+    private static Long firstNonNull(Long a, Long b) {
+        return a != null ? a : b;
+    }
+
     public Page<SightingReviewItemResponse> listReviewSightings(boolean pendingOnly, int page, int size) {
         int safeSize = Math.max(1, Math.min(100, size));
         int safePage = Math.max(0, page);
@@ -209,7 +339,7 @@ public class SightingDeduplicationService {
         Page<SightingEntity> entities = pendingOnly
                 ? sightingJpaRepository.findByDedupStatusOrderByOccurredAtDesc(DedupStatus.PENDING_REVIEW, pageable)
                 : sightingJpaRepository.findAllByOrderByOccurredAtDesc(pageable);
-        return entities.map(SightingDeduplicationService::toReviewItem);
+        return entities.map(this::toReviewItem);
     }
 
     /**
@@ -222,8 +352,39 @@ public class SightingDeduplicationService {
         double ear = booleanScore(incoming.earTipped(), candidate.isEarTipped());
         double features = overlapScore(incoming.specialFeatures(), candidate.getSpecialFeatures());
 
-        // Weighted blend for business requirements.
         return 0.25 * coat + 0.20 * pattern + 0.15 * size + 0.30 * features + 0.10 * ear;
+    }
+
+    private SightingReviewItemResponse toReviewItem(SightingEntity s) {
+        Double clipDistance = catMatchFeedbackJpaRepository.findFirstBySightingIdOrderByIdDesc(s.getId())
+                .map(CatMatchFeedbackEntity::getClipDistance)
+                .orElse(null);
+        return new SightingReviewItemResponse(
+                s.getId(),
+                s.getCatId(),
+                s.getReporterUserId(),
+                s.getImageUrl(),
+                s.getAddressText(),
+                s.getLatitude(),
+                s.getLongitude(),
+                s.getOccurredAt(),
+                s.getCoatColor(),
+                s.getPatternType(),
+                s.getBodySize(),
+                s.getSpecialFeatures(),
+                s.isEarTipped(),
+                s.getEarTippedConfidence(),
+                s.getDedupStatus(),
+                s.getSuggestedCatId(),
+                s.getDuplicateOfSightingId(),
+                s.getSimilarityScore(),
+                clipDistance,
+                s.getDedupReason(),
+                s.getCreatedAt()
+        );
+    }
+
+    private record ClipDedupOutcome(ClipDedupDecision decision, float[] embedding) {
     }
 
     private CatEntity createNewCat(NewSightingCommand cmd, CatFeatureVector featureVector, Instant seenAt) {
@@ -264,8 +425,6 @@ public class SightingDeduplicationService {
         }
 
         cat.setSpecialFeatures(unionFeatures(cat.getSpecialFeatures(), sighting.getSpecialFeatures()));
-
-        // New activity cancels any pending "no re-sight" reminder state for this profile.
         cat.setAbsenceReminderSentAt(null);
 
         if (sighting.isEarTipped() && sighting.getEarTippedConfidence() >= 0.60) {
@@ -364,7 +523,6 @@ public class SightingDeduplicationService {
         if (value.length() <= MAX_STORED_IMAGE_URL_CHARS) {
             return value;
         }
-        // Keep DB write safe for very large uploads; retain a stable identifier for auditing.
         return "data-url-too-large:sha256=" + sha256Hex(value) + ":chars=" + value.length();
     }
 
@@ -452,7 +610,6 @@ public class SightingDeduplicationService {
         }
 
         UserEntity u = new UserEntity();
-        // Accept explicit caller-provided id so foreign key reporter_user_id can be used immediately.
         u.setId(reporterUserId);
         u.setEmail(email);
         u.setDisplayName("Tracking User " + reporterUserId);
@@ -461,7 +618,6 @@ public class SightingDeduplicationService {
         try {
             userJpaRepository.save(u);
         } catch (DataIntegrityViolationException ex) {
-            // Concurrent insert or legacy row with same key: treat as existing user (idempotent upsert).
             if (userJpaRepository.findById(reporterUserId).isEmpty()
                     && userJpaRepository.findByEmail(email).isEmpty()) {
                 throw ex;
@@ -471,30 +627,5 @@ public class SightingDeduplicationService {
 
     private static Instant maxInstant(Instant a, Instant b) {
         return a.isAfter(b) ? a : b;
-    }
-
-    private static SightingReviewItemResponse toReviewItem(SightingEntity s) {
-        return new SightingReviewItemResponse(
-                s.getId(),
-                s.getCatId(),
-                s.getReporterUserId(),
-                s.getImageUrl(),
-                s.getAddressText(),
-                s.getLatitude(),
-                s.getLongitude(),
-                s.getOccurredAt(),
-                s.getCoatColor(),
-                s.getPatternType(),
-                s.getBodySize(),
-                s.getSpecialFeatures(),
-                s.isEarTipped(),
-                s.getEarTippedConfidence(),
-                s.getDedupStatus(),
-                s.getSuggestedCatId(),
-                s.getDuplicateOfSightingId(),
-                s.getSimilarityScore(),
-                s.getDedupReason(),
-                s.getCreatedAt()
-        );
     }
 }

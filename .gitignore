@@ -38,3 +38,8 @@ build/
 # ===== Python cat-agent =====
 cat-agent/.venv/
 cat-agent/__pycache__/
+
+# ===== Python embedding-service =====
+embedding-service/.venv/
+embedding-service/__pycache__/
+embedding-service/chroma_db/

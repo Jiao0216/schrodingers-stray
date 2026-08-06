@@ -104,3 +104,10 @@ cat-rescue:
   python-agent:
     enabled: ${CAT_RESCUE_PYTHON_AGENT_ENABLED:true}
     base-url: ${CAT_RESCUE_PYTHON_AGENT_BASE_URL:http://127.0.0.1:8000}
+  # CLIP embedding microservice (embedding-service on :8001, separate from cat-agent :8000)
+  embedding:
+    enabled: ${CAT_RESCUE_EMBEDDING_ENABLED:true}
+    base-url: ${CAT_RESCUE_EMBEDDING_BASE_URL:http://127.0.0.1:8001}
+    distance-threshold: ${CAT_RESCUE_EMBEDDING_DISTANCE_THRESHOLD:0.199}
+  chroma:
+    collection: ${CAT_RESCUE_CHROMA_COLLECTION:stray_cats}
