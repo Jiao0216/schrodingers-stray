@@ -12,9 +12,12 @@ import com.catrescue.api.tracking.dto.CatProfileResponse;
 import com.catrescue.api.tracking.dto.HeatmapPointDto;
 import com.catrescue.api.tracking.dto.HeatmapSampleResponse;
 import com.catrescue.api.tracking.dto.HeatmapSightingResponse;
+import com.catrescue.api.tracking.service.CatDeletionService;
 import com.catrescue.api.tracking.service.CatHeatmapService;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,6 +25,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 /**
  * Read APIs for cat movement history (heatmap + last seen).
@@ -35,17 +40,20 @@ public class CatTrackingController {
     private final DataAccessResolver dataAccessResolver;
     private final DataMaskingService dataMaskingService;
     private final AssessmentService assessmentService;
+    private final CatDeletionService catDeletionService;
 
     public CatTrackingController(
             CatHeatmapService catHeatmapService,
             DataAccessResolver dataAccessResolver,
             DataMaskingService dataMaskingService,
-            AssessmentService assessmentService
+            AssessmentService assessmentService,
+            CatDeletionService catDeletionService
     ) {
         this.catHeatmapService = catHeatmapService;
         this.dataAccessResolver = dataAccessResolver;
         this.dataMaskingService = dataMaskingService;
         this.assessmentService = assessmentService;
+        this.catDeletionService = catDeletionService;
     }
 
     /**
@@ -152,6 +160,24 @@ public class CatTrackingController {
         DataAccessTier tier = dataAccessResolver.resolve(request);
         CatLastSeenResponse raw = catHeatmapService.buildLastSeen(catId);
         return dataMaskingService.maskLastSeen(raw, tier);
+    }
+
+    /**
+     * Permanently removes this cat and related rows (sightings for this archive, pending suggestions,
+     * feeding records, saved snapshots, volunteer notifications). Requires admin data token header.
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Map<String, Object>> deleteCat(@PathVariable("id") Long catId, HttpServletRequest request) {
+        if (dataAccessResolver.resolve(request) != DataAccessTier.ADMIN) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                    "success", false,
+                    "error", "Admin data token required (X-Cat-Rescue-Admin-Data-Token)."
+            ));
+        }
+        Optional<Map<String, Object>> deleted = catDeletionService.deleteCat(catId);
+        return deleted
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> new ResponseEntity<>(null, HttpStatus.NOT_FOUND));
     }
 
     private HeatmapSampleResponse toSample(HeatmapPointDto p) {

@@ -35,7 +35,10 @@ public class AdminResetController {
         deletedRows.put("volunteer_feeding_checkins", safeDelete("DELETE FROM volunteer_feeding_checkins"));
         deletedRows.put("volunteer_notifications", safeDelete("DELETE FROM volunteer_notifications"));
         deletedRows.put("notifications", safeDelete("DELETE FROM notifications"));
+        deletedRows.put("volunteer_saved_cats", safeDelete("DELETE FROM volunteer_saved_cats"));
         deletedRows.put("cats", safeDelete("DELETE FROM cats"));
+        // Community upload / analyze photos live in assessments (image_bytes).
+        deletedRows.put("assessments", safeDelete("DELETE FROM assessments"));
 
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("success", true);

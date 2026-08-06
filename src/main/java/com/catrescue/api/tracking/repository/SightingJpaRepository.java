@@ -59,6 +59,13 @@ public interface SightingJpaRepository extends JpaRepository<SightingEntity, Lon
     @Query("select count(distinct s.catId) from SightingEntity s where s.catId is not null")
     long countDistinctCatIdWithNonNullCat();
 
+    /**
+     * Distinct archive cats with at least one sighting merged as {@link DedupStatus#CONFIRMED_DUPLICATE}
+     * (each cat counted at most once).
+     */
+    @Query("select count(distinct s.catId) from SightingEntity s where s.catId is not null and s.dedupStatus = :status")
+    long countDistinctCatIdByDedupStatus(@Param("status") DedupStatus status);
+
     Page<SightingEntity> findByReporterUserIdOrderByOccurredAtDesc(Long reporterUserId, Pageable pageable);
 
     long countByReporterUserId(Long reporterUserId);

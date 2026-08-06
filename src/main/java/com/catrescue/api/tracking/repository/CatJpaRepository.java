@@ -1,5 +1,6 @@
 package com.catrescue.api.tracking.repository;
 
+import com.catrescue.api.tracking.domain.SterilizationStatus;
 import com.catrescue.api.tracking.persistence.CatEntity;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -8,9 +9,12 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
 
 public interface CatJpaRepository extends JpaRepository<CatEntity, Long> {
+
+    long countBySterilizationStatusIn(Collection<SterilizationStatus> statuses);
 
     List<CatEntity> findByCreatedByUserIdOrderByLastSeenAtDesc(Long createdByUserId, Pageable pageable);
 

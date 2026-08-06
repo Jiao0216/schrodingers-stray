@@ -2,6 +2,9 @@ package com.catrescue.api.service;
 
 import com.catrescue.api.dto.PlatformStatsResponse;
 import com.catrescue.api.persistence.AssessmentJpaRepository;
+import com.catrescue.api.tracking.domain.DedupStatus;
+import com.catrescue.api.tracking.domain.SterilizationStatus;
+import com.catrescue.api.tracking.repository.CatJpaRepository;
 import com.catrescue.api.tracking.repository.FeedingStationDispenseLogJpaRepository;
 import com.catrescue.api.tracking.repository.SightingJpaRepository;
 import com.catrescue.api.tracking.service.CatHeatmapService;
@@ -11,6 +14,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 
 @Service
 public class PlatformStatsService {
@@ -20,15 +24,18 @@ public class PlatformStatsService {
     private final AssessmentJpaRepository assessmentJpaRepository;
     private final SightingJpaRepository sightingJpaRepository;
     private final FeedingStationDispenseLogJpaRepository feedingStationDispenseLogJpaRepository;
+    private final CatJpaRepository catJpaRepository;
 
     public PlatformStatsService(
             AssessmentJpaRepository assessmentJpaRepository,
             SightingJpaRepository sightingJpaRepository,
-            FeedingStationDispenseLogJpaRepository feedingStationDispenseLogJpaRepository
+            FeedingStationDispenseLogJpaRepository feedingStationDispenseLogJpaRepository,
+            CatJpaRepository catJpaRepository
     ) {
         this.assessmentJpaRepository = assessmentJpaRepository;
         this.sightingJpaRepository = sightingJpaRepository;
         this.feedingStationDispenseLogJpaRepository = feedingStationDispenseLogJpaRepository;
+        this.catJpaRepository = catJpaRepository;
     }
 
     public PlatformStatsResponse summarize() {
@@ -40,13 +47,25 @@ public class PlatformStatsService {
         double ratio = totalAssessments <= 0 ? 0.0 : (double) withGeo / (double) totalAssessments;
         Instant startOfToday = ZonedDateTime.now(PLATFORM_DAY_ZONE).toLocalDate().atStartOfDay(PLATFORM_DAY_ZONE).toInstant();
         long todayDispenses = feedingStationDispenseLogJpaRepository.countScheduledSince(startOfToday);
+
+        long totalCatProfiles = catJpaRepository.count();
+        long totalSightings = sightingJpaRepository.count();
+        long distinctDupCats =
+                sightingJpaRepository.countDistinctCatIdByDedupStatus(DedupStatus.CONFIRMED_DUPLICATE);
+        long catsPendingTnr = catJpaRepository.countBySterilizationStatusIn(
+                List.of(SterilizationStatus.UNKNOWN, SterilizationStatus.NOT_STERILIZED));
+
         return new PlatformStatsResponse(
                 totalAssessments,
                 sightings30,
                 distinctCats,
                 withGeo,
                 Math.round(ratio * 1000.0) / 1000.0,
-                todayDispenses
+                todayDispenses,
+                totalCatProfiles,
+                totalSightings,
+                distinctDupCats,
+                catsPendingTnr
         );
     }
 }

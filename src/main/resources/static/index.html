@@ -330,6 +330,106 @@
       color: rgba(124, 45, 18, 0.72);
     }
 
+    .impact-simple-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 12px 16px;
+      margin: 10px 16px 0;
+    }
+    .impact-view-detail-btn {
+      font-size: 12px;
+      padding: 6px 14px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .impact-detail-dialog {
+      max-width: min(520px, 94vw);
+      width: calc(100vw - 32px);
+      border: none;
+      border-radius: 18px;
+      padding: 0;
+      background: transparent;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+    }
+    .impact-detail-dialog::backdrop {
+      background: rgba(15, 10, 6, 0.5);
+    }
+    body.theme-tech .impact-detail-inner {
+      background: linear-gradient(165deg, rgba(30, 22, 14, 0.98) 0%, rgba(18, 12, 8, 0.99) 100%);
+      border: 1px solid rgba(255, 140, 66, 0.28);
+      color: rgba(255, 248, 238, 0.95);
+    }
+    .impact-detail-inner {
+      position: relative;
+      padding: 22px 18px 20px;
+      border-radius: 18px;
+      border: 1px solid rgba(217, 119, 6, 0.32);
+      background: linear-gradient(165deg, rgba(255, 252, 247, 0.99) 0%, rgba(255, 243, 224, 0.99) 100%);
+      color: var(--text);
+    }
+    .impact-detail-close {
+      position: absolute;
+      top: 10px;
+      right: 12px;
+      width: 36px;
+      height: 36px;
+      border: none;
+      border-radius: 10px;
+      font-size: 22px;
+      line-height: 1;
+      cursor: pointer;
+      background: rgba(0, 0, 0, 0.06);
+      color: inherit;
+    }
+    body.theme-tech .impact-detail-close {
+      background: rgba(255, 255, 255, 0.08);
+      color: rgba(255, 248, 238, 0.92);
+    }
+    .impact-detail-title {
+      margin: 0 40px 10px 0;
+      font-size: 1.15rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+    }
+    body.theme-tech .impact-detail-title {
+      color: rgba(255, 248, 238, 0.96);
+    }
+    .impact-detail-asof {
+      margin: 0 0 4px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+    }
+    body.theme-tech .impact-detail-asof {
+      color: rgba(253, 230, 200, 0.75);
+    }
+    .impact-detail-summary-line {
+      margin: 10px 0 12px;
+      font-size: 15px;
+      font-weight: 700;
+      line-height: 1.55;
+      color: var(--text);
+      text-align: center;
+    }
+    body.theme-tech .impact-detail-summary-line {
+      color: rgba(255, 248, 238, 0.96);
+    }
+    .impact-detail-tagline {
+      margin: 18px 0 0;
+      text-align: center;
+      font-size: 14px;
+      font-weight: 600;
+      line-height: 1.65;
+      letter-spacing: 0.04em;
+      color: #9a3412;
+    }
+    body.theme-tech .impact-detail-tagline {
+      color: rgba(253, 186, 116, 0.95);
+    }
+
     .cat-profile-toolbar {
       display: flex;
       flex-wrap: wrap;
@@ -1794,13 +1894,38 @@
       <p class="hero-subtitle" data-i18n="heroSubtitleLine">每只流浪猫都处于叠加态——直到你行动，让它坍缩为安全与幸福。</p>
       <div class="hero-actions">
         <a class="btn hero-cta-primary" href="/auth" data-i18n="heroBtnCommunity">加入社区</a>
-        <a class="btn hero-cta-secondary" href="mailto:zhang.jiao2@northeastern.edu?subject=%E6%9C%BA%E6%9E%84%E5%90%88%E4%BD%9C%E7%94%B3%E8%AF%B7" data-i18n="heroBtnOrg">申请机构合作</a>
-        <a class="hero-cta-text" href="mailto:zhang.jiao2@northeastern.edu?subject=%E6%8A%95%E8%B5%84%E4%BA%BA%E5%90%88%E4%BD%9C" data-i18n="heroBtnInvestor">投资人联系</a>
+        <a class="btn hero-cta-secondary" href="mailto:zhang.jiao2@northeastern.edu?subject=%E6%9C%BA%E6%9E%84%E5%90%88%E4%BD%9C" data-i18n="heroBtnOrg">机构合作</a>
       </div>
     </div>
   </section>
 
-  <p id="impactSimpleLine" class="heatmap-note" style="margin:10px 4px 0;font-size:12px;" data-i18n="dashboardSimpleLoading">正在从后端汇总…</p>
+  <div class="impact-simple-row">
+    <button type="button" id="impactViewDetailBtn" class="btn secondary impact-view-detail-btn" data-i18n="impactViewBtn">查看影响力</button>
+  </div>
+
+  <dialog id="impactDetailDialog" class="impact-detail-dialog" aria-labelledby="impactDetailDialogTitle">
+    <div class="impact-detail-inner">
+      <button type="button" class="impact-detail-close" id="impactDetailCloseBtn" aria-label="Close">&times;</button>
+      <h2 id="impactDetailDialogTitle" class="impact-detail-title" data-i18n="impactDetailTitle">平台影响力</h2>
+      <p id="impactDetailAsOf" class="impact-detail-asof"></p>
+      <p id="impactDetailSummaryLine" class="impact-detail-summary-line" aria-live="polite"></p>
+      <div class="impact-dash-grid" style="margin-top:4px;">
+        <div class="impact-card">
+          <span id="impactDetailNumTracked" class="impact-num">—</span>
+          <span class="impact-label" data-i18n="impactMetricTrackedLabel">已追踪（档案）</span>
+        </div>
+        <div class="impact-card">
+          <span id="impactDetailNumSightings" class="impact-num">—</span>
+          <span class="impact-label" data-i18n="impactMetricCommunityLabel">社区记录</span>
+        </div>
+        <div class="impact-card">
+          <span id="impactDetailNumTnr" class="impact-num">—</span>
+          <span class="impact-label" data-i18n="impactMetricTnrLabel">待 TNR 个体</span>
+        </div>
+      </div>
+      <p id="impactDetailTagline" class="impact-detail-tagline" data-i18n="impactDetailTagline"></p>
+    </div>
+  </dialog>
 
   <nav class="main-tabs" role="tablist" aria-label="CatGuardian">
     <button type="button" class="main-tab active" id="tabUpload" data-panel="panel-upload" data-i18n="tabUpload">上传 / 分析</button>
@@ -2012,6 +2137,10 @@
       <div id="claimedCatsList" class="cat-photo-match-grid"></div>
     </div>
     <div id="catProfileSummary"></div>
+    <div class="cat-delete-row" style="margin:14px 0 10px;display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;">
+      <button id="deleteCatPlatformBtn" type="button" class="btn secondary" style="border-color:var(--danger);color:var(--danger);" data-i18n="catProfileDeleteLabel">从平台删除此猫全部数据</button>
+      <span id="deleteCatPlatformNote" class="heatmap-note" style="margin:0;"></span>
+    </div>
     <h3 class="cat-profile-timeline-title" data-i18n="catProfileSightingsTitle">目击时间线</h3>
     <div id="catProfileStatus" class="heatmap-note" style="margin-bottom:10px;"></div>
     <div id="catProfileTimeline"></div>
@@ -2227,8 +2356,7 @@
       useAddressBtn: "解析地址",
       heroHeadlineLine: "你是观测者。",
       heroSubtitleLine: "每只流浪猫都处于叠加态——直到你行动，让它坍缩为安全与幸福。",
-      heroBtnOrg: "申请机构合作",
-      heroBtnInvestor: "投资人联系",
+      heroBtnOrg: "机构合作",
       heroBtnCommunity: "加入社区",
       healthScoresTitle: "体态与健康（模型 0–100%）",
       healthScoresFootnote: "任一分项低于 70% 时建议人工现场核实。综合「伤病」概率由体态等多维信号推导。",
@@ -2239,10 +2367,16 @@
       probHealthInjury: "疑似受伤",
       triageFeedAutoLabel: "喂食器已记录",
       triageFeedAutoHint: "日常投喂由定时喂食器计入打卡；本分析不测是否缺粮。",
-      dashboardOfflineNote: "未连接后端 API 时无法汇总；请使用页面顶部配置或地址栏 ?api= 后再刷新。",
       dashboardImpactPartial: "部分接口不可用，已用「—」表示缺失项。",
-      dashboardSimpleLoading: "正在从后端汇总…",
       dashboardSimpleLine: "已追踪 {cats} 只猫 · {sightings} 个目击记录",
+      impactViewBtn: "查看影响力",
+      impactDetailTitle: "平台影响力",
+      impactAsOfPrefix: "截至今天：",
+      impactMetricTrackedLabel: "已追踪（档案）",
+      impactMetricCommunityLabel: "社区记录",
+      impactMetricTnrLabel: "待 TNR 个体",
+      impactDetailTagline: "让更多流浪猫，从不确定走向安全与幸福。",
+      impactDetailCloseAria: "关闭",
       stepStatus: "猫咪状态",
       stepActions: "推荐行动",
       stepResources: "附近资源",
@@ -2514,6 +2648,14 @@
       catProfileSightingsTitle: "目击时间线",
       catProfileSightingId: "目击 #",
       catProfileDedup: "去重",
+      catProfileDeleteLabel: "从平台删除此猫全部数据",
+      catProfileDeleteNeedProfile: "请先打开一只猫的档案（或输入猫咪 ID 并加载档案）。",
+      catProfileDeleteNeedAdmin: "需要管理员数据令牌：在本地存储设置 catguardian_admin_data_token，或配置 X-Cat-Rescue-Admin-Data-Token。",
+      catProfileDeleteConfirm: "确定从本平台永久删除猫咪 #{id} 及其关联目击、喂养记录、保存快照与通知吗？此操作不可恢复。",
+      catProfileDeleteRunning: "正在删除…",
+      catProfileDeleteOk: "已删除该猫在平台上的关联数据。",
+      catProfileDeleteFail: "删除失败：",
+      catProfileDeleteForbidden: "无权限（需要管理员令牌）。",
       catProfileOpenFromHeatmap: "打开个体档案",
       catProfileLastFed: "最后喂养",
       catProfileNeverFed: "暂无记录",
@@ -2610,8 +2752,7 @@
       useAddressBtn: "Geocode",
       heroHeadlineLine: "You are the observer.",
       heroSubtitleLine: "Every stray exists in superposition — until you act to collapse it into safety and warmth.",
-      heroBtnOrg: "Partner with us",
-      heroBtnInvestor: "Contact investors",
+      heroBtnOrg: "Institutional partnership",
       heroBtnCommunity: "Join the community",
       healthScoresTitle: "Body condition & health (model 0–100%)",
       healthScoresFootnote: "Any score under 70%: recommend an in-person check. The combined illness/injury bar aggregates these signals.",
@@ -2622,10 +2763,16 @@
       probHealthInjury: "Suspected injury",
       triageFeedAutoLabel: "Logged by feeder",
       triageFeedAutoHint: "Routine meals come from scheduled feeders; this photo analysis does not score hunger.",
-      dashboardOfflineNote: "Connect an API base URL (banner or ?api=) and reload to see live totals.",
       dashboardImpactPartial: "Some endpoints failed; missing cells show as —.",
-      dashboardSimpleLoading: "Loading summary from API...",
       dashboardSimpleLine: "Tracking {cats} cats · {sightings} sightings",
+      impactViewBtn: "View impact",
+      impactDetailTitle: "Platform impact",
+      impactAsOfPrefix: "As of today: ",
+      impactMetricTrackedLabel: "Stray cats on file",
+      impactMetricCommunityLabel: "Community records",
+      impactMetricTnrLabel: "Cats pending TNR",
+      impactDetailTagline: "Helping more strays move from uncertainty toward safety and wellbeing.",
+      impactDetailCloseAria: "Close",
       stepStatus: "Cat status",
       stepActions: "Recommended actions",
       stepResources: "Nearby resources",
@@ -2897,6 +3044,14 @@
       catProfileSightingsTitle: "Sighting timeline",
       catProfileSightingId: "Sighting #",
       catProfileDedup: "Dedup",
+      catProfileDeleteLabel: "Delete this cat and all platform data",
+      catProfileDeleteNeedProfile: "Open a cat profile first (or enter a cat ID and load the profile).",
+      catProfileDeleteNeedAdmin: "Admin data token required: set localStorage catguardian_admin_data_token, or send X-Cat-Rescue-Admin-Data-Token.",
+      catProfileDeleteConfirm: "Permanently delete cat #{id} and related sightings, feeding records, saved snapshots, and notifications? This cannot be undone.",
+      catProfileDeleteRunning: "Deleting…",
+      catProfileDeleteOk: "This cat and related platform data were removed.",
+      catProfileDeleteFail: "Delete failed: ",
+      catProfileDeleteForbidden: "Forbidden (admin token required).",
       catProfileOpenFromHeatmap: "Open cat profile",
       catProfileLastFed: "Last fed",
       catProfileNeverFed: "No records yet",
@@ -3040,19 +3195,63 @@
     return lang === "en" ? "en-US" : "zh-CN";
   }
 
-  function renderImpactDashFromCache() {
-    const lineEl = document.getElementById("impactSimpleLine");
-    if (!lineEl) return;
+  function formatImpactAsOfLocal() {
+    const d = new Date();
+    const loc = impactDashLocale();
+    if (lang === "en") {
+      return d.toLocaleDateString(loc, { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+    }
+    return d.toLocaleDateString(loc, { year: "numeric", month: "long", day: "numeric", weekday: "long" });
+  }
+
+  function fmtImpactNum(v) {
+    if (v == null || !Number.isFinite(Number(v))) return "—";
+    return Number(v).toLocaleString(impactDashLocale());
+  }
+
+  function fillImpactDetailDialog() {
+    const asOfEl = document.getElementById("impactDetailAsOf");
+    const sumLine = document.getElementById("impactDetailSummaryLine");
+    const nTracked = document.getElementById("impactDetailNumTracked");
+    const nSight = document.getElementById("impactDetailNumSightings");
+    const nTnr = document.getElementById("impactDetailNumTnr");
+    const tagEl = document.getElementById("impactDetailTagline");
+    if (asOfEl) asOfEl.textContent = t("impactAsOfPrefix") + formatImpactAsOfLocal();
+    if (tagEl) tagEl.textContent = t("impactDetailTagline");
+
+    function dashImpactCards() {
+      if (nTracked) nTracked.textContent = "—";
+      if (nSight) nSight.textContent = "—";
+      if (nTnr) nTnr.textContent = "—";
+    }
+
     if (!impactMetricsCache) {
-      lineEl.textContent = t("dashboardSimpleLoading");
+      if (sumLine) sumLine.textContent = "";
+      dashImpactCards();
       return;
     }
+
+    if (impactMetricsCache.partial) {
+      if (sumLine) sumLine.textContent = t("dashboardImpactPartial");
+      dashImpactCards();
+      return;
+    }
+
     const loc = impactDashLocale();
-    const cats = impactMetricsCache.distinctCats != null ? Number(impactMetricsCache.distinctCats).toLocaleString(loc) : "—";
-    const sightings = impactMetricsCache.sightings != null ? Number(impactMetricsCache.sightings).toLocaleString(loc) : "—";
-    lineEl.textContent = t("dashboardSimpleLine")
-      .replace("{cats}", cats)
-      .replace("{sightings}", sightings);
+    const cats =
+      impactMetricsCache.distinctCats != null ? Number(impactMetricsCache.distinctCats).toLocaleString(loc) : "—";
+    const sightings30 =
+      impactMetricsCache.sightings != null ? Number(impactMetricsCache.sightings).toLocaleString(loc) : "—";
+    if (sumLine) sumLine.textContent = t("dashboardSimpleLine").replace("{cats}", cats).replace("{sightings}", sightings30);
+
+    const c = impactMetricsCache;
+    /* When the running API predates extended fields, fall back to the same KPIs as the summary line so cards are not all "—". */
+    const tracked = c.totalCatProfiles != null ? c.totalCatProfiles : c.distinctCats;
+    const community = c.totalSightings != null ? c.totalSightings : c.sightings;
+    if (nTracked) nTracked.textContent = fmtImpactNum(tracked);
+    if (nSight) nSight.textContent = fmtImpactNum(community);
+    /* TNR: only backend `catsPendingTnr` (no client-side estimate). */
+    if (nTnr) nTnr.textContent = fmtImpactNum(c.catsPendingTnr);
   }
 
   /** Hosts that serve only static files and require an explicit API origin (e.g. Butterbase). Same-origin Spring Boot (localhost:8090) has getApiBase()==="" but API is still reachable. */
@@ -3064,29 +3263,24 @@
     }
   }
 
-  function refreshImpactDashFootnote() {
-    const el = document.getElementById("impactSimpleLine");
-    if (!el) return;
-    if (!impactMetricsCache) {
-      if (!getApiBase() && isStaticHostRequiringApiConfig()) {
-        el.textContent = t("dashboardOfflineNote");
-      } else {
-        el.textContent = t("dashboardSimpleLoading");
-      }
-      return;
+  /** First present finite number among alternate JSON property names (camelCase or snake_case). */
+  function pickStatLong(obj, keys) {
+    if (!obj || typeof obj !== "object") return null;
+    for (const k of keys) {
+      if (!Object.prototype.hasOwnProperty.call(obj, k)) continue;
+      const n = Number(obj[k]);
+      if (Number.isFinite(n)) return n;
     }
-    if (impactMetricsCache.partial) {
-      el.textContent = t("dashboardImpactPartial");
-    } else {
-      renderImpactDashFromCache();
-    }
+    return null;
   }
 
   async function refreshImpactMetricsFromApi() {
     /* getApiBase() is empty on same-origin (e.g. Spring Boot serving static + API); apiFetchUrl() still uses location.origin. */
-    refreshImpactDashFootnote();
     let nSight = null;
     let nDistinct = null;
+    let nTotalCatProfiles = null;
+    let nTotalSightings = null;
+    let nPendingTnr = null;
     let usedPlatform = false;
     for (const u of PLATFORM_STATS_URLS) {
       try {
@@ -3107,9 +3301,14 @@
           continue;
         }
         if (j == null || typeof j !== "object") continue;
-        if (j.totalAssessments == null && j.sightingsLast30Days == null) continue;
-        nSight = Number(j.sightingsLast30Days);
-        nDistinct = Number(j.distinctCatsWithSightings);
+        const totalAssess = pickStatLong(j, ["totalAssessments", "total_assessments"]);
+        const s30Probe = pickStatLong(j, ["sightingsLast30Days", "sightings_last_30_days"]);
+        if (totalAssess == null && s30Probe == null) continue;
+        nSight = pickStatLong(j, ["sightingsLast30Days", "sightings_last_30_days"]);
+        nDistinct = pickStatLong(j, ["distinctCatsWithSightings", "distinct_cats_with_sightings"]);
+        nTotalCatProfiles = pickStatLong(j, ["totalCatProfiles", "total_cat_profiles"]);
+        nTotalSightings = pickStatLong(j, ["totalSightings", "total_sightings"]);
+        nPendingTnr = pickStatLong(j, ["catsPendingTnr", "cats_pending_tnr"]);
         usedPlatform = true;
         break;
       } catch (_ignore) {
@@ -3119,10 +3318,15 @@
     impactMetricsCache = {
       sightings: usedPlatform ? nSight : null,
       distinctCats: usedPlatform ? nDistinct : null,
+      totalCatProfiles: usedPlatform ? nTotalCatProfiles : null,
+      totalSightings: usedPlatform ? nTotalSightings : null,
+      catsPendingTnr: usedPlatform ? nPendingTnr : null,
       partial: !usedPlatform
     };
-    renderImpactDashFromCache();
-    refreshImpactDashFootnote();
+    try {
+      const dlg = document.getElementById("impactDetailDialog");
+      if (dlg && typeof dlg.open === "boolean" && dlg.open) fillImpactDetailDialog();
+    } catch (_e) {}
   }
 
   function applyStaticI18n() {
@@ -3143,8 +3347,8 @@
       themeBtn.textContent = theme === "tech" ? t("themeToggleToWarm") : t("themeToggleToTech");
     }
     refreshTrackingUserNote();
-    renderImpactDashFromCache();
-    refreshImpactDashFootnote();
+    const impactClose = document.getElementById("impactDetailCloseBtn");
+    if (impactClose) impactClose.setAttribute("aria-label", t("impactDetailCloseAria"));
     refreshPythonAgentResultChatUi();
   }
 
@@ -3169,8 +3373,10 @@
     lang = next;
     localStorage.setItem(LANG_KEY, lang);
     applyStaticI18n();
-    renderImpactDashFromCache();
-    refreshImpactDashFootnote();
+    try {
+      const dlg = document.getElementById("impactDetailDialog");
+      if (dlg && dlg.open) fillImpactDetailDialog();
+    } catch (_e) {}
     refreshDynamicLanguageContent();
   }
   document.getElementById("langZh").addEventListener("click", () => setLanguage("zh"));
@@ -4129,6 +4335,76 @@
     }
     const catSaveBtnEnd = document.getElementById("catSaveToVolunteerBtn");
     if (catSaveBtnEnd) catSaveBtnEnd.disabled = !readVolunteerUserId();
+  }
+
+  async function deleteCatFromPlatform() {
+    const note = document.getElementById("deleteCatPlatformNote");
+    const id = String(activeCatProfileId || "").trim().replace(/[^\d]/g, "");
+    if (!/^[1-9]\d*$/.test(id)) {
+      if (note) note.textContent = t("catProfileDeleteNeedProfile");
+      return;
+    }
+    let adminTok = "";
+    try {
+      adminTok = (localStorage.getItem(STORAGE_ADMIN_DATA_TOKEN) || "").trim();
+    } catch (_e) {
+      adminTok = "";
+    }
+    if (!adminTok) {
+      if (note) note.textContent = t("catProfileDeleteNeedAdmin");
+      return;
+    }
+    if (!confirm(t("catProfileDeleteConfirm").replace("{id}", id))) {
+      if (note) note.textContent = "";
+      return;
+    }
+    if (note) note.textContent = t("catProfileDeleteRunning");
+    let lastErr = "";
+    try {
+      const paths = ["/api/v1/cats/" + encodeURIComponent(id), "/cats/" + encodeURIComponent(id)];
+      for (const p of paths) {
+        const r = await fetch(apiFetchUrl(p), {
+          method: "DELETE",
+          cache: "no-store",
+          credentials: "omit",
+          mode: "cors",
+          headers: mergeDataHeaders({ Accept: "application/json" })
+        });
+        if (r.status === 403) {
+          const tj = await r.text().catch(() => "");
+          if (note) note.textContent = t("catProfileDeleteForbidden") + (tj ? " " + tj : "");
+          return;
+        }
+        if (r.status === 404) {
+          lastErr = t("catProfileNotFound");
+          break;
+        }
+        if (r.ok) {
+          if (note) note.textContent = t("catProfileDeleteOk");
+          activeCatProfileId = "";
+          const hi = document.getElementById("heatmapCatId");
+          if (hi && String(hi.value || "").trim().replace(/[^\d]/g, "") === id) {
+            hi.value = "";
+          }
+          const se = document.getElementById("catProfileStatus");
+          const su = document.getElementById("catProfileSummary");
+          const tl = document.getElementById("catProfileTimeline");
+          if (se) se.textContent = "";
+          if (su) su.innerHTML = "";
+          if (tl) tl.innerHTML = "";
+          try {
+            await loadHeatmap();
+          } catch (_e2) {
+            /* ignore */
+          }
+          return;
+        }
+        lastErr = (await r.text().catch(() => "")) || "HTTP " + r.status;
+      }
+      if (note) note.textContent = t("catProfileDeleteFail") + (lastErr || "");
+    } catch (e) {
+      if (note) note.textContent = t("catProfileDeleteFail") + (e && e.message ? e.message : String(e));
+    }
   }
 
   async function loadClaimedCats() {
@@ -7599,6 +7875,31 @@
   initHeroCarousel();
   refreshImpactMetricsFromApi();
 
+  (function initImpactDetailDialog() {
+    const impactViewBtn = document.getElementById("impactViewDetailBtn");
+    const impactDlg = document.getElementById("impactDetailDialog");
+    const impactCloseBtn = document.getElementById("impactDetailCloseBtn");
+    if (impactViewBtn && impactDlg) {
+      impactViewBtn.addEventListener("click", async () => {
+        await refreshImpactMetricsFromApi();
+        fillImpactDetailDialog();
+        if (typeof impactDlg.showModal === "function") {
+          impactDlg.showModal();
+        }
+      });
+    }
+    if (impactCloseBtn && impactDlg) {
+      impactCloseBtn.addEventListener("click", () => {
+        if (typeof impactDlg.close === "function") impactDlg.close();
+      });
+    }
+    if (impactDlg) {
+      impactDlg.addEventListener("click", (ev) => {
+        if (ev.target === impactDlg && typeof impactDlg.close === "function") impactDlg.close();
+      });
+    }
+  })();
+
   try {
     if (sessionStorage.getItem("catguardian_open_upload") === "1") {
       sessionStorage.removeItem("catguardian_open_upload");
@@ -7780,6 +8081,12 @@
         return;
       }
       openCatProfileById(hid);
+    });
+  }
+  const deleteCatPlatformBtn = document.getElementById("deleteCatPlatformBtn");
+  if (deleteCatPlatformBtn) {
+    deleteCatPlatformBtn.addEventListener("click", () => {
+      void deleteCatFromPlatform();
     });
   }
   findSameCatBtn.addEventListener("click", async () => {
