@@ -1964,20 +1964,20 @@
         </div>
 
         <div class="field">
-          <span class="ear-clip-group-label" data-i18n="earClipLabel">剪耳（TNR 标记）</span>
-          <div class="ear-clip-row" role="radiogroup" aria-label="Ear clip">
-            <label><input type="radio" name="earClip" value="yes"> <span data-i18n="earClipYes">已剪耳</span></label>
-            <label><input type="radio" name="earClip" value="no"> <span data-i18n="earClipNo">未剪耳</span></label>
-            <label><input type="radio" name="earClip" value="unknown" checked> <span data-i18n="earClipUnknown">不确定</span></label>
+          <span class="ear-clip-group-label" data-i18n="earClipLabel">剪耳（TNR 标记）<span aria-hidden="true"> *</span></span>
+          <div class="ear-clip-row" role="radiogroup" aria-label="Ear clip" aria-required="true">
+            <label><input type="radio" name="earClip" value="yes" required> <span data-i18n="earClipYes">已剪耳</span></label>
+            <label><input type="radio" name="earClip" value="no" required> <span data-i18n="earClipNo">未剪耳</span></label>
           </div>
+          <p class="meta-line" style="margin-top:6px;font-size:12px;" data-i18n="earClipRequiredHint">必填：请根据现场观察选择；下方 AI 剪耳提示仅供参考。</p>
         </div>
 
         <input type="hidden" id="trackingUserId" value="">
         <p class="desc" style="margin-top:8px;margin-bottom:0;font-size:12px;" data-i18n="recentAssessHint"></p>
 
-        <div class="field" style="display:flex;align-items:center;gap:8px;">
-          <input id="autoMatchAfterUpload" type="checkbox" checked>
-          <label for="autoMatchAfterUpload" style="margin:0;" data-i18n="autoMatchLabel">上传后自动检索同猫并定位热力图</label>
+        <div class="field" style="display:flex;align-items:center;gap:8px;opacity:0.65;">
+          <input id="autoMatchAfterUpload" type="checkbox">
+          <label for="autoMatchAfterUpload" style="margin:0;" data-i18n="autoMatchLabelLegacy">（实验）上传后检索同猫档案</label>
         </div>
 
         <button id="submitBtn" type="submit" class="btn full" data-i18n="submitBtn">分析</button>
@@ -2008,6 +2008,24 @@
     </div>
     <div id="heatmapMap" class="heatmap-map"></div>
     <div id="heatmapNote" class="heatmap-note" data-i18n="heatmapWaiting">等待加载热力图数据…</div>
+  </section>
+
+  <section class="glass feeding-spot-panel" style="margin-top:16px;">
+    <h3 style="margin:0 0 8px;font-size:1.05rem;" data-i18n="feedingSpotSectionTitle">社区投喂点</h3>
+    <p class="desc" data-i18n="feedingSpotSectionDesc">投喂点挂在「碗的位置」上，与猫咪身份无关。登记需拍碗的照片；日常打卡只需点「我喂了」。</p>
+    <form id="feedingSpotForm" class="feeding-spot-form">
+      <div class="field">
+        <label for="feedingSpotPhoto" data-i18n="feedingSpotPhotoLabel">碗的照片（必填）</label>
+        <input id="feedingSpotPhoto" type="file" accept="image/*" required>
+      </div>
+      <div class="field">
+        <label for="feedingSpotDesc" data-i18n="feedingSpotDescLabel">说明（可选）</label>
+        <input id="feedingSpotDesc" type="text" data-i18n-placeholder="feedingSpotDescPlaceholder" placeholder="">
+      </div>
+      <button type="submit" class="btn secondary" data-i18n="feedingSpotCreateBtn">登记新投喂点（需拍碗）</button>
+      <div id="feedingSpotFormStatus" class="status"></div>
+    </form>
+    <div id="feedingSpotList" class="feeding-spot-list"></div>
   </section>
   </div>
 
@@ -2318,7 +2336,12 @@
     const tnr = Number(ml.likelyNotNeuteredOrEarNotTippedConfidence || 0);
     const ear = !!ml.likelyEarTipped;
     let neuteredStatus = "UNKNOWN";
-    if (ear) {
+    const userClip = raw.userEarClip != null ? String(raw.userEarClip).trim().toLowerCase() : "";
+    if (userClip === "yes") {
+      neuteredStatus = "TNR_VERIFIED";
+    } else if (userClip === "no") {
+      neuteredStatus = "LIKELY_INTACT";
+    } else if (ear) {
       neuteredStatus = "TNR_VERIFIED";
     } else {
       neuteredStatus = "LIKELY_INTACT";
@@ -2406,6 +2429,7 @@
       captureAdvice: "捕捉建议",
       rationaleTitle: "模型判断依据",
       postTitle: "呼吁邻居喂养",
+      postTitleDefault: "社区猫咪喂养协作",
       copyPost: "复制文案",
       nextdoor: "Nextdoor",
       facebook: "Facebook",
@@ -2493,6 +2517,7 @@
       themeToggleToTech: "切换科技风",
       themeToggleToWarm: "切换温暖风",
       autoMatchLabel: "上传后自动检索同猫并定位热力图",
+      autoMatchLabelLegacy: "（实验）上传后检索同猫档案",
       findSameCatBtn: "按当前照片检索同猫并定位",
       sameCatSearching: "正在按新上传照片检索同猫…",
       sameCatNeedImage: "请先选择猫咪照片。",
@@ -2702,14 +2727,58 @@
       communityFilterIntact: "未绝育",
       communityFilterInjured: "受伤",
       communityFilterHealthy: "健康",
-      dupBannerTitle: "疑似同一只猫",
+      dupBannerTitle: "参考：可能与此前记录相似",
+      dupBannerHint: "系统仅作提示，是否同一只猫请由您自行判断，不会自动合并记录。",
       dupBannerLine: "我们曾在 {date} 于 {loc} 见过极为相似的猫咪（相似度约 {pct}%）。",
       timelineSummary: "出现记录时间线（共 {n} 条）",
       locUnknown: "位置未记录",
       earClipLabel: "剪耳（TNR 标记）",
       earClipYes: "已剪耳",
       earClipNo: "未剪耳",
-      earClipUnknown: "不确定",
+      earClipRequiredHint: "必填：请根据现场观察选择；下方 AI 剪耳提示仅供参考。",
+      actionGuidanceTitle: "下一步行动",
+      actionGuidanceTnrTitle: "附近 TNR / 绝育资源",
+      actionGuidanceShelterMore: "展开其余 {n} 家机构",
+      actionGuidanceFeedSpotTitle: "附近投喂点",
+      actionGuidanceNoFeedSpotTitle: "附近暂无登记投喂点",
+      actionGuidanceBowlLink: "查看猫碗选购参考（Amazon）",
+      actionGuidanceBowlReuse: "也可先用旧碗、一次性餐盒等容器，拍照登记一个新投喂点。",
+      feedingSpotSectionTitle: "社区投喂点",
+      feedingSpotCreateBtn: "登记新投喂点（需拍碗）",
+      feedingSpotCheckInBtn: "我喂了",
+      feedingSpotSectionDesc: "投喂点挂在「碗的位置」上，与猫咪身份无关。登记需拍碗的照片；日常打卡只需点「我喂了」。",
+      feedingSpotPhotoLabel: "碗的照片",
+      feedingSpotDescLabel: "位置说明",
+      feedingSpotDescPlaceholder: "例如：东门花坛旁",
+      feedingSpotCreateOk: "投喂点已登记",
+      feedingSpotCheckInOk: "打卡成功，感谢喂养！",
+      contactOrg: "联系机构",
+      openInMaps: "在地图中打开",
+      noFeedingSpotsYet: "暂无投喂点。",
+      feedingSpotItemLabel: "投喂点 #{id}",
+      captureAdviceZhTipped: "已剪耳：通常表示已参与 TNR；如需医疗可联系救助机构。",
+      captureAdviceZhIntact: "未剪耳：建议了解附近 TNR 资源，安全诱捕后再送机构。",
+      captureAdviceZhDefault: "请结合现场观察与下方行动引导安排喂养或救助。",
+      agentOptionalHint: "可选：如需进一步咨询，可使用下方 AI 站长对话。",
+      abnormalRiskTitle: "检测到异常风险",
+      abnormalRiskBody: "已为你展开附近医院/TNR 机构，请尽快联系机构。",
+      chooseEarClipRequired: "请选择剪耳状态（已剪耳 / 未剪耳）。",
+      locRequiredForFeedingSpot: "请先填写地址或定位。",
+      submitting: "提交中…",
+      emptyResponseHint: "（响应正文为空，请看运行 mvn 的终端里的报错堆栈）",
+      unexpectedJsonNotAssessment: "返回不是评估结果 JSON。",
+      unexpectedJsonDetail: "HTTP 成功但正文不是评估接口的预期格式（可能访问了错误地址、网关或接口路径）。",
+      uiRenderError: "界面渲染错误：",
+      communityStatusHealthy: "健康",
+      communityStatusLikelyIntact: "疑似未绝育",
+      communityStatusTnrVerified: "已绝育",
+      communityStatusInjured: "疑似受伤",
+      communityStatusUnknown: "未知",
+      shareLinkLabel: "链接：",
+      agentInjuryYes: "根据当前照片，模型判断可能存在受伤风险，建议结合现场观察，必要时联系兽医。",
+      agentInjuryNo: "从照片看，模型未发现明显外伤迹象，仍建议持续关注状态变化。",
+      agentInjuryUnclear: "仅凭照片较难判断是否受伤，建议近距离观察或咨询专业人士。",
+      agentFeedPhotoNote: " 是否需要额外喂食无法仅凭照片判定，请结合喂养记录与现场情况判断。",
       earClipOverrideNeuterYes: "已按表单：剪耳（TNR）",
       earClipOverrideNeuterNo: "已按表单：未剪耳（建议安排 TNR）",
       earClipBannerUserTipped: "已按表单标记为剪耳：右侧「是否已绝育」以「是」为准。",
@@ -2802,6 +2871,7 @@
       captureAdvice: "Trapping guidance",
       rationaleTitle: "Model rationale",
       postTitle: "Neighbor feeding post",
+      postTitleDefault: "Community feeding",
       copyPost: "Copy text",
       nextdoor: "Nextdoor",
       facebook: "Facebook",
@@ -2889,6 +2959,7 @@
       themeToggleToTech: "Switch to Tech",
       themeToggleToWarm: "Switch to Warm",
       autoMatchLabel: "Auto-match same cat and center heatmap after upload",
+      autoMatchLabelLegacy: "(Experimental) search same-cat archive after upload",
       findSameCatBtn: "Find same cat from current photo",
       sameCatSearching: "Searching same cat from uploaded photo...",
       sameCatNeedImage: "Please choose a cat photo first.",
@@ -3098,14 +3169,58 @@
       communityFilterIntact: "Unneutered",
       communityFilterInjured: "Injured",
       communityFilterHealthy: "Healthy",
-      dupBannerTitle: "Same cat likely",
+      dupBannerTitle: "Reference: may match a prior record",
+      dupBannerHint: "For your reference only — please decide yourself whether it is the same cat; records are not auto-merged.",
       dupBannerLine: "We've seen a very similar cat on {date} near {loc} (similarity ~{pct}%).",
       timelineSummary: "Sighting timeline ({n} records)",
       locUnknown: "Location not recorded",
       earClipLabel: "Ear tip (TNR marker)",
       earClipYes: "Tipped",
       earClipNo: "Not tipped",
-      earClipUnknown: "Unknown",
+      earClipRequiredHint: "Required — choose based on what you see; AI ear-tip hints are reference only.",
+      actionGuidanceTitle: "Suggested next steps",
+      actionGuidanceTnrTitle: "Nearby TNR / spay-neuter",
+      actionGuidanceShelterMore: "Show {n} more organizations",
+      actionGuidanceFeedSpotTitle: "Nearby feeding spots",
+      actionGuidanceNoFeedSpotTitle: "No registered feeding spots nearby",
+      actionGuidanceBowlLink: "Browse cat bowls on Amazon",
+      actionGuidanceBowlReuse: "You can also start with an old bowl or disposable container — register a spot with a photo.",
+      feedingSpotSectionTitle: "Community feeding spots",
+      feedingSpotCreateBtn: "Register a spot (bowl photo required)",
+      feedingSpotCheckInBtn: "I fed here",
+      feedingSpotSectionDesc: "Spots are tied to a bowl location, not a cat identity. Registration requires a bowl photo; daily check-in is one tap.",
+      feedingSpotPhotoLabel: "Bowl photo",
+      feedingSpotDescLabel: "Description",
+      feedingSpotDescPlaceholder: "e.g. east gate flower bed",
+      feedingSpotCreateOk: "Feeding spot registered",
+      feedingSpotCheckInOk: "Check-in recorded — thank you!",
+      contactOrg: "Contact org",
+      openInMaps: "Open in maps",
+      noFeedingSpotsYet: "No feeding spots yet.",
+      feedingSpotItemLabel: "Spot #{id}",
+      captureAdviceZhTipped: "Tipped ear: usually indicates TNR; contact a rescue if medical care is needed.",
+      captureAdviceZhIntact: "Not tipped: look into nearby TNR; trap safely before transport.",
+      captureAdviceZhDefault: "Use on-site observation and the action guide below for feeding or rescue.",
+      agentOptionalHint: "Optional: ask the station lead below if you need more advice.",
+      abnormalRiskTitle: "Abnormal risk detected",
+      abnormalRiskBody: "Nearby hospitals/TNR resources are expanded below. Please contact an organization now.",
+      chooseEarClipRequired: "Please choose ear-tip status (tipped / not tipped).",
+      locRequiredForFeedingSpot: "Set location first (address or GPS).",
+      submitting: "Submitting…",
+      emptyResponseHint: "(empty response body — check Spring Boot terminal logs)",
+      unexpectedJsonNotAssessment: "Unexpected JSON (not an assessment response).",
+      unexpectedJsonDetail: "The server returned success but the body is not a normal assessment payload (wrong URL, proxy, or API version).",
+      uiRenderError: "UI render error: ",
+      communityStatusHealthy: "Healthy",
+      communityStatusLikelyIntact: "Likely unneutered",
+      communityStatusTnrVerified: "Sterilized",
+      communityStatusInjured: "Possibly injured",
+      communityStatusUnknown: "Unknown",
+      shareLinkLabel: "Link: ",
+      agentInjuryYes: "From this photo, the model flags a possible injury. Observe in person and contact a vet if things worsen.",
+      agentInjuryNo: "The model does not see obvious injury signs in this photo. Keep monitoring the cat over time.",
+      agentInjuryUnclear: "The model cannot confidently tell from this photo alone whether the cat is injured—on-site observation helps.",
+      agentFeedPhotoNote: " Extra feeding cannot be decided from photos alone—pair with feeding logs and local guidance.",
       earClipOverrideNeuterYes: "Form: tipped (TNR)",
       earClipOverrideNeuterNo: "Form: not tipped (plan TNR)",
       earClipBannerUserTipped: "Ear clip set to tipped — the right panel shows “Yes” for sterilized.",
@@ -3139,7 +3254,7 @@
     }
   };
 
-  let lang = localStorage.getItem(LANG_KEY) || "en";
+  let lang = localStorage.getItem(LANG_KEY) || "zh";
   let theme = localStorage.getItem(THEME_KEY) || "warm";
 
   function t(key) {
@@ -3340,6 +3455,8 @@
       const k = el.getAttribute("data-i18n-placeholder");
       if (k) el.setAttribute("placeholder", t(k));
     });
+    const earRg = document.querySelector(".ear-clip-row[role='radiogroup']");
+    if (earRg) earRg.setAttribute("aria-label", t("earClipLabel"));
     document.getElementById("langZh").classList.toggle("active", lang === "zh");
     document.getElementById("langEn").classList.toggle("active", lang === "en");
     const themeBtn = document.getElementById("themeToggleBtn");
@@ -3450,7 +3567,7 @@
   /** Last successful Java assessment JSON — for station-lead chat context. */
   let __lastAssessmentPayload = null;
 
-  /** Last Java assessment: model neuter hint for earClip「不确定」fallback. */
+  /** Last Java assessment: model neuter hint when ear clip not yet chosen. */
   let __lastAssessmentTriageModelSterilized = false;
   let __lastAssessmentTriageHasResult = false;
 
@@ -3460,6 +3577,7 @@
   let heatPointLayer = null;
   let heatmapFocusMarker = null;
   let heatmapStationLayer = null;
+  let heatmapFeedingSpotLayer = null;
   let heatmapRequestSeq = 0;
 
   let communityRecords = [];
@@ -3508,6 +3626,143 @@
       /* ignore — map still works without feeders */
     }
     return [];
+  }
+
+  async function loadFeedingSpotsData(lat, lng) {
+    const paths = ["/api/v1/feeding-spots", "/feeding-spots"];
+    const qs = new URLSearchParams();
+    if (lat != null && lng != null && Number.isFinite(Number(lat)) && Number.isFinite(Number(lng))) {
+      qs.set("lat", String(lat));
+      qs.set("lng", String(lng));
+      qs.set("radiusM", "1500");
+      qs.set("limit", "80");
+    }
+    const suffix = qs.toString() ? "?" + qs.toString() : "";
+    try {
+      for (let i = 0; i < paths.length; i++) {
+        const r = await fetch(apiFetchUrl(paths[i] + suffix), {
+          headers: mergeAuthHeaders({ Accept: "application/json" })
+        });
+        if (r.ok) {
+          const data = await r.json();
+          if (Array.isArray(data)) {
+            return data;
+          }
+        }
+      }
+    } catch (_e) { /* ignore */ }
+    return [];
+  }
+
+  function removeHeatmapFeedingSpotLayer() {
+    if (heatmapFeedingSpotLayer && heatmapMap) {
+      heatmapMap.removeLayer(heatmapFeedingSpotLayer);
+    }
+    heatmapFeedingSpotLayer = null;
+  }
+
+  function placeFeedingSpotsOnHeatmap(spots) {
+    if (!heatmapMap || typeof L === "undefined") {
+      return;
+    }
+    removeHeatmapFeedingSpotLayer();
+    if (!Array.isArray(spots) || !spots.length) {
+      return;
+    }
+    heatmapFeedingSpotLayer = L.layerGroup();
+    spots.forEach(function (sp) {
+      if (!sp || sp.latitude == null || sp.longitude == null) {
+        return;
+      }
+      const m = L.marker([Number(sp.latitude), Number(sp.longitude)], {
+        icon: L.divIcon({
+          className: "feeding-spot-marker",
+          html: "<div class='feeding-spot-marker-wrap' aria-hidden='true'>🥣</div>",
+          iconSize: [28, 28],
+          iconAnchor: [14, 14]
+        })
+      });
+      const desc = sp.description ? String(sp.description) : ("Spot #" + sp.id);
+      m.bindPopup(
+        "<div><strong>" + escapeHtml(desc) + "</strong>" +
+        "<div style='margin-top:8px;'><button type='button' class='btn secondary fs-checkin-btn' data-spot-id='" +
+        escapeHtml(String(sp.id)) + "'>" + escapeHtml(t("feedingSpotCheckInBtn")) + "</button></div></div>"
+      );
+      heatmapFeedingSpotLayer.addLayer(m);
+    });
+    heatmapFeedingSpotLayer.addTo(heatmapMap);
+    heatmapFeedingSpotLayer.on("popupopen", function (ev) {
+      const btn = ev.popup && ev.popup.getElement()
+        ? ev.popup.getElement().querySelector(".fs-checkin-btn")
+        : null;
+      if (!btn || btn.dataset.wired === "1") {
+        return;
+      }
+      btn.dataset.wired = "1";
+      btn.addEventListener("click", function () {
+        void checkInFeedingSpot(btn.getAttribute("data-spot-id"));
+      });
+    });
+  }
+
+  async function checkInFeedingSpot(spotId) {
+    const id = String(spotId || "").replace(/[^\d]/g, "");
+    if (!id) {
+      return;
+    }
+    const vidRaw = (document.getElementById("volunteerUserIdInput") &&
+      document.getElementById("volunteerUserIdInput").value) ||
+      (trackingUserIdInput && trackingUserIdInput.value) || "";
+    const body = { fedByUserId: /^[1-9]\d*$/.test(String(vidRaw).trim()) ? Number(String(vidRaw).trim()) : null };
+    try {
+      const r = await fetch(apiFetchUrl("/api/v1/feeding-spots/" + encodeURIComponent(id) + "/check-ins"), {
+        method: "POST",
+        headers: mergeAuthHeaders({ "Content-Type": "application/json", Accept: "application/json" }),
+        body: JSON.stringify(body)
+      });
+      if (r.ok) {
+        alert(t("feedingSpotCheckInOk"));
+        await refreshFeedingSpotsUi();
+      }
+    } catch (_e) { /* ignore */ }
+  }
+
+  function renderFeedingSpotList(spots) {
+    const el = document.getElementById("feedingSpotList");
+    if (!el) {
+      return;
+    }
+    if (!Array.isArray(spots) || !spots.length) {
+      el.innerHTML = "<p class='meta-line'>" + escapeHtml(t("noFeedingSpotsYet")) + "</p>";
+      return;
+    }
+    el.innerHTML = spots.slice(0, 12).map(function (sp) {
+      const desc = sp.description ? escapeHtml(String(sp.description)) : ("#" + sp.id);
+      const dist = sp.distanceMeters != null ? " · ~" + Math.round(Number(sp.distanceMeters)) + "m" : "";
+      return (
+        "<div class='feeding-spot-row'>" +
+        "<div><strong>" + desc + "</strong><span class='meta-line'>" + dist + "</span></div>" +
+        "<button type='button' class='btn secondary feeding-spot-checkin' data-id='" + escapeHtml(String(sp.id)) + "'>" +
+        escapeHtml(t("feedingSpotCheckInBtn")) + "</button></div>"
+      );
+    }).join("");
+    el.querySelectorAll(".feeding-spot-checkin").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        void checkInFeedingSpot(btn.getAttribute("data-id"));
+      });
+    });
+  }
+
+  async function refreshFeedingSpotsUi() {
+    let la = latInput && latInput.value ? Number(latInput.value) : NaN;
+    let ln = lngInput && lngInput.value ? Number(lngInput.value) : NaN;
+    if (!Number.isFinite(la) || !Number.isFinite(ln)) {
+      la = 37.3382;
+      ln = -121.8863;
+    }
+    const spots = await loadFeedingSpotsData(la, ln);
+    renderFeedingSpotList(spots);
+    placeFeedingSpotsOnHeatmap(spots);
   }
 
   function feedingStationCameraPlaceholderUrl() {
@@ -3954,9 +4209,9 @@
       buildNeuterAuxBadge(ear, model);
     const bw = document.getElementById("sterilizedBannerWrap");
     if (bw) {
-      if (ear === "yes" || (ear === "unknown" && model)) {
+      if (ear === "yes") {
         bw.style.display = "";
-        bw.innerHTML = escapeHtml(ear === "yes" ? t("earClipBannerUserTipped") : t("bannerSterilizedOk"));
+        bw.innerHTML = escapeHtml(t("earClipBannerUserTipped"));
       } else {
         bw.style.display = "none";
         bw.innerHTML = "";
@@ -4549,6 +4804,84 @@
     }
   }
 
+  function renderShelterInfoRows(shelters, maxVisible) {
+    const max = maxVisible == null ? 3 : maxVisible;
+    if (!Array.isArray(shelters) || !shelters.length) {
+      return "";
+    }
+    function row(s) {
+      const dist = s.distanceMeters != null ? " · ~" + Math.round(Number(s.distanceMeters)) + "m" : "";
+      return (
+        "<div class='kv'>" + escapeHtml(s.name || "") + dist +
+        "<div class='meta-line'>" + escapeHtml(s.address || "") +
+        (s.phone ? " · " + escapeHtml(s.phone) : "") + "</div></div>"
+      );
+    }
+    let html = shelters.slice(0, max).map(row).join("");
+    const rest = shelters.slice(max);
+    if (rest.length) {
+      html +=
+        "<details class='dup-timeline-details shelter-more-details'>" +
+        "<summary class='dup-timeline-summary'>" +
+        escapeHtml(t("actionGuidanceShelterMore").replace("{n}", String(rest.length))) +
+        "</summary>" + rest.map(row).join("") + "</details>";
+    }
+    return html;
+  }
+
+  function localizedCaptureAdvice(labels, earClipUser) {
+    if (lang === "en") {
+      return String((labels && labels.captureAdvice) || "").trim();
+    }
+    if (earClipUser === "yes") {
+      return t("captureAdviceZhTipped");
+    }
+    if (earClipUser === "no") {
+      return t("captureAdviceZhIntact");
+    }
+    return t("captureAdviceZhDefault");
+  }
+
+  function renderActionGuidanceBlock(guidance) {
+    if (!guidance || typeof guidance !== "object") {
+      return "";
+    }
+    const lines = Array.isArray(guidance.guidanceLines) ? guidance.guidanceLines : [];
+    const shelters = Array.isArray(guidance.tnrSheltersNearby) ? guidance.tnrSheltersNearby : [];
+    const spots = Array.isArray(guidance.feedingSpotsNearby) ? guidance.feedingSpotsNearby : [];
+    let html =
+      "<section class='step-card action-guidance-card'>" +
+      "<div class='step-head'><span class='step-num'>★</span><h3>" + escapeHtml(t("actionGuidanceTitle")) + "</h3></div>";
+    if (lines.length) {
+      html += "<ul class='list'>" + lines.map(function (x) {
+        return "<li>" + escapeHtml(String(x || "")) + "</li>";
+      }).join("") + "</ul>";
+    }
+    if (guidance.showTnrNearby && shelters.length) {
+      html += "<div class='kv'><strong>" + escapeHtml(t("actionGuidanceTnrTitle")) + "</strong></div>";
+      html += renderShelterInfoRows(shelters, 3);
+    }
+    if (guidance.showFeedingSpotPrompt) {
+      html += "<div class='kv'><strong>" + escapeHtml(t("actionGuidanceNoFeedSpotTitle")) + "</strong></div>";
+      html += "<p class='meta-line'>" + escapeHtml(t("actionGuidanceBowlReuse")) + "</p>";
+      if (guidance.bowlPurchaseSearchUrl) {
+        html += "<p><a class='btn secondary' href='" + escapeHtml(String(guidance.bowlPurchaseSearchUrl)) +
+          "' target='_blank' rel='noopener'>" + escapeHtml(t("actionGuidanceBowlLink")) + "</a></p>";
+      }
+    } else if (spots.length) {
+      html += "<div class='kv'><strong>" + escapeHtml(t("actionGuidanceFeedSpotTitle")) + "</strong></div>";
+      html += spots.slice(0, 4).map(function (sp) {
+        const dist = sp.distanceMeters != null ? " · ~" + Math.round(Number(sp.distanceMeters)) + "m" : "";
+        const label = sp.description
+          ? String(sp.description)
+          : t("feedingSpotItemLabel").replace("{id}", String(sp.id));
+        return "<div class='kv'>" + escapeHtml(label) + dist + "</div>";
+      }).join("");
+    }
+    html += "</section>";
+    return html;
+  }
+
   function renderDuplicateBanner(dup) {
     if (!dup || dup.matchedAssessmentId == null) return "";
     if (!Array.isArray(dup.clusterSightings) || dup.clusterSightings.length === 0) {
@@ -4570,7 +4903,8 @@
       "</ul></details>";
     return (
       "<div class='dup-banner dup-banner--timeline-only' role='status'>" +
-      "<strong>⚠️ " + escapeHtml(t("dupBannerTitle")) + "</strong>" +
+      "<strong>ℹ️ " + escapeHtml(t("dupBannerTitle")) + "</strong>" +
+      "<p class='meta-line'>" + escapeHtml(t("dupBannerHint")) + "</p>" +
       timeline +
       "</div>"
     );
@@ -4586,12 +4920,11 @@
 
   function communityStatusLabel(code) {
     const x = String(code || "").toUpperCase();
-    const isEn = lang === "en";
-    if (x === "HEALTHY") return isEn ? "Healthy" : "健康";
-    if (x === "LIKELY_INTACT") return isEn ? "Likely unneutered" : "疑似未绝育";
-    if (x === "TNR_VERIFIED") return isEn ? "Sterilized" : "已绝育";
-    if (x === "INJURED" || x === "NEEDS_HELP" || x === "MONITOR") return isEn ? "Possibly injured" : "疑似受伤";
-    return x ? x.replace(/_/g, " ") : (isEn ? "Unknown" : "未知");
+    if (x === "HEALTHY") return t("communityStatusHealthy");
+    if (x === "LIKELY_INTACT") return t("communityStatusLikelyIntact");
+    if (x === "TNR_VERIFIED") return t("communityStatusTnrVerified");
+    if (x === "INJURED" || x === "NEEDS_HELP" || x === "MONITOR") return t("communityStatusInjured");
+    return x ? x.replace(/_/g, " ") : t("communityStatusUnknown");
   }
 
   function getCommunityCatId(row) {
@@ -4603,6 +4936,28 @@
     const fromSuggested = m && m.suggestedCatId != null ? String(m.suggestedCatId).replace(/[^\d]/g, "") : "";
     if (/^[1-9]\d*$/.test(fromSuggested)) return fromSuggested;
     return "";
+  }
+
+  function dedupeCommunityRecordsByCluster(records) {
+    const best = new Map();
+    for (const row of records) {
+      if (!row) continue;
+      const key = row.identityClusterId ? String(row.identityClusterId) : String(row.id || "");
+      const prev = best.get(key);
+      if (!prev) {
+        best.set(key, row);
+        continue;
+      }
+      const prevTime = prev.createdAt ? Date.parse(prev.createdAt) : 0;
+      const rowTime = row.createdAt ? Date.parse(row.createdAt) : 0;
+      const mergedBadge = !!(row.sameCatBadge || prev.sameCatBadge || (row.clusterSize || 0) > 1 || (prev.clusterSize || 0) > 1);
+      if (rowTime >= prevTime) {
+        best.set(key, Object.assign({}, row, { sameCatBadge: mergedBadge }));
+      } else {
+        best.set(key, Object.assign({}, prev, { sameCatBadge: mergedBadge }));
+      }
+    }
+    return Array.from(best.values());
   }
 
   function communityPassesFilter(row, f) {
@@ -6018,7 +6373,7 @@
       const j = JSON.parse(txt);
       volunteerSharePayload = j;
       const lines = lang === "en" ? j.shareTextEn : j.shareTextZh;
-      if (out) out.textContent = (lines || "") + "\n\n" + (lang === "en" ? "Link: " : "链接：") + (j.url || "");
+      if (out) out.textContent = (lines || "") + "\n\n" + t("shareLinkLabel") + (j.url || "");
     } catch (_e) {
       volunteerSharePayload = null;
       if (out) out.textContent = t("volunteerShareLoadErr");
@@ -6360,8 +6715,7 @@
   function renderCenterList(title, list, typePrefix, refLat, refLng) {
     if (!Array.isArray(list) || list.length === 0) return "";
     const kind = typePrefix === "tnr" ? "tnr" : "rescue";
-    const top3 = list.slice(0, 3);
-    const html = top3.map((x) => {
+    function renderOne(x) {
       const distance = x.distanceKm == null ? "" : "（" + t("kmApprox") + x.distanceKm + " " + t("kmUnit") + "）";
       const detailHref = buildDirectoryDetailUrl(kind, x.id || "", refLat, refLng);
       const phone = (x.phone || "").trim();
@@ -6369,7 +6723,7 @@
       const street = (x.streetAddress || "").trim();
       const city = (x.city || "").trim();
       const addrLine = [street, city].filter(Boolean).join(" · ");
-      const addrLabel = addrLine || (lang === "en" ? "Open in maps" : "在地图中打开");
+      const addrLabel = addrLine || t("openInMaps");
       const latN = Number(x.latitude);
       const lngN = Number(x.longitude);
       let mapsHref = "";
@@ -6410,12 +6764,21 @@
           "<div class='center-actions'>" +
             "<a class='btn secondary' href='" + escapeHtml(detailHref) + "'>" + escapeHtml(t("viewDetail")) + "</a>" +
             (contactHref && !phone
-              ? "<a class='btn secondary' href='" + escapeHtml(contactHref) + "' style='margin-left:6px;'>" + escapeHtml(lang === "en" ? "Contact Org" : "联系机构") + "</a>"
+              ? "<a class='btn secondary' href='" + escapeHtml(contactHref) + "' style='margin-left:6px;'>" + escapeHtml(t("contactOrg")) + "</a>"
               : "") +
           "</div>" +
         "</div>"
       );
-    }).join("");
+    }
+    const top3 = list.slice(0, 3);
+    const rest = list.slice(3);
+    let html = top3.map(renderOne).join("");
+    if (rest.length) {
+      html +=
+        "<details class='dup-timeline-details shelter-more-details'><summary class='dup-timeline-summary'>" +
+        escapeHtml(t("actionGuidanceShelterMore").replace("{n}", String(rest.length))) +
+        "</summary><div class='center-list'>" + rest.map(renderOne).join("") + "</div></details>";
+    }
     return "<div><strong>" + escapeHtml(title) + "</strong><div class='center-list'>" + html + "</div></div>";
   }
 
@@ -6425,7 +6788,7 @@
 
   function getEarClipForPython() {
     const el = document.querySelector('input[name="earClip"]:checked');
-    return el && el.value ? el.value : "unknown";
+    return el && el.value ? el.value : "";
   }
 
   function pickDeepField(data, primary, fallbacks) {
@@ -6539,6 +6902,48 @@
     if (addr) {
       parts.push((en ? "Location: " : "位置：") + addr);
     }
+    const tm = payload.trackingMatch;
+    if (tm && typeof tm === "object") {
+      const tmLines = [];
+      if (tm.dedupStatus) {
+        tmLines.push((en ? "Dedup status: " : "社区追踪状态：") + String(tm.dedupStatus));
+      }
+      if (tm.sightingId != null) {
+        tmLines.push((en ? "Sighting id: " : "目击记录 ID：") + String(tm.sightingId));
+      }
+      if (tm.catId != null) {
+        tmLines.push((en ? "Matched cat archive id: " : "已匹配猫咪档案 ID：") + String(tm.catId));
+      } else if (tm.suggestedCatId != null) {
+        tmLines.push((en ? "Suggested same-cat archive id: " : "疑似同猫档案 ID：") + String(tm.suggestedCatId));
+      }
+      if (tm.similarityScore != null && Number.isFinite(Number(tm.similarityScore))) {
+        tmLines.push((en ? "CLIP match distance: " : "CLIP 匹配距离：") + Number(tm.similarityScore).toFixed(3));
+      }
+      if (tm.dedupReason) {
+        tmLines.push((en ? "Dedup note: " : "去重说明：") + String(tm.dedupReason));
+      }
+      if (tmLines.length) {
+        parts.push((en ? "[Community tracking]\n" : "【社区追踪】\n") + tmLines.join("\n"));
+      }
+    }
+    const dup = payload.assessmentDuplicate;
+    if (dup && dup.matchedAssessmentId != null && Array.isArray(dup.clusterSightings) && dup.clusterSightings.length) {
+      const scorePct = dup.similarityScore != null && Number.isFinite(Number(dup.similarityScore))
+        ? Math.round(Number(dup.similarityScore) * 100)
+        : null;
+      const dupHead = en
+        ? "[Same-cat match]\nSystem linked this upload to a prior assessment (similarity "
+          + (scorePct != null ? scorePct + "%" : "n/a") + ").\nSightings in this identity cluster:"
+        : "【同猫识别】\n系统判定与此前评估为同一只猫（相似度 "
+          + (scorePct != null ? scorePct + "%" : "未知") + "）。\n同一身份簇出现记录：";
+      const dupItems = dup.clusterSightings.map(function (s) {
+        const tl = s.createdAt ? formatIsoLocal(s.createdAt) : "—";
+        const sl = s.locationSummary || t("locUnknown");
+        const hs = s.healthStatus || "";
+        return "- " + tl + " — " + sl + (hs ? " · " + hs : "");
+      }).join("\n");
+      parts.push(dupHead + "\n" + dupItems);
+    }
     return parts.join("\n\n");
   }
 
@@ -6630,6 +7035,9 @@
     }
     if (extra && extra.iot_snapshot) {
       body.iot_snapshot = extra.iot_snapshot;
+    }
+    if (ap && ap.assessmentDuplicate && ap.assessmentDuplicate.matchedAssessmentId != null) {
+      body.assessment_duplicate = ap.assessmentDuplicate;
     }
     return body;
   }
@@ -6783,25 +7191,15 @@
     } else if (hl.injuryLine.indexOf("：否") >= 0 || hl.injuryLine.indexOf(":否") >= 0) {
       injury = "no";
     }
-    const en = lang === "en";
     let core;
     if (injury === "yes") {
-      core = en
-        ? "From this photo, the model flags a possible injury. Observe in person and contact a vet if things worsen."
-        : "根据当前照片，模型判断可能存在受伤风险，建议结合现场观察，必要时联系兽医。";
+      core = t("agentInjuryYes");
     } else if (injury === "no") {
-      core = en
-        ? "The model does not see obvious injury signs in this photo. Keep monitoring the cat over time."
-        : "从照片看，模型未发现明显外伤迹象，仍建议持续关注状态变化。";
+      core = t("agentInjuryNo");
     } else {
-      core = en
-        ? "The model cannot confidently tell from this photo alone whether the cat is injured—on-site observation helps."
-        : "仅凭照片较难判断是否受伤，建议近距离观察或咨询专业人士。";
+      core = t("agentInjuryUnclear");
     }
-    const feedNote = en
-      ? " Extra feeding cannot be decided from photos alone—pair with feeding logs and local guidance."
-      : " 是否需要额外喂食无法仅凭照片判定，请结合喂养记录与现场情况判断。";
-    return core + feedNote;
+    return core + t("agentFeedPhotoNote");
   }
 
   function pythonAgentKnowledgeMerged(apiData) {
@@ -6977,7 +7375,7 @@
     if (v === "no") {
       return t("aiEarClipNoBanner");
     }
-    return t("aiEarClipUnknownBanner");
+    return t("chooseEarClipRequired");
   }
 
   function pythonAgentAnswerDanger(apiData) {
@@ -7311,7 +7709,7 @@
     const rationale = Array.isArray(labels.rationalePhrases) ? labels.rationalePhrases : [];
     const rescueNearby = Array.isArray(actions.rescueNearby) ? actions.rescueNearby : [];
     const tnrNearby = Array.isArray(actions.tnrNearby) ? actions.tnrNearby : [];
-    const postTitle = actions.nextdoorTitle || (lang === "en" ? "Community feeding" : "社区猫咪喂养协作");
+    const postTitle = actions.nextdoorTitle || t("postTitleDefault");
     const postBody = actions.nextdoorBody || "";
     lastSocialCopy = isFailed ? "" : ((postTitle ? postTitle + "\n\n" : "") + postBody);
 
@@ -7332,11 +7730,6 @@
         sterilizedBanner =
           "<div id='sterilizedBannerWrap' class='steri-banner confirmed'>" +
           escapeHtml(t("earClipBannerUserTipped")) +
-          "</div>";
-      } else if (earClipUser === "unknown" && likelySterilized) {
-        sterilizedBanner =
-          "<div id='sterilizedBannerWrap' class='steri-banner confirmed'>" +
-          escapeHtml(t("bannerSterilizedOk")) +
           "</div>";
       } else {
         sterilizedBanner =
@@ -7370,7 +7763,7 @@
       ? ""
       : (
       healthGuidanceHtml +
-      "<div class='kv'><strong>" + t("captureAdvice") + "</strong> " + escapeHtml(labels.captureAdvice || "") + "</div>" +
+      "<div class='kv'><strong>" + t("captureAdvice") + "</strong> " + escapeHtml(localizedCaptureAdvice(labels, earClipUser)) + "</div>" +
       rationaleHtml +
       "<div><strong>" + t("postTitle") + "</strong>" +
       "<div class='kv'>" + escapeHtml(postTitle) + "</div>" +
@@ -7407,9 +7800,9 @@
       (actions.disclaimer ? "<div class='kv'>" + t("disclaimer") + ": " + escapeHtml(actions.disclaimer) + "</div>" : "");
 
     const autoAbnormalHint = (!isFailed && severeAbnormal)
-      ? "<div class='failure-banner'><strong>" + (lang === "en" ? "Abnormal risk detected" : "检测到异常风险") +
+      ? "<div class='failure-banner'><strong>" + escapeHtml(t("abnormalRiskTitle")) +
         "</strong><div class='failure-detail'>" +
-        (lang === "en" ? "Nearby hospitals/TNR resources are expanded below. Please contact an organization now." : "已为你展开附近医院/TNR机构，请尽快联系机构。") +
+        escapeHtml(t("abnormalRiskBody")) +
         "</div></div>"
       : "";
 
@@ -7436,31 +7829,14 @@
       stepStatusBody +
       "</section>" +
       autoAbnormalHint +
+      renderActionGuidanceBlock(data.actionGuidance) +
       stepActionsSection +
       stepResourcesSection +
       "<div id='pythonAgentChatSlot'></div>" +
+      "<p class='meta-line' style='margin-top:8px;'>" +
+      escapeHtml(t("agentOptionalHint")) +
+      "</p>" +
       "</div>";
-
-    if (!isFailed) {
-      const abnormalLine = severeAbnormal
-        ? ("<p class='meta-line' style='color:var(--danger);font-weight:600;margin-bottom:8px;'>" +
-          escapeHtml(lang === "en"
-            ? "Elevated injury or malnutrition risk — ask the assistant for nearby clinics or TNR."
-            : "模型提示伤病或严重营养不良风险偏高，可在下方对话追问附近医院或绝育资源。") +
-          "</p>")
-        : "";
-      stepsWrap =
-        "<div class='step-flow step-flow--agent-only'>" +
-        abnormalLine +
-        "<div id='pythonAgentChatSlot'></div>" +
-        "</div>";
-    } else {
-      stepsWrap =
-        "<div class='step-flow step-flow--agent-only'>" +
-        "<p class='meta-line'>" + escapeHtml(t("analysisIncomplete")) + "</p>" +
-        "<div id='pythonAgentChatSlot'></div>" +
-        "</div>";
-    }
 
     resultView.innerHTML =
       failureBanner +
@@ -7632,6 +8008,12 @@
       statusEl.className = "status error";
       return;
     }
+    const earSel = document.querySelector('input[name="earClip"]:checked');
+    if (!earSel) {
+      statusEl.textContent = t("chooseEarClipRequired");
+      statusEl.className = "status error";
+      return;
+    }
     var uploadFile;
     try {
       if (isHeicLikeImageFile(file)) {
@@ -7675,6 +8057,7 @@
     if (addrTxt) {
       formData.append("addressText", addrTxt);
     }
+    formData.append("earClip", getEarClipForPython());
 
     statusEl.textContent = t("analyzing");
     statusEl.className = "status";
@@ -7702,9 +8085,7 @@
       if (!response.ok) {
         let errHint = (text && String(text).trim()) ? text.slice(0, 400) : "";
         if (!errHint.trim()) {
-          errHint = lang === "en"
-            ? "(empty response body — check Spring Boot terminal logs)"
-            : "（响应正文为空，请看运行 mvn 的终端里的报错堆栈）";
+          errHint = t("emptyResponseHint");
         }
         try {
           const pj = JSON.parse(text);
@@ -7718,15 +8099,12 @@
           "<div class='empty'>" + escapeHtml(t("reqFail")) + " " + response.status + "<br/>" + escapeHtml(errHint) + "</div>";
         lastAssessmentTracking = null;
       } else if (!isAssessmentPayload(parsed)) {
-        statusEl.textContent =
-          (lang === "en" ? "Unexpected JSON (not an assessment response)." : "返回不是评估结果 JSON。");
+        statusEl.textContent = t("unexpectedJsonNotAssessment");
         statusEl.className = "status error";
         lastAssessmentTracking = null;
         if (rawJsonEl) rawJsonEl.textContent = typeof text === "string" ? text : JSON.stringify(parsed, null, 2);
         resultView.innerHTML =
-          "<div class='empty'>" + escapeHtml(lang === "en"
-            ? "The server returned success but the body is not a normal assessment payload (wrong URL, proxy, or API version)."
-            : "HTTP 成功但正文不是评估接口的预期格式（可能访问了错误地址、网关或接口路径）。") + "</div>";
+          "<div class='empty'>" + escapeHtml(t("unexpectedJsonDetail")) + "</div>";
       } else if (parsed.status === "FAILED") {
         const fr = parsed.failureReason ? String(parsed.failureReason).slice(0, 200) : "";
         statusEl.textContent = t("analyzeInferFailed") + (fr ? " · " + fr : "");
@@ -7735,7 +8113,7 @@
         try {
           renderResult(parsed);
         } catch (renderErr) {
-          statusEl.textContent = (lang === "en" ? "UI render error: " : "界面渲染错误：") + (renderErr && renderErr.message ? renderErr.message : String(renderErr));
+          statusEl.textContent = t("uiRenderError") + (renderErr && renderErr.message ? renderErr.message : String(renderErr));
           resultView.innerHTML = "<div class='empty'>" + escapeHtml(String(renderErr)) + "</div>";
         }
         if (rawJsonEl) rawJsonEl.textContent = JSON.stringify(parsed, null, 2);
@@ -7760,7 +8138,7 @@
           renderResult(parsed);
           renderedOk = true;
         } catch (renderErr) {
-          statusEl.textContent = (lang === "en" ? "UI render error: " : "界面渲染错误：") + (renderErr && renderErr.message ? renderErr.message : String(renderErr));
+          statusEl.textContent = t("uiRenderError") + (renderErr && renderErr.message ? renderErr.message : String(renderErr));
           statusEl.className = "status error";
           resultView.innerHTML = "<div class='empty'>" + escapeHtml(String(renderErr)) + "</div>";
         }
@@ -7916,7 +8294,71 @@
   } catch (_e) {}
 
   initHeatmapMap();
+  void refreshFeedingSpotsUi();
   loadHeatmapBtn.addEventListener("click", loadHeatmap);
+  const feedingSpotForm = document.getElementById("feedingSpotForm");
+  if (feedingSpotForm) {
+    feedingSpotForm.addEventListener("submit", async function (ev) {
+      ev.preventDefault();
+      const statusEl = document.getElementById("feedingSpotFormStatus");
+      const photoEl = document.getElementById("feedingSpotPhoto");
+      const descEl = document.getElementById("feedingSpotDesc");
+      const file = photoEl && photoEl.files && photoEl.files[0];
+      if (!file) {
+        if (statusEl) {
+          statusEl.textContent = t("errSelectImage");
+          statusEl.className = "status error";
+        }
+        return;
+      }
+      let la = latInput && latInput.value ? Number(latInput.value) : NaN;
+      let ln = lngInput && lngInput.value ? Number(lngInput.value) : NaN;
+      if (!Number.isFinite(la) || !Number.isFinite(ln)) {
+        if (statusEl) {
+          statusEl.textContent = t("locRequiredForFeedingSpot");
+          statusEl.className = "status error";
+        }
+        return;
+      }
+      const fd = new FormData();
+      fd.append("photo", file);
+      fd.append("latitude", String(la));
+      fd.append("longitude", String(ln));
+      if (descEl && descEl.value && String(descEl.value).trim()) {
+        fd.append("description", String(descEl.value).trim());
+      }
+      const vidRaw = (trackingUserIdInput && trackingUserIdInput.value) || "";
+      if (/^[1-9]\d*$/.test(String(vidRaw).trim())) {
+        fd.append("createdByUserId", String(vidRaw).trim());
+      }
+      if (statusEl) {
+        statusEl.textContent = t("submitting");
+        statusEl.className = "status";
+      }
+      try {
+        const r = await fetch(apiFetchUrl("/api/v1/feeding-spots"), {
+          method: "POST",
+          body: fd,
+          headers: mergeAuthHeaders({})
+        });
+        if (!r.ok) {
+          const txt = await r.text();
+          throw new Error(txt.slice(0, 200));
+        }
+        if (statusEl) {
+          statusEl.textContent = t("feedingSpotCreateOk");
+          statusEl.className = "status success";
+        }
+        feedingSpotForm.reset();
+        await refreshFeedingSpotsUi();
+      } catch (err) {
+        if (statusEl) {
+          statusEl.textContent = String(err && err.message ? err.message : err);
+          statusEl.className = "status error";
+        }
+      }
+    });
+  }
   const loadClaimedCatsBtn = document.getElementById("loadClaimedCatsBtn");
   if (loadClaimedCatsBtn) loadClaimedCatsBtn.addEventListener("click", () => loadClaimedCats());
   const catFeedCheckInBtn = document.getElementById("catFeedCheckInBtn");

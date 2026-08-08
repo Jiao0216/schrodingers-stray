@@ -103,6 +103,12 @@ public class AssessmentEntity {
 
     private UUID identityClusterId;
 
+    /** yes | no | unknown from upload form */
+    @Column(length = 16)
+    private String userEarClip;
+
+    private Long trackingSightingId;
+
     @Column(nullable = false)
     private Instant createdAt;
 
@@ -347,5 +353,21 @@ public class AssessmentEntity {
 
     public void setIdentityClusterId(UUID identityClusterId) {
         this.identityClusterId = identityClusterId;
+    }
+
+    public String getUserEarClip() {
+        return userEarClip;
+    }
+
+    public void setUserEarClip(String userEarClip) {
+        this.userEarClip = userEarClip;
+    }
+
+    public Long getTrackingSightingId() {
+        return trackingSightingId;
+    }
+
+    public void setTrackingSightingId(Long trackingSightingId) {
+        this.trackingSightingId = trackingSightingId;
     }
 }

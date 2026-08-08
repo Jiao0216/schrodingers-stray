@@ -19,6 +19,8 @@ public interface AssessmentJpaRepository extends JpaRepository<AssessmentEntity,
 
     long countByIdentityClusterId(UUID identityClusterId);
 
+    java.util.Optional<AssessmentEntity> findFirstByTrackingSightingIdOrderByCreatedAtDesc(Long trackingSightingId);
+
     @Query("select count(a) from AssessmentEntity a where a.latitude is not null and a.longitude is not null")
     long countWithLatitudeAndLongitudeNotNull();
 }

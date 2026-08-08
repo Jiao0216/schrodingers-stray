@@ -38,7 +38,7 @@ public class PythonAgentProxyController {
             @RequestParam(value = "location", required = false, defaultValue = "") String location,
             @RequestParam(value = "lat", required = false) Double lat,
             @RequestParam(value = "lng", required = false) Double lng,
-            @RequestParam(value = "ear_clip", required = false, defaultValue = "unknown") String earClip,
+            @RequestParam(value = "ear_clip", required = false, defaultValue = "") String earClip,
             @RequestParam(value = "include_behavior", required = false, defaultValue = "true") boolean includeBehavior) {
         if (!props.isEnabled()) {
             byte[] body = "{\"detail\":\"Python agent proxy disabled (cat-rescue.python-agent.enabled=false)\"}"
@@ -57,7 +57,7 @@ public class PythonAgentProxyController {
         if (lng != null) {
             builder.part("lng", lng.toString());
         }
-        builder.part("ear_clip", earClip != null ? earClip : "unknown");
+        builder.part("ear_clip", earClip != null ? earClip : "");
         builder.part("include_behavior", Boolean.toString(includeBehavior));
 
         try {

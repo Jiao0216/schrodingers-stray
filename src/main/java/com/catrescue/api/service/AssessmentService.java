@@ -6,6 +6,7 @@ import com.catrescue.api.domain.AssessmentStatus;
 import com.catrescue.api.domain.BranchType;
 import com.catrescue.api.domain.ModelLabels;
 import com.catrescue.api.domain.CatFeatureSnapshot;
+import com.catrescue.api.dto.AssessmentActionGuidanceDto;
 import com.catrescue.api.dto.AssessmentDuplicateMatchDto;
 import com.catrescue.api.dto.AssessmentListItemDto;
 import com.catrescue.api.dto.AssessmentResponse;
@@ -20,6 +21,7 @@ import com.catrescue.api.dto.TnrLocationDto;
 import com.catrescue.api.persistence.AssessmentEntity;
 import com.catrescue.api.persistence.AssessmentJpaRepository;
 import com.catrescue.api.repository.AssessmentRepository;
+import com.catrescue.api.service.client.ClipEmbeddingClient;
 import com.catrescue.api.service.client.MultimodalClient;
 import com.catrescue.api.tracking.dto.CatFeatureVector;
 import com.catrescue.api.tracking.dto.NewSightingCommand;
@@ -29,6 +31,9 @@ import com.catrescue.api.tracking.repository.SightingJpaRepository;
 import com.catrescue.api.tracking.service.CatFeatureExtractionService;
 import com.catrescue.api.tracking.service.CatHeatmapService;
 import com.catrescue.api.tracking.service.SightingDeduplicationService;
+import com.catrescue.api.tracking.vector.StrayCatVectorMetadata;
+import com.catrescue.api.tracking.vector.VectorClient;
+import com.catrescue.api.util.CoordinatePrecision;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Sort;
@@ -70,6 +75,9 @@ public class AssessmentService {
     private final SightingJpaRepository sightingJpaRepository;
     private final AssessmentJpaRepository assessmentJpaRepository;
     private final CatJpaRepository catJpaRepository;
+    private final VectorClient vectorClient;
+    private final ClipEmbeddingClient clipEmbeddingClient;
+    private final AssessmentActionGuidanceService assessmentActionGuidanceService;
 
     public AssessmentService(
             AssessmentRepository repository,
@@ -85,7 +93,10 @@ public class AssessmentService {
             AssessmentDedupService assessmentDedupService,
             SightingJpaRepository sightingJpaRepository,
             AssessmentJpaRepository assessmentJpaRepository,
-            CatJpaRepository catJpaRepository
+            CatJpaRepository catJpaRepository,
+            VectorClient vectorClient,
+            ClipEmbeddingClient clipEmbeddingClient,
+            AssessmentActionGuidanceService assessmentActionGuidanceService
     ) {
         this.repository = repository;
         this.multimodalClient = multimodalClient;
@@ -101,6 +112,9 @@ public class AssessmentService {
         this.sightingJpaRepository = sightingJpaRepository;
         this.assessmentJpaRepository = assessmentJpaRepository;
         this.catJpaRepository = catJpaRepository;
+        this.vectorClient = vectorClient;
+        this.clipEmbeddingClient = clipEmbeddingClient;
+        this.assessmentActionGuidanceService = assessmentActionGuidanceService;
     }
 
     public AssessmentResponse createAssessment(
@@ -108,10 +122,14 @@ public class AssessmentService {
             Double latitude,
             Double longitude,
             Long reporterUserId,
-            String addressText
+            String addressText,
+            String earClip
     ) {
         if (image == null || image.isEmpty()) {
             throw new IllegalArgumentException("Image file is required");
+        }
+        if (earClip == null || earClip.isBlank()) {
+            throw new IllegalArgumentException("is_ear_tipped is required (earClip: yes or no)");
         }
         UUID id = UUID.randomUUID();
         Instant now = Instant.now();
@@ -125,6 +143,7 @@ public class AssessmentService {
         String contentType = image.getContentType();
         byte[] payload = storePayload(bytes);
         String addr = normalizeAddress(addressText);
+        String userEarClip = normalizeEarClip(earClip);
 
         ModelLabels labels;
         try {
@@ -148,10 +167,12 @@ public class AssessmentService {
                     null,
                     null,
                     null,
-                    id
+                    id,
+                    userEarClip,
+                    null
             );
             Assessment saved = repository.save(failed, payload);
-            return toResponse(saved, null);
+            return toResponse(saved, null, null, null);
         }
         BranchType branch = routingService.decide(labels);
 
@@ -169,20 +190,12 @@ public class AssessmentService {
         UUID duplicateOf = null;
         Double duplicateScore = null;
         UUID clusterId = id;
+        Optional<AssessmentDedupService.ScoredAssessmentMatch> featureHint = Optional.empty();
         if (snapshot != null) {
             try {
-                Optional<AssessmentDedupService.ScoredAssessmentMatch> dup =
-                        assessmentDedupService.findBestMatchingPriorAssessment(snapshot, id);
-                if (dup.isPresent()) {
-                    var priorEntity = dup.get().prior();
-                    duplicateOf = priorEntity.getId();
-                    duplicateScore = dup.get().score();
-                    clusterId = priorEntity.getIdentityClusterId() != null
-                            ? priorEntity.getIdentityClusterId()
-                            : priorEntity.getId();
-                }
+                featureHint = assessmentDedupService.findBestMatchingPriorAssessment(snapshot, id);
             } catch (Exception ex) {
-                log.warn("Assessment dedup skipped (assessment still saved): {}", ex.toString());
+                log.warn("Assessment feature hint skipped: {}", ex.toString());
             }
         }
 
@@ -203,7 +216,9 @@ public class AssessmentService {
                 snapshot,
                 duplicateOf,
                 duplicateScore,
-                clusterId
+                clusterId,
+                userEarClip,
+                null
         );
         Assessment saved = repository.save(assessment, payload);
 
@@ -214,7 +229,56 @@ public class AssessmentService {
                 reporterUserId,
                 addressText
         );
-        return toResponse(saved, trackingMatch);
+        Assessment reloaded = reloadAssessment(saved.id());
+        AssessmentDuplicateMatchDto hintDuplicate = featureHint
+                .flatMap(h -> buildHintDuplicateMatch(h, reloaded))
+                .orElse(null);
+        AssessmentActionGuidanceDto guidance = assessmentActionGuidanceService.build(
+                userEarClip,
+                reloaded.latitude(),
+                reloaded.longitude()
+        );
+        return toResponse(reloaded, trackingMatch, hintDuplicate, guidance);
+    }
+
+    private Assessment reloadAssessment(UUID id) {
+        return repository.findById(id).orElseThrow(() -> new NotFoundException("Assessment not found"));
+    }
+
+    private void indexAssessmentInChroma(Assessment saved, byte[] bytes, String contentType, float[] knownEmbedding) {
+        if (!vectorClient.isEnabled()) {
+            return;
+        }
+        float[] embedding = knownEmbedding;
+        if (embedding == null) {
+            embedding = clipEmbeddingClient.embedBytes(bytes, saved.originalFilename(), contentType).orElse(null);
+        }
+        if (embedding == null) {
+            return;
+        }
+        String chromaId = "assessment_" + saved.id();
+        String loc = locationSummary(saved);
+        StrayCatVectorMetadata metadata = new StrayCatVectorMetadata(
+                saved.trackingSightingId() != null ? saved.trackingSightingId() : 0L,
+                null,
+                saved.createdAt().toString(),
+                loc,
+                saved.imageStored() ? "/api/v1/assessments/" + saved.id() + "/image" : ""
+        );
+        if (!vectorClient.add(chromaId, embedding, metadata)) {
+            log.warn("Failed to index assessment {} in Chroma", saved.id());
+        }
+    }
+
+    private static String normalizeEarClip(String raw) {
+        if (raw == null || raw.isBlank()) {
+            throw new IllegalArgumentException("is_ear_tipped is required (earClip: yes or no)");
+        }
+        String v = raw.trim().toLowerCase(Locale.ROOT);
+        return switch (v) {
+            case "yes", "no" -> v;
+            default -> throw new IllegalArgumentException("Invalid earClip: must be yes or no");
+        };
     }
 
     public List<AssessmentListItemDto> listCommunityAssessments() {
@@ -242,7 +306,7 @@ public class AssessmentService {
 
     public AssessmentResponse getAssessment(UUID id) {
         Assessment a = repository.findById(id).orElseThrow(() -> new NotFoundException("Assessment not found"));
-        return toResponse(a, null);
+        return toResponse(a, null, null, null);
     }
 
     private AssessmentTrackingMatchDto ingestTrackingSightingIfRequested(
@@ -269,6 +333,7 @@ public class AssessmentService {
                     saved.longitude(),
                     null
             ));
+            linkAssessmentToSighting(saved.id(), se.getId());
             Long exclude = se.getCatId() != null ? se.getCatId() : se.getSuggestedCatId();
             int nearby = catHeatmapService.countDistinctOtherCatsNear(
                     saved.latitude(),
@@ -293,11 +358,30 @@ public class AssessmentService {
         }
     }
 
+    private void linkAssessmentToSighting(UUID assessmentId, Long sightingId) {
+        if (assessmentId == null || sightingId == null || sightingId <= 0) {
+            return;
+        }
+        assessmentJpaRepository.findById(assessmentId).ifPresent(entity -> {
+            entity.setTrackingSightingId(sightingId);
+            assessmentJpaRepository.save(entity);
+        });
+    }
+
     public Optional<StoredAssessmentImage> getAssessmentImage(UUID id) {
         return repository.findStoredImage(id);
     }
 
     private AssessmentResponse toResponse(Assessment a, AssessmentTrackingMatchDto trackingMatch) {
+        return toResponse(a, trackingMatch, null, null);
+    }
+
+    private AssessmentResponse toResponse(
+            Assessment a,
+            AssessmentTrackingMatchDto trackingMatch,
+            AssessmentDuplicateMatchDto hintDuplicate,
+            AssessmentActionGuidanceDto guidanceOverride
+    ) {
         boolean likelyAlreadySterilized = isLikelyAlreadySterilized(a.modelLabels());
         String captureAdvice = likelyAlreadySterilized
                 ? "Ear-tip detected: treat as already sterilized. Avoid repeat trapping unless medical care is needed."
@@ -342,12 +426,20 @@ public class AssessmentService {
                     Collections.emptyList()
             );
         }
-        AssessmentDuplicateMatchDto duplicateDto = null;
-        try {
-            duplicateDto = buildDuplicateMatch(a);
-        } catch (Exception ex) {
-            log.warn("buildDuplicateMatch skipped: {}", ex.toString());
+        AssessmentDuplicateMatchDto duplicateDto = hintDuplicate;
+        if (duplicateDto == null && a.catFeatures() != null) {
+            try {
+                duplicateDto = assessmentDedupService
+                        .findBestMatchingPriorAssessment(a.catFeatures(), a.id())
+                        .flatMap(h -> buildHintDuplicateMatch(h, a))
+                        .orElse(null);
+            } catch (Exception ex) {
+                log.warn("buildHintDuplicateMatch skipped: {}", ex.toString());
+            }
         }
+        AssessmentActionGuidanceDto actionGuidance = guidanceOverride != null
+                ? guidanceOverride
+                : assessmentActionGuidanceService.build(a.userEarClip(), a.latitude(), a.longitude());
         return new AssessmentResponse(
                 a.id(),
                 a.status(),
@@ -362,35 +454,33 @@ public class AssessmentService {
                 actions,
                 a.failureReason(),
                 trackingMatch,
-                duplicateDto
+                duplicateDto,
+                actionGuidance
         );
     }
 
-    private AssessmentDuplicateMatchDto buildDuplicateMatch(Assessment a) {
-        if (a.duplicateOfAssessmentId() == null) {
-            return null;
+    private Optional<AssessmentDuplicateMatchDto> buildHintDuplicateMatch(
+            AssessmentDedupService.ScoredAssessmentMatch match,
+            Assessment current
+    ) {
+        if (match == null || match.prior() == null || match.prior().getId() == null) {
+            return Optional.empty();
         }
-        Assessment prior = repository.findById(a.duplicateOfAssessmentId()).orElse(null);
+        Assessment prior = repository.findById(match.prior().getId()).orElse(null);
         if (prior == null) {
-            return null;
+            return Optional.empty();
         }
-        UUID clusterKey = a.identityClusterId() != null ? a.identityClusterId() : a.id();
-        List<Assessment> chain = repository.findByIdentityClusterIdOrdered(clusterKey);
-        if (chain.isEmpty()) {
-            chain = List.of(prior, a).stream().sorted(Comparator.comparing(Assessment::createdAt)).toList();
-        }
-        if (chain.size() > 60) {
-            chain = chain.subList(0, 60);
-        }
-        List<AssessmentTimelineItemDto> timeline = chain.stream().map(this::toTimelineItem).toList();
-        double score = a.duplicateSimilarityScore() != null ? a.duplicateSimilarityScore() : 0.0;
-        return new AssessmentDuplicateMatchDto(
+        List<AssessmentTimelineItemDto> timeline = List.of(
+                toTimelineItem(prior),
+                toTimelineItem(current)
+        ).stream().sorted(Comparator.comparing(AssessmentTimelineItemDto::createdAt)).toList();
+        return Optional.of(new AssessmentDuplicateMatchDto(
                 prior.id(),
-                score,
+                match.score(),
                 prior.createdAt(),
                 locationSummary(prior),
                 timeline
-        );
+        ));
     }
 
     private AssessmentTimelineItemDto toTimelineItem(Assessment x) {
@@ -411,13 +501,13 @@ public class AssessmentService {
         if (clusterSize <= 0) {
             clusterSize = 1;
         }
-        boolean sameCatBadge = a.duplicateOfAssessmentId() != null || clusterSize > 1;
+        boolean sameCatBadge = a.duplicateOfAssessmentId() != null;
         double sick = a.modelLabels().sickOrInjuredConfidence();
         int inj = a.modelLabels().healthSuspectedInjuryPercent();
         int sev = a.modelLabels().healthSeverelyEmaciatedPercent();
         boolean needsHelp = a.branchType() == BranchType.RESCUE || sick >= 0.55
                 || inj >= 70 || sev >= 70;
-        boolean tnrVerified = isLikelyAlreadySterilized(a.modelLabels());
+        boolean tnrVerified = "TNR_VERIFIED".equals(neuteredStatusLabel(a));
         boolean healthy = !needsHelp && sick < 0.45;
         String img = a.imageStored() ? "/api/v1/assessments/" + a.id() + "/image" : null;
         return new AssessmentListItemDto(
@@ -473,6 +563,13 @@ public class AssessmentService {
     private static String neuteredStatusLabel(Assessment a) {
         if (a.status() != AssessmentStatus.COMPLETED) {
             return "UNKNOWN";
+        }
+        String userClip = a.userEarClip() != null ? a.userEarClip().trim().toLowerCase(Locale.ROOT) : "unknown";
+        if ("yes".equals(userClip)) {
+            return "TNR_VERIFIED";
+        }
+        if ("no".equals(userClip)) {
+            return "LIKELY_INTACT";
         }
         if (isLikelyAlreadySterilized(a.modelLabels())) {
             return "TNR_VERIFIED";

@@ -22,7 +22,9 @@ public record AssessmentResponse(
         String failureReason,
         /** Present when {@code reporterUserId} was sent with the assessment and sighting ingest succeeded. */
         AssessmentTrackingMatchDto trackingMatch,
-        /** Prior sighting match when feature similarity &gt; 70%. */
-        AssessmentDuplicateMatchDto assessmentDuplicate
+        /** Prior sighting match when feature similarity &gt; 70% (hint only, not auto-merge). */
+        AssessmentDuplicateMatchDto assessmentDuplicate,
+        /** Immediate post-upload action cards (TNR / feeding spot / bowl tips). */
+        AssessmentActionGuidanceDto actionGuidance
 ) {
 }

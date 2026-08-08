@@ -76,6 +76,10 @@ class ChatStreamRequest(BaseModel):
         None,
         description="当前聚焦的评估 UUID（与页面最近一次评估一致），供档案详情类查询",
     )
+    assessment_duplicate: dict[str, Any] | None = Field(
+        None,
+        description="上传后同猫识别结果（assessmentDuplicate JSON），供站长回答「之前见过吗」",
+    )
     volunteer_user_id: int | None = Field(
         None,
         description="志愿者数字 ID（喂养打卡 POST /volunteers/me/feeding-checkins 使用）",
@@ -260,6 +264,7 @@ async def chat_stream(body: ChatStreamRequest) -> StreamingResponse:
         output_language=ol,
         focus_cat_id=body.cat_id,
         focus_assessment_id=body.assessment_id,
+        assessment_duplicate=body.assessment_duplicate,
     )
     if body.need_nearby and state.get("route") is None:
         # 覆盖路由：按钮「附近绝育」

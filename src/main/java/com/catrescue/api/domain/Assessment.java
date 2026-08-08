@@ -24,6 +24,10 @@ public record Assessment(
         CatFeatureSnapshot catFeatures,
         UUID duplicateOfAssessmentId,
         Double duplicateSimilarityScore,
-        UUID identityClusterId
+        UUID identityClusterId,
+        /** User form: yes | no | unknown — overrides model neuter label in community UI. */
+        String userEarClip,
+        /** Sighting row created from this assessment upload (for CLIP ↔ assessment linking). */
+        Long trackingSightingId
 ) {
 }

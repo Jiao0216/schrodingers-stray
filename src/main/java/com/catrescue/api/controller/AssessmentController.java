@@ -76,9 +76,12 @@ public class AssessmentController {
             @RequestParam(value = "latitude", required = false) Double latitude,
             @RequestParam(value = "longitude", required = false) Double longitude,
             @RequestParam(value = "reporterUserId", required = false) Long reporterUserId,
-            @RequestParam(value = "addressText", required = false) String addressText
+            @RequestParam(value = "addressText", required = false) String addressText,
+            @RequestParam(value = "earClip", required = false) String earClip,
+            @RequestParam(value = "is_ear_tipped", required = false) String isEarTipped
     ) {
-        return assessmentService.createAssessment(image, latitude, longitude, reporterUserId, addressText);
+        String clip = earClip != null && !earClip.isBlank() ? earClip : isEarTipped;
+        return assessmentService.createAssessment(image, latitude, longitude, reporterUserId, addressText, clip);
     }
 
     @GetMapping("/" + ID_UUID)

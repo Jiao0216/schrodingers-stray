@@ -273,7 +273,7 @@ public class SightingDeduplicationService {
         boolean hit = best.distance() < threshold;
         String reason = hit
                 ? "CLIP candidate distance=" + String.format(Locale.ROOT, "%.3f", best.distance())
-                : "Best CLIP distance below threshold";
+                : "CLIP distance above threshold (" + String.format(Locale.ROOT, "%.3f", best.distance()) + ")";
         ClipDedupDecision decision = new ClipDedupDecision(
                 hit,
                 best.distance(),

@@ -132,6 +132,8 @@ public class DbAssessmentRepository implements AssessmentRepository {
         e.setDuplicateOfAssessmentId(a.duplicateOfAssessmentId());
         e.setDuplicateSimilarityScore(a.duplicateSimilarityScore());
         e.setIdentityClusterId(a.identityClusterId());
+        e.setUserEarClip(a.userEarClip());
+        e.setTrackingSightingId(a.trackingSightingId());
         return e;
     }
 
@@ -196,7 +198,9 @@ public class DbAssessmentRepository implements AssessmentRepository {
                 features,
                 e.getDuplicateOfAssessmentId(),
                 e.getDuplicateSimilarityScore(),
-                e.getIdentityClusterId()
+                e.getIdentityClusterId(),
+                e.getUserEarClip(),
+                e.getTrackingSightingId()
         );
     }
 

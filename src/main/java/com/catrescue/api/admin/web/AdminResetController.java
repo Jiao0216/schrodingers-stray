@@ -37,6 +37,8 @@ public class AdminResetController {
         deletedRows.put("notifications", safeDelete("DELETE FROM notifications"));
         deletedRows.put("volunteer_saved_cats", safeDelete("DELETE FROM volunteer_saved_cats"));
         deletedRows.put("cats", safeDelete("DELETE FROM cats"));
+        deletedRows.put("feeding_spot_records", safeDelete("DELETE FROM feeding_spot_records"));
+        deletedRows.put("feeding_spots", safeDelete("DELETE FROM feeding_spots"));
         // Community upload / analyze photos live in assessments (image_bytes).
         deletedRows.put("assessments", safeDelete("DELETE FROM assessments"));
 

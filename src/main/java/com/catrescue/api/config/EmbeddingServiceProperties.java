@@ -14,8 +14,8 @@ public class EmbeddingServiceProperties {
     /** No trailing slash, e.g. http://127.0.0.1:8001 */
     private String baseUrl = "http://127.0.0.1:8001";
 
-    /** Cosine distance threshold for suspected same-cat (used in later dedup steps). */
-    private double distanceThreshold = 0.199;
+    /** Cosine distance threshold for suspected same-cat (CLIP). */
+    private double distanceThreshold = 0.35;
 
     public boolean isEnabled() {
         return enabled;

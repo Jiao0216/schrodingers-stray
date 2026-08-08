@@ -165,6 +165,7 @@ _CONCEPT_TOOL_BY_INTENT: dict[str, str] = {
     "assessment_ear": "get_assessment_detail",
     "assessment_reporter": "get_assessment_detail",
     "cat_heatmap_sightings": "get_cat_sightings_timeline",
+    "assessment_duplicate_match": "get_same_cat_cluster_timeline",
     "report_cat": "report_cat",
     "unknown": "unknown",
 }
@@ -216,18 +217,20 @@ SCENE_C_APPEND = """
 SCENE_FOLLOWUP_APPEND = """
 【当前为多轮追问】
 务必优先回答「本轮志愿者输入」里的具体问题；结合「本次照片评估背景」与上方对话历史，不要答非所问。
+若背景中含【同猫识别】或【社区追踪】，用户问是否之前见过、是否同一只猫、有无历史记录时，**必须依据其中的时间线与档案 ID 回答**，勿说「系统暂无记录」。
 若用户追问喂食、危险、绝育等，请直接回应其字面意思，不要重复无关的机构列表，除非本轮明确在问附近医院/TNR。
 """.strip()
 
 SCENE_FOLLOWUP_APPEND_EN = """
 [Multi-turn follow-up]
 Answer the volunteer's latest question first. Use the optional photo-assessment context and the conversation history; do not go off-topic.
+If the context includes [Same-cat match] or [Community tracking], and they ask whether this cat was seen before or is the same individual, **answer from that timeline and archive IDs**—do not claim there is no record.
 If they ask about feeding, safety, or neutering, respond directly—do not repeat unrelated shelter lists unless they clearly ask for nearby clinics/TNR.
 """.strip()
 
 SCENE_DB_LOOKUP_APPEND = """
 【当前路由：平台数据库检索（概念工具名见 JSON 字段 concept_tool，与 Demo 脚本一致）】
-下方 JSON 来自 Java 后端真实响应（字段 intent 标明本次分支：platform_stats | feeding_checkin | cats_nearby_count | feeding_stations | tnr_directory / rescue_directory / assessments_list / assessment_detail | cat_heatmap_sightings | report_cat）。
+下方 JSON 来自 Java 后端真实响应（字段 intent 标明本次分支：platform_stats | feeding_checkin | cats_nearby_count | feeding_stations | tnr_directory / rescue_directory / assessments_list / assessment_detail | cat_heatmap_sightings | assessment_duplicate_match | report_cat）。
 - report_cat：无 REST 写接口；JSON 含 workflow 提示，请引导用户用「上传/分析」提交照片与定位完成上报。
 - platform_stats：GET /api/v1/stats/platform 全区汇总；含 totalAssessments、sightingsLast30Days、distinctCatsWithSightings、assessmentsWithGeo、assessmentWithGeoRatio、todayScheduledStationDispenses。用户问「本周成果」时用这些数字做**汇总**，不要只复述单条猫咪档案。
 - tnr_directory / rescue_directory：nearest 接口返回的机构列表。
@@ -237,6 +240,7 @@ SCENE_DB_LOOKUP_APPEND = """
 - feeding_stations：GET /api/v1/feeding-stations；若有 GPS 会附 `distanceMeters` 并按距离排序。
 - feeding_checkin：POST /api/v1/volunteers/me/feeding-checkins 成功后的 JSON（需 volunteer_user_id）；失败见 error。
 - cat_heatmap_sightings：`data` 为 GET /api/v1/cats/{catId}/heatmap/sightings（近 window_days 天、与热力图一致的加权目击）；`cat_history` 为 GET /api/v1/cats/{catId}/history?limit=50，含 `recentSightings` 每条的时间、坐标与 **addressText**（与档案页「出现记录时间线」同源的可读地址）。回答「几次、在哪些地方」时优先用 `cat_history.recentSightings` 复述地点与时间；`data` 用于补充热力图权重、去重状态、缩略图 imageUrl 等。若 `sightings_total` 与 `timeline_sightings_count` 不一致，说明热力图窗口内过滤更严，向用户简要说明即可。
+- assessment_duplicate_match：`data` 为上传后页面传入的同猫识别簇（matchedAssessmentId、similarityScore、clusterSightings 时间线）。用户问「之前见过吗 / 同一只猫吗」时直接据此回答出现次数、时间与地点；可结合 trackingMatch 中的 suggestedCatId / dedupStatus。
 - 若用户问志愿者/跟进人：公开 JSON 不含 reporterUserId；仅可复述 trackingMatch 内已有字段（如 sightingId、catId、dedupStatus）。若无可用信息，如实说明，禁止编造姓名或联系方式。
 【回复格式】像站长口头说明一样用自然段落（可 1～3 段），不要用「第1/2/3条」「猫咪档案1、2、3」等编号列表。若需提及图片，只使用 JSON 里给出的完整 http(s) 链接（已是绝对地址），勿改回相对路径。
 仅当 JSON 中 **records_omitted 存在且为大于 0 的整数** 时，结尾才用一句自然话说明另有若干条未展开；若该字段为 0、缺省或不存在，**禁止**写「另外还有」「未展示」等与条数相关的收尾。
@@ -246,7 +250,7 @@ SCENE_DB_LOOKUP_APPEND = """
 
 SCENE_DB_LOOKUP_APPEND_EN = """
 [Route: platform DB lookup — see `concept_tool` in JSON for the demo script tool name]
-The JSON is the real Java API response (see intent: platform_stats | feeding_checkin | cats_nearby_count | feeding_stations | tnr_directory / rescue_directory / assessments_list / assessment_detail | cat_heatmap_sightings | report_cat).
+The JSON is the real Java API response (see intent: platform_stats | feeding_checkin | cats_nearby_count | feeding_stations | tnr_directory / rescue_directory / assessments_list / assessment_detail | cat_heatmap_sightings | assessment_duplicate_match | report_cat).
 - report_cat: no write API; JSON only has workflow hints—tell the user to use Upload / Analyze with photo + location.
 - platform_stats: GET /stats/platform — totals: totalAssessments, sightingsLast30Days, distinctCatsWithSightings, assessmentsWithGeo, assessmentWithGeoRatio, todayScheduledStationDispenses. For “weekly summary / dashboard”, give an aggregate overview, not a single-cat story.
 - feeding_checkin: POST /volunteers/me/feeding-checkins result or error (needs volunteer_user_id).
@@ -256,6 +260,7 @@ The JSON is the real Java API response (see intent: platform_stats | feeding_che
 - assessments_list: GPS-filtered; `data` holds up to the 3 most recent matches. `records_total` is the full match count; `records_omitted` is how many are not expanded (0 means all shown).
 - assessment_detail: single assessment. Neuter/ear-tip only from modelLabels (earTipDetected, earTipConfidencePercent, likelyAlreadySterilized, captureAdvice); do not invent field names.
 - cat_heatmap_sightings: `data` = GET /api/v1/cats/{catId}/heatmap/sightings (last `window_days`, same weighting as the UI heatmap). `cat_history` = GET /api/v1/cats/{catId}/history?limit=50 with `recentSightings` entries including **addressText** (human-readable locations like the profile timeline). For “how many times / where”, prefer summarizing `cat_history.recentSightings` (time + address); use `data` for weights, dedup flags, and `imageUrl`. If `sightings_total` differs from `timeline_sightings_count`, the heatmap window/filter is stricter—say that briefly.
+- assessment_duplicate_match: `data` is the same-cat cluster from the upload page (matchedAssessmentId, similarityScore, clusterSightings timeline). For “seen before / same cat?” answer from this timeline; you may mention suggestedCatId / dedupStatus from trackingMatch in assessment context.
 - Volunteer/follow-up: there is no reporterUserId in the public payload; only summarize trackingMatch fields if present; otherwise say it is not returned—do not invent identities.
 [Reply format] Write as natural spoken prose (1–3 short paragraphs). Do not use numbered lists like "record 1/2/3" or "archive #1, #2". For images, only use the full http(s) URLs already present in JSON—never shorten to relative paths.
 Only if `records_omitted` exists and is an integer **greater than 0**, add one short sentence that more records exist; if it is 0, missing, or absent, **do not** mention "additional records" / "N more rows".
@@ -323,7 +328,34 @@ def _web_search_is_local_facilities(msg: str) -> bool:
     )
 
 
-def _db_lookup_kind(msg: str) -> str | None:
+def _state_has_assessment_duplicate(state: AgentState | None) -> bool:
+    if not state:
+        return False
+    dup = state.get("assessment_duplicate")
+    if not isinstance(dup, dict):
+        return False
+    if dup.get("matchedAssessmentId") is None:
+        return False
+    rows = dup.get("clusterSightings")
+    return isinstance(rows, list) and len(rows) > 0
+
+
+def _same_cat_history_question(msg: str) -> bool:
+    m = (msg or "").strip()
+    if not m:
+        return False
+    return bool(
+        re.search(
+            r"同一只猫|同只猫|疑似同猫|疑似.{0,8}同|之前出现过|之前有没有|曾经见过|有没有见过|"
+            r"有.{0,8}记录|历史记录|见过吗|有记录吗|之前有记录|喂过吗|有档案吗|这只猫是谁的|"
+            r"same\s+cat|seen\s+before|prior\s+record",
+            m,
+            re.I,
+        )
+    )
+
+
+def _db_lookup_kind(msg: str, state: AgentState | None = None) -> str | None:
     """
     数据库检索意图（与 classify_route 中 db_lookup 分支一致）。
     返回：platform_stats | report_cat | feeding_checkin | cats_nearby_count | feeding_stations | …
@@ -386,7 +418,17 @@ def _db_lookup_kind(msg: str) -> str | None:
         return "tnr_directory"
     if re.search(r"附近救助|救助机构|送养|哪(里|儿)可以送养|领养.{0,6}哪", m):
         return "rescue_directory"
-    if re.search(r"见过吗|有记录吗|之前有记录|喂过吗|有档案吗|这只猫是谁的", m):
+    if _same_cat_history_question(m):
+        if _state_has_assessment_duplicate(state):
+            return "assessment_duplicate_match"
+        cid = state.get("focus_cat_id") if state else None
+        if cid is not None:
+            return "cat_heatmap_sightings"
+    if re.search(
+        r"见过吗|有记录吗|之前有记录|喂过吗|有档案吗|这只猫是谁的|"
+        r"之前出现过|之前有没有|曾经见过|有没有见过|同一只猫|疑似同猫",
+        m,
+    ):
         return "assessments_list"
     if re.search(
         r"绝育过吗|TNR了吗|耳尖|剪耳|tnr了|已经tnr|做过绝育",
@@ -397,8 +439,8 @@ def _db_lookup_kind(msg: str) -> str | None:
     return None
 
 
-def _wants_db_lookup(msg: str) -> bool:
-    return _db_lookup_kind(msg) is not None
+def _wants_db_lookup(msg: str, state: AgentState | None = None) -> bool:
+    return _db_lookup_kind(msg, state) is not None
 
 
 _UUID_RE = re.compile(
@@ -507,6 +549,9 @@ def _prepare_db_lookup_llm_payload(payload: dict[str, Any]) -> dict[str, Any]:
             slim.append(cp)
         out["data"] = slim
 
+    if out.get("intent") == "assessment_duplicate_match" and isinstance(out.get("data"), dict):
+        out["data"] = _expand_assessment_relative_urls(out["data"], API_BASE)
+
     try:
         ro = out.get("records_omitted")
         if ro is not None and int(ro) == 0:
@@ -594,6 +639,7 @@ class AgentState(TypedDict, total=False):
     output_language: Literal["zh", "en"]
     focus_cat_id: int | None
     focus_assessment_id: str | None
+    assessment_duplicate: dict[str, Any] | None
     route: RouteKind
     shelter_payload: dict[str, Any] | None
     shelter_cards: list[dict[str, Any]]
@@ -744,7 +790,7 @@ def classify_route(state: AgentState) -> RouteKind:
 
     msg = (state.get("user_message") or "").replace("[nearby_shelters]", "").strip()
 
-    if _wants_db_lookup(msg):
+    if _wants_db_lookup(msg, state):
         return "db_lookup"
 
     if _wants_web_search(msg):
@@ -1026,7 +1072,7 @@ async def iot_audit_node(state: AgentState, config: RunnableConfig) -> dict[str,
 async def db_lookup_fetch_node(state: AgentState) -> dict[str, Any]:
     """按意图调用 Spring Boot：TNR/救助目录 nearest、assessments/list、assessments/{id}。"""
     msg = (state.get("user_message") or "").replace("[nearby_shelters]", "").strip()
-    kind = _db_lookup_kind(msg) or "unknown"
+    kind = _db_lookup_kind(msg, state) or "unknown"
     base = API_BASE
     lat, lng = _coords_for_db_lookup(state, msg)
     payload: dict[str, Any] = {
@@ -1188,6 +1234,23 @@ async def db_lookup_fetch_node(state: AgentState) -> dict[str, Any]:
                     else:
                         payload["check_in"] = r.json()
                         payload["empty"] = False
+
+            elif kind == "assessment_duplicate_match":
+                dup = state.get("assessment_duplicate")
+                if not isinstance(dup, dict) or dup.get("matchedAssessmentId") is None:
+                    payload.update(
+                        {
+                            "error": "missing_duplicate_payload",
+                            "hint_zh": "页面未传入同猫识别结果；请在上传分析完成后再问「之前见过吗」。",
+                            "hint_en": "Same-cat match data was not passed from the upload page; ask after analysis completes.",
+                        }
+                    )
+                else:
+                    rows = dup.get("clusterSightings")
+                    timeline = rows if isinstance(rows, list) else []
+                    payload["data"] = dup
+                    payload["cluster_size"] = len(timeline)
+                    payload["empty"] = len(timeline) == 0
 
             elif kind == "cat_heatmap_sightings":
                 cid_raw = state.get("focus_cat_id")
@@ -1479,6 +1542,7 @@ def initial_state(
     output_language: str | None = None,
     focus_cat_id: int | None = None,
     focus_assessment_id: str | None = None,
+    assessment_duplicate: dict[str, Any] | None = None,
 ) -> AgentState:
     ol = (output_language or "zh").strip().lower()
     lang: Literal["zh", "en"] = "en" if ol.startswith("en") else "zh"
@@ -1499,6 +1563,8 @@ def initial_state(
         fa = str(focus_assessment_id).strip()
         if _UUID_RE.fullmatch(fa):
             st["focus_assessment_id"] = fa
+    if isinstance(assessment_duplicate, dict) and assessment_duplicate.get("matchedAssessmentId") is not None:
+        st["assessment_duplicate"] = assessment_duplicate
     if volunteer_user_id is not None:
         try:
             vu = int(volunteer_user_id)
