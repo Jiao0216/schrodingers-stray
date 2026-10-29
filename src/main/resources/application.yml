@@ -110,5 +110,15 @@ cat-rescue:
     enabled: ${CAT_RESCUE_EMBEDDING_ENABLED:false}
     base-url: ${CAT_RESCUE_EMBEDDING_BASE_URL:http://127.0.0.1:8001}
     distance-threshold: ${CAT_RESCUE_EMBEDDING_DISTANCE_THRESHOLD:0.35}
+    # Ear-tip check: also send the vision model a padded head crop from embedding-service (/crop).
+    # Independent of `enabled`; falls back to the full photo when the service is down or no head is found.
+    head-crop-enabled: ${CAT_RESCUE_HEAD_CROP_ENABLED:true}
+    # Re-fit distance-threshold from volunteer confirm/reject feedback (GET/POST /api/v1/admin/clip-calibration).
+    # Until min-per-class confirmed AND rejected CLIP matches exist, distance-threshold above is used as-is.
+    auto-calibrate: ${CAT_RESCUE_EMBEDDING_AUTO_CALIBRATE:true}
+    calibration-min-per-class: ${CAT_RESCUE_EMBEDDING_CALIBRATION_MIN_PER_CLASS:5}
+    calibration-floor: 0.10
+    calibration-ceiling: 0.60
+    calibration-interval-ms: 3600000
   chroma:
     collection: ${CAT_RESCUE_CHROMA_COLLECTION:stray_cats}

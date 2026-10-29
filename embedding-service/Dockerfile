@@ -9,7 +9,7 @@ RUN apt-get update \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY main.py .
+COPY main.py chroma_store.py detector.py ./
 
 ENV PORT=8001
 EXPOSE 8001

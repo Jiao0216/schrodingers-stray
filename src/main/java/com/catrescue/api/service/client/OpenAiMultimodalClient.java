@@ -9,6 +9,7 @@ import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
@@ -33,9 +34,24 @@ public class OpenAiMultimodalClient implements MultimodalClient {
 
     @Override
     public ModelLabels analyzeImageBytes(byte[] imageBytes, String contentType) {
+        return analyzeImageBytes(imageBytes, contentType, null);
+    }
+
+    @Override
+    public ModelLabels analyzeImageBytes(byte[] imageBytes, String contentType, byte[] headCropJpeg) {
         String mime = normalizeMimeType(contentType);
         String base64 = Base64.getEncoder().encodeToString(imageBytes);
         String dataUrl = "data:" + mime + ";base64," + base64;
+
+        List<Map<String, Object>> userContent = new ArrayList<>();
+        userContent.add(Map.of("type", "text", "text", VisionPrompts.USER_INSTRUCTIONS));
+        userContent.add(highDetailImage(dataUrl));
+        if (headCropJpeg != null && headCropJpeg.length > 0) {
+            userContent.add(Map.of("type", "text", "text", VisionPrompts.HEAD_CROP_NOTE));
+            userContent.add(highDetailImage(
+                    "data:image/jpeg;base64," + Base64.getEncoder().encodeToString(headCropJpeg)
+            ));
+        }
 
         Map<String, Object> body = Map.of(
                 "model", model,
@@ -51,10 +67,7 @@ public class OpenAiMultimodalClient implements MultimodalClient {
                         ),
                         Map.of(
                                 "role", "user",
-                                "content", List.of(
-                                        Map.of("type", "text", "text", VisionPrompts.USER_INSTRUCTIONS),
-                                        Map.of("type", "image_url", "image_url", Map.of("url", dataUrl))
-                                )
+                                "content", userContent
                         )
                 )
         );
@@ -84,6 +97,11 @@ public class OpenAiMultimodalClient implements MultimodalClient {
             }
             throw new OpenAiInvocationException("OpenAI call failed: " + e.getMessage(), e);
         }
+    }
+
+    /** detail=high keeps small regions (ear tips) from being lost to the default downscale. */
+    private static Map<String, Object> highDetailImage(String url) {
+        return Map.of("type", "image_url", "image_url", Map.of("url", url, "detail", "high"));
     }
 
     private ModelLabels parseResponse(String json) {

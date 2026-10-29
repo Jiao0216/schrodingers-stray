@@ -145,9 +145,11 @@ public class AssessmentService {
         String addr = normalizeAddress(addressText);
         String userEarClip = normalizeEarClip(earClip);
 
+        byte[] headCrop = clipEmbeddingClient.cropHead(bytes, contentType).orElse(null);
+
         ModelLabels labels;
         try {
-            labels = multimodalClient.analyzeImageBytes(bytes, contentType);
+            labels = multimodalClient.analyzeImageBytes(bytes, contentType, headCrop);
         } catch (Exception e) {
             log.warn("Multimodal inference failed: {}", e.toString());
             Assessment failed = new Assessment(
@@ -181,7 +183,7 @@ public class AssessmentService {
 
         CatFeatureSnapshot snapshot = null;
         try {
-            CatFeatureVector extracted = catFeatureExtractionService.extractFromImage(dataUrlForFeatures);
+            CatFeatureVector extracted = catFeatureExtractionService.extractFromImage(dataUrlForFeatures, headCrop);
             snapshot = CatFeatureSnapshot.fromVector(extracted);
         } catch (Exception ex) {
             log.warn("Assessment feature extraction skipped: {}", ex.toString());
