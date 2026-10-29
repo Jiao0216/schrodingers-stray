@@ -15,7 +15,7 @@ public final class VisionPrompts {
             将结论填入下方 JSON 字段：
             - left_ear_tnr_mark / right_ear_tnr_mark：分别观察左耳、右耳是否可见上述剪耳形态；仅当该耳清晰可见且呈典型平整剪口时为 true，否则为 false（该耳被遮挡或看不清则为 false）。
             - ear_tip_verdict：若左耳或右耳任一为 true（任一侧可见典型剪耳），必须为 "yes"；仅当两侧均可排除剪耳（或两侧均无法看清且无法确认）时用 "no" 或 "unclear"。严禁仅因标记出现在右耳而输出 "no"。
-            - ear_tip_verdict 必须用英文枚举 "yes"（有剪耳）、"no"（无剪耳）、"unclear"（无法确认）；ear_tip_confidence_percent 为整数 0–100；ear_tip_basis 为一句话依据（可用中文，须说明左/右耳观察结果）。
+            - ear_tip_verdict 必须用英文枚举 "yes"（有剪耳）、"no"（无剪耳）、"unclear"（无法确认）；ear_tip_confidence_percent 为整数 0–100；ear_tip_basis 为一句中文依据（须说明左/右耳观察结果），ear_tip_basis_en 为同义英文句子。
             ear_tip_detected 与 likelyEarTipped：仅当 ear_tip_verdict 为 "yes" 或任一侧 left_ear_tnr_mark/right_ear_tnr_mark 为 true 时为 true；否则为 false（不要猜测）。
             ear_tip_confidence：取 "high"|"medium"|"low" — 当 verdict 为 "unclear" 时必须为 "low"；否则可按置信度分档（例如 ≥70 可用 high，40–69 medium，低于 40 用 low）。
 
@@ -44,7 +44,8 @@ public final class VisionPrompts {
               "ear_tip_confidence": "<high|medium|low>",
               "ear_tip_verdict": "<yes|no|unclear>",
               "ear_tip_confidence_percent": <integer 0-100>,
-              "ear_tip_basis": "<one short sentence>",
+              "ear_tip_basis": "<one short sentence in Simplified Chinese, covering left and right ear>",
+              "ear_tip_basis_en": "<the same sentence in English>",
               "health_body_normal_percent": <integer 0-100>,
               "health_undernutrition_percent": <integer 0-100>,
               "health_severely_emaciated_percent": <integer 0-100>,
@@ -52,8 +53,12 @@ public final class VisionPrompts {
               "image_quality": "<high|medium|low>",
               "indoor_clean_setting": <true|false>,
               "acute_symptoms_visible": <true|false>,
-              "rationalePhrases": [<short English strings; include 无法判断 when unclear>]
+              "rationalePhrases": [<2-4 short phrases in Simplified Chinese; use 无法判断 when unclear>],
+              "rationalePhrasesEn": [<the same phrases in English, same order; use "cannot determine" when unclear>]
             }
+
+            LANGUAGE: rationalePhrases and ear_tip_basis must be entirely Simplified Chinese; rationalePhrasesEn and \
+            ear_tip_basis_en must be entirely English with the same meaning. Never mix languages inside one field.
 
             Omit sickOrInjuredConfidence from your output — the server will derive a legacy score from the four health percentages.
             needsFeedingConfidence must always be exactly 0.

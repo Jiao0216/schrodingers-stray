@@ -124,6 +124,16 @@ public class DbAssessmentRepository implements AssessmentRepository {
         e.setRationalePhrases(a.modelLabels().rationalePhrases() != null
                 ? a.modelLabels().rationalePhrases()
                 : List.of());
+        ModelLabels ml = a.modelLabels();
+        e.setRationalePhrasesEn(ml.rationalePhrasesEn() != null ? ml.rationalePhrasesEn() : List.of());
+        e.setEarTipDetected(ml.earTipDetected());
+        e.setEarTipConfidenceLevel(ml.earTipConfidenceLevel());
+        e.setEarTipConfidencePercent(ml.earTipConfidencePercent() >= 0 ? ml.earTipConfidencePercent() : null);
+        e.setEarTipBasis(ml.earTipBasis());
+        e.setEarTipBasisEn(ml.earTipBasisEn());
+        e.setImageQualityLevel(ml.imageQualityLevel());
+        e.setIndoorCleanSettingHint(ml.indoorCleanSettingHint());
+        e.setAcuteSymptomsVisible(ml.acuteSymptomsVisible());
         e.setFailureReason(a.failureReason());
         e.setCreatedAt(a.createdAt());
         e.setUpdatedAt(a.updatedAt());
@@ -168,17 +178,19 @@ public class DbAssessmentRepository implements AssessmentRepository {
                 e.getLikelyNotNeuteredConfidence(),
                 e.getRationalePhrases() != null ? e.getRationalePhrases() : List.of(),
                 e.isLikelyEarTipped(),
-                false,
-                "",
-                "medium",
-                false,
-                false,
-                -1,
-                "",
+                Boolean.TRUE.equals(e.getEarTipDetected()),
+                e.getEarTipConfidenceLevel() != null ? e.getEarTipConfidenceLevel() : "",
+                e.getImageQualityLevel() != null ? e.getImageQualityLevel() : "medium",
+                Boolean.TRUE.equals(e.getIndoorCleanSettingHint()),
+                Boolean.TRUE.equals(e.getAcuteSymptomsVisible()),
+                pctFromDb(e.getEarTipConfidencePercent()),
+                e.getEarTipBasis() != null ? e.getEarTipBasis() : "",
                 pctFromDb(e.getHealthBodyNormalPercent()),
                 pctFromDb(e.getHealthUndernutritionPercent()),
                 pctFromDb(e.getHealthSeverelyEmaciatedPercent()),
-                pctFromDb(e.getHealthSuspectedInjuryPercent())
+                pctFromDb(e.getHealthSuspectedInjuryPercent()),
+                e.getRationalePhrasesEn() != null ? e.getRationalePhrasesEn() : List.of(),
+                e.getEarTipBasisEn() != null ? e.getEarTipBasisEn() : ""
         );
         CatFeatureSnapshot features = catFeaturesFromEntity(e);
         return new Assessment(

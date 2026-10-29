@@ -12,6 +12,7 @@ public final class TnrLocationMapper {
         double km = GeoUtils.haversineKm(fromLat, fromLng, e.latitude(), e.longitude());
         String navigationUrl = "https://www.google.com/maps/dir/?api=1&destination="
                 + e.latitude() + "," + e.longitude();
+        DirectoryZhCopy.ZhCopy zh = DirectoryZhCopy.forId(e.id());
         return new TnrLocationDto(
                 e.id(),
                 e.name(),
@@ -23,7 +24,10 @@ public final class TnrLocationMapper {
                 e.longitude(),
                 Math.round(km * 100.0) / 100.0,
                 e.websiteHint(),
-                navigationUrl
+                navigationUrl,
+                zh.name(),
+                zh.shortDescription(),
+                zh.streetAddress()
         );
     }
 }

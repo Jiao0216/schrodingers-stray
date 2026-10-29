@@ -311,9 +311,11 @@ public class VolunteerHubService {
             loadVolunteer(volunteerUserId);
         }
         String name = cat.getDisplayName();
-        if (name == null || name.isBlank()) {
+        boolean unnamed = name == null || name.isBlank();
+        if (unnamed) {
             name = "猫咪 #" + cat.getId();
         }
+        String nameEn = unnamed ? "Cat #" + cat.getId() : name;
         String base = siteProperties.getPublicBaseUrl() == null ? "" : siteProperties.getPublicBaseUrl().trim();
         String path = "/index.html?shareCatId=" + cat.getId();
         String url = base.isEmpty() ? path : (base.endsWith("/") ? base.substring(0, base.length() - 1) + path : base + path);
@@ -325,7 +327,7 @@ public class VolunteerHubService {
         );
         String en = String.format(
                 "Tracking stray cat \"%s\" on Schrödinger's Stray Cat — join TNR & rescue.\n%s",
-                name,
+                nameEn,
                 url
         );
         List<String> tags = List.of("流浪猫救助", "TNR", "薛定谔的流浪猫", "StrayCat");

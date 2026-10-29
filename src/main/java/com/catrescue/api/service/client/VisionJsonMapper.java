@@ -49,7 +49,19 @@ public final class VisionJsonMapper {
             });
         }
         if (rationale.isEmpty()) {
-            rationale.add("Model did not provide rationale; verify in person.");
+            rationale.add("模型未给出判断依据，请现场核实。");
+        }
+        List<String> rationaleEn = new ArrayList<>();
+        JsonNode arrEn = out.path("rationalePhrasesEn");
+        if (arrEn.isArray()) {
+            arrEn.forEach(n -> {
+                if (n.isTextual() && !n.asText().isBlank()) {
+                    rationaleEn.add(n.asText());
+                }
+            });
+        }
+        if (rationaleEn.isEmpty()) {
+            rationaleEn.add("Model did not provide rationale; verify in person.");
         }
 
         String verdictRaw = out.path("ear_tip_verdict").asText("");
@@ -59,6 +71,7 @@ public final class VisionJsonMapper {
         int earTipPercent = clampPercent(percentRaw);
 
         String basis = out.path("ear_tip_basis").asText("").trim();
+        String basisEn = out.path("ear_tip_basis_en").asText("").trim();
 
         boolean likelyEarTipped = out.path("likelyEarTipped").asBoolean(false);
         boolean earTipDetected = out.path("ear_tip_detected").asBoolean(false);
@@ -104,6 +117,9 @@ public final class VisionJsonMapper {
         if (!basis.isEmpty()) {
             rationale.add(0, basis);
         }
+        if (!basisEn.isEmpty()) {
+            rationaleEn.add(0, basisEn);
+        }
 
         int outNormal = hasNewHealth ? hNormal : -1;
         int outUnder = hasNewHealth ? hUnder : -1;
@@ -126,7 +142,9 @@ public final class VisionJsonMapper {
                 outNormal,
                 outUnder,
                 outSevere,
-                outInjury
+                outInjury,
+                List.copyOf(rationaleEn),
+                basisEn
         );
     }
 

@@ -19,6 +19,9 @@ public record ModelLabelsDto(
         Integer healthBodyNormalPercent,
         Integer healthUndernutritionPercent,
         Integer healthSeverelyEmaciatedPercent,
-        Integer healthSuspectedInjuryPercent
+        Integer healthSuspectedInjuryPercent,
+        /** English versions of rationalePhrases / earTipBasis (those are Simplified Chinese). */
+        List<String> rationalePhrasesEn,
+        String earTipBasisEn
 ) {
 }

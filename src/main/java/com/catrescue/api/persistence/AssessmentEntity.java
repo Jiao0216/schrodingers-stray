@@ -67,6 +67,31 @@ public class AssessmentEntity {
     @Column(columnDefinition = "TEXT")
     private List<String> rationalePhrases;
 
+    // Vision label fields that used to be dropped on save (null on legacy rows).
+    @Convert(converter = StringListJsonConverter.class)
+    @Column(columnDefinition = "TEXT")
+    private List<String> rationalePhrasesEn;
+
+    private Boolean earTipDetected;
+
+    @Column(length = 16)
+    private String earTipConfidenceLevel;
+
+    private Integer earTipConfidencePercent;
+
+    @Column(columnDefinition = "TEXT")
+    private String earTipBasis;
+
+    @Column(columnDefinition = "TEXT")
+    private String earTipBasisEn;
+
+    @Column(length = 16)
+    private String imageQualityLevel;
+
+    private Boolean indoorCleanSettingHint;
+
+    private Boolean acuteSymptomsVisible;
+
     @Column(columnDefinition = "TEXT")
     private String failureReason;
 
@@ -241,6 +266,78 @@ public class AssessmentEntity {
 
     public void setRationalePhrases(List<String> rationalePhrases) {
         this.rationalePhrases = rationalePhrases;
+    }
+
+    public List<String> getRationalePhrasesEn() {
+        return rationalePhrasesEn;
+    }
+
+    public void setRationalePhrasesEn(List<String> rationalePhrasesEn) {
+        this.rationalePhrasesEn = rationalePhrasesEn;
+    }
+
+    public Boolean getEarTipDetected() {
+        return earTipDetected;
+    }
+
+    public void setEarTipDetected(Boolean earTipDetected) {
+        this.earTipDetected = earTipDetected;
+    }
+
+    public String getEarTipConfidenceLevel() {
+        return earTipConfidenceLevel;
+    }
+
+    public void setEarTipConfidenceLevel(String earTipConfidenceLevel) {
+        this.earTipConfidenceLevel = earTipConfidenceLevel;
+    }
+
+    public Integer getEarTipConfidencePercent() {
+        return earTipConfidencePercent;
+    }
+
+    public void setEarTipConfidencePercent(Integer earTipConfidencePercent) {
+        this.earTipConfidencePercent = earTipConfidencePercent;
+    }
+
+    public String getEarTipBasis() {
+        return earTipBasis;
+    }
+
+    public void setEarTipBasis(String earTipBasis) {
+        this.earTipBasis = earTipBasis;
+    }
+
+    public String getEarTipBasisEn() {
+        return earTipBasisEn;
+    }
+
+    public void setEarTipBasisEn(String earTipBasisEn) {
+        this.earTipBasisEn = earTipBasisEn;
+    }
+
+    public String getImageQualityLevel() {
+        return imageQualityLevel;
+    }
+
+    public void setImageQualityLevel(String imageQualityLevel) {
+        this.imageQualityLevel = imageQualityLevel;
+    }
+
+    public Boolean getIndoorCleanSettingHint() {
+        return indoorCleanSettingHint;
+    }
+
+    public void setIndoorCleanSettingHint(Boolean indoorCleanSettingHint) {
+        this.indoorCleanSettingHint = indoorCleanSettingHint;
+    }
+
+    public Boolean getAcuteSymptomsVisible() {
+        return acuteSymptomsVisible;
+    }
+
+    public void setAcuteSymptomsVisible(Boolean acuteSymptomsVisible) {
+        this.acuteSymptomsVisible = acuteSymptomsVisible;
     }
 
     public String getFailureReason() {

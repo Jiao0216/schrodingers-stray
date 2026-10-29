@@ -35,6 +35,38 @@ public record ModelLabels(
     int healthBodyNormalPercent,
     int healthUndernutritionPercent,
     int healthSeverelyEmaciatedPercent,
-    int healthSuspectedInjuryPercent
+    int healthSuspectedInjuryPercent,
+    /**
+     * English versions of {@link #rationalePhrases} / {@link #earTipBasis} (which are Simplified Chinese), so the UI
+     * can show the model's reasoning in the selected language. Empty when the model did not provide them.
+     */
+    List<String> rationalePhrasesEn,
+    String earTipBasisEn
 ) {
+
+    /** Pre-bilingual shape: English rationale / basis left empty. */
+    public ModelLabels(
+            double sickOrInjuredConfidence,
+            double needsFeedingConfidence,
+            double likelyNotNeuteredOrEarNotTippedConfidence,
+            List<String> rationalePhrases,
+            boolean likelyEarTipped,
+            boolean earTipDetected,
+            String earTipConfidenceLevel,
+            String imageQualityLevel,
+            boolean indoorCleanSettingHint,
+            boolean acuteSymptomsVisible,
+            int earTipConfidencePercent,
+            String earTipBasis,
+            int healthBodyNormalPercent,
+            int healthUndernutritionPercent,
+            int healthSeverelyEmaciatedPercent,
+            int healthSuspectedInjuryPercent
+    ) {
+        this(sickOrInjuredConfidence, needsFeedingConfidence, likelyNotNeuteredOrEarNotTippedConfidence, rationalePhrases,
+                likelyEarTipped, earTipDetected, earTipConfidenceLevel, imageQualityLevel, indoorCleanSettingHint,
+                acuteSymptomsVisible, earTipConfidencePercent, earTipBasis, healthBodyNormalPercent,
+                healthUndernutritionPercent, healthSeverelyEmaciatedPercent, healthSuspectedInjuryPercent,
+                List.of(), "");
+    }
 }

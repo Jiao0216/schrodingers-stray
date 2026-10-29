@@ -94,7 +94,9 @@ public final class ModelLabelPostProcessor {
                 labels.healthBodyNormalPercent(),
                 labels.healthUndernutritionPercent(),
                 labels.healthSeverelyEmaciatedPercent(),
-                labels.healthSuspectedInjuryPercent()
+                labels.healthSuspectedInjuryPercent(),
+                labels.rationalePhrasesEn() != null ? labels.rationalePhrasesEn() : List.of(),
+                labels.earTipBasisEn() != null ? labels.earTipBasisEn() : ""
         );
     }
 
