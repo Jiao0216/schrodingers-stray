@@ -1,0 +1,3 @@
+image,label
+# label: yes = ear-tipped, no = both ear tips intact, unclear = a person cannot tell
+photos/example_cat.jpg,no

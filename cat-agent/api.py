@@ -161,7 +161,7 @@ def _yield_sse_token_chunks(text: str, step: int = 32):
 # LangGraph astream_events(v2) 对图内节点往往不冒泡 on_chat_model_stream，只在 on_chain_end 给出 final_text
 #（例如 db_lookup_reply 早退路径不调 LLM）。此处在链结束且本轮未流式输出时补发 token，避免前端 acc 为空显示「暂无内容」。
 _FINAL_TEXT_CHAIN_NODES = frozenset(
-    {"db_lookup_reply", "education_reply", "shelter_reply", "iot_audit"},
+    {"db_lookup_reply", "education_reply", "shelter_reply", "iot_audit", "multi_tool"},
 )
 
 
@@ -197,7 +197,13 @@ async def _stream_graph_events(
                 route = output.get("route")
                 if route:
                     route_emitted = True
-                    yield _sse({"type": "route", "route": route})
+                    # routing_mode / tools show whether the rules or the LLM decided, and which tools it chose.
+                    yield _sse({
+                        "type": "route",
+                        "route": route,
+                        "routing_mode": output.get("routing_mode", "rule"),
+                        "tools": output.get("tools_used") or [],
+                    })
 
             # 机构数据拉取完成后缓存卡片
             if kind == "on_chain_end" and name == "shelter_fetch":

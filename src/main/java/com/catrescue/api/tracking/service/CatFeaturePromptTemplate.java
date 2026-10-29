@@ -12,7 +12,7 @@ public final class CatFeaturePromptTemplate {
               "coatColor": "string",
               "patternType": "string",
               "bodySize": "small|medium|large|unknown",
-              "specialFeatures": ["string", "..."],
+              "specialFeatures": [<zero or more tags from the list below>],
               "earTipped": true|false,
               "earTippedConfidence": 0.0-1.0,
               "extractionConfidence": 0.0-1.0,
@@ -27,7 +27,12 @@ public final class CatFeaturePromptTemplate {
             - If only one cat is visible, this JSON must describe only that one cat.
             - Keep cat count consistent with what is visible (do not imply extra cats).
             - Focus on dedup-relevant traits: coat color, tabby/solid/calico pattern, body size, eye traits, scars, missing fur, tail shape.
-            - If ear tip notch/cut is clearly visible (TNR marker), set earTipped=true.
+            - specialFeatures: use ONLY these tags (exact spelling), and only for traits that are clearly visible:
+              white_paws, white_chest, white_face_blaze, white_belly, bicolor_mask, bobtail, kinked_tail, \
+            missing_eye, heterochromia, torn_ear, ear_tip_tnr, visible_scar, fur_loss_patch, longhair, collar, \
+            very_thin. Return [] when none apply. Do not invent other tags.
+            - earTipped=true only when the top of one ear clearly shows a straight, flat surgical cut (TNR ear tip). \
+            Rounded tips, fur tufts, folded/hidden ears, blur and irregular notches are NOT ear tips.
             - If ear visibility is poor, set earTipped=false and low confidence.
             - Do not add markdown fences and do not include extra keys.
             """;

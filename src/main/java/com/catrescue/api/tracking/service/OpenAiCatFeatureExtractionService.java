@@ -127,7 +127,10 @@ public class OpenAiCatFeatureExtractionService implements CatFeatureExtractionSe
         if (arr.isArray()) {
             arr.forEach(n -> {
                 if (n.isTextual()) {
-                    features.add(n.asText());
+                    String tag = normalizeFeatureTag(n.asText());
+                    if (FEATURE_TAGS.contains(tag) && !features.contains(tag)) {
+                        features.add(tag);
+                    }
                 }
             });
         }
@@ -142,6 +145,20 @@ public class OpenAiCatFeatureExtractionService implements CatFeatureExtractionSe
                 clamp01(out.path("extractionConfidence").asDouble(0.5)),
                 sanitizeSummary(out.path("summary").asText(""))
         );
+    }
+
+    /**
+     * Fixed vocabulary for specialFeatures (see {@link CatFeaturePromptTemplate}). Free-text descriptions of the same
+     * cat almost never match word for word, so the 30% feature-overlap weight in dedup was effectively always 0.
+     */
+    static final java.util.Set<String> FEATURE_TAGS = java.util.Set.of(
+            "white_paws", "white_chest", "white_face_blaze", "white_belly", "bicolor_mask", "bobtail", "kinked_tail",
+            "missing_eye", "heterochromia", "torn_ear", "ear_tip_tnr", "visible_scar", "fur_loss_patch", "longhair",
+            "collar", "very_thin"
+    );
+
+    static String normalizeFeatureTag(String raw) {
+        return raw == null ? "" : raw.trim().toLowerCase(Locale.ROOT).replaceAll("[\\s-]+", "_");
     }
 
     private String resolveModel() {

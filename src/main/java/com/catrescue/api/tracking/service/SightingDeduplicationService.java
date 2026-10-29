@@ -21,7 +21,9 @@ import com.catrescue.api.tracking.dto.CatFeatureVector;
 import com.catrescue.api.tracking.vector.StrayCatVectorMetadata;
 import com.catrescue.api.tracking.vector.VectorClient;
 import com.catrescue.api.tracking.vector.VectorMatchResult;
+import com.catrescue.api.config.EmbeddingServiceProperties;
 import com.catrescue.api.util.CoordinatePrecision;
+import com.catrescue.api.util.GeoUtils;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,7 +55,8 @@ public class SightingDeduplicationService {
     public static final double DUP_RADIUS_METERS = 500.0;
     public static final Duration DUP_WINDOW = Duration.ofHours(48);
     public static final double DUP_THRESHOLD = 0.72;
-    public static final int CLIP_QUERY_TOP_K = 5;
+    /** Fetch more than we need: candidates outside the distance / time gate are dropped afterwards. */
+    public static final int CLIP_QUERY_TOP_K = 15;
     public static final int MAX_STORED_IMAGE_URL_CHARS = 240;
 
     private final SightingJpaRepository sightingJpaRepository;
@@ -64,6 +67,7 @@ public class SightingDeduplicationService {
     private final ClipEmbeddingClient clipEmbeddingClient;
     private final ClipThresholdCalibrationService clipThresholdCalibrationService;
     private final VectorClient vectorClient;
+    private final EmbeddingServiceProperties embeddingServiceProperties;
     private final ApplicationEventPublisher applicationEventPublisher;
 
     public SightingDeduplicationService(
@@ -75,6 +79,7 @@ public class SightingDeduplicationService {
             ClipEmbeddingClient clipEmbeddingClient,
             ClipThresholdCalibrationService clipThresholdCalibrationService,
             VectorClient vectorClient,
+            EmbeddingServiceProperties embeddingServiceProperties,
             ApplicationEventPublisher applicationEventPublisher
     ) {
         this.sightingJpaRepository = sightingJpaRepository;
@@ -85,6 +90,7 @@ public class SightingDeduplicationService {
         this.clipEmbeddingClient = clipEmbeddingClient;
         this.clipThresholdCalibrationService = clipThresholdCalibrationService;
         this.vectorClient = vectorClient;
+        this.embeddingServiceProperties = embeddingServiceProperties;
         this.applicationEventPublisher = applicationEventPublisher;
     }
 
@@ -105,7 +111,7 @@ public class SightingDeduplicationService {
             return featureExtractionService.extractFromImage(cmd.imageUrl(), headCrop);
         });
         CompletableFuture<ClipDedupOutcome> clipFuture = CompletableFuture.supplyAsync(
-                () -> evaluateClipDedup(imageBytes, imageContentType)
+                () -> evaluateClipDedup(imageBytes, imageContentType, cmd.latitude(), cmd.longitude(), occurredAt)
         );
 
         CatFeatureVector incoming = featureFuture.join();
@@ -251,7 +257,7 @@ public class SightingDeduplicationService {
         );
     }
 
-    ClipDedupOutcome evaluateClipDedup(byte[] imageBytes, String contentType) {
+    ClipDedupOutcome evaluateClipDedup(byte[] imageBytes, String contentType, Double lat, Double lng, Instant occurredAt) {
         if (!clipEmbeddingClient.isEnabled()) {
             return new ClipDedupOutcome(ClipDedupDecision.unavailable("CLIP service disabled"), null);
         }
@@ -272,7 +278,21 @@ public class SightingDeduplicationService {
             );
         }
 
-        VectorMatchResult best = matches.get(0);
+        double maxM = embeddingServiceProperties.getClipMaxDistanceM();
+        int maxDays = embeddingServiceProperties.getClipMaxAgeDays();
+        Optional<VectorMatchResult> gated = selectGatedMatch(
+                matches,
+                id -> sightingJpaRepository.findById(id).map(s -> new SeenAt(s.getLatitude(), s.getLongitude(), s.getOccurredAt())),
+                lat, lng, occurredAt, maxM, maxDays
+        );
+        if (gated.isEmpty()) {
+            return new ClipDedupOutcome(
+                    new ClipDedupDecision(false, null, null, null, String.format(Locale.ROOT,
+                            "No CLIP candidates within %.1f km / %d days", maxM / 1000.0, maxDays)),
+                    embedding.get()
+            );
+        }
+        VectorMatchResult best = gated.get();
         double threshold = clipThresholdCalibrationService.effectiveThreshold();
         boolean hit = best.distance() < threshold;
         String reason = hit
@@ -286,6 +306,44 @@ public class SightingDeduplicationService {
                 reason
         );
         return new ClipDedupOutcome(decision, embedding.get());
+    }
+
+    /** Where / when a candidate sighting was seen. */
+    record SeenAt(Double lat, Double lng, Instant at) {
+    }
+
+    /**
+     * Closest-looking candidate (matches are sorted by CLIP distance) that was also seen near the new photo in
+     * place and time. Candidates whose location is unknown are kept — the gate only removes clear mismatches.
+     */
+    static Optional<VectorMatchResult> selectGatedMatch(
+            List<VectorMatchResult> matches,
+            java.util.function.Function<Long, Optional<SeenAt>> lookup,
+            Double lat,
+            Double lng,
+            Instant at,
+            double maxDistanceM,
+            int maxAgeDays
+    ) {
+        for (VectorMatchResult m : matches) {
+            if (m.sightingId() <= 0) {
+                continue;
+            }
+            Optional<SeenAt> seen = lookup.apply(m.sightingId());
+            if (seen.isEmpty()) {
+                continue;  // stale vector: the sighting no longer exists
+            }
+            SeenAt s = seen.get();
+            if (lat != null && lng != null && s.lat() != null && s.lng() != null
+                    && GeoUtils.haversineKm(lat, lng, s.lat(), s.lng()) * 1000.0 > maxDistanceM) {
+                continue;
+            }
+            if (at != null && s.at() != null && Math.abs(Duration.between(s.at(), at).toDays()) > maxAgeDays) {
+                continue;
+            }
+            return Optional.of(m);
+        }
+        return Optional.empty();
     }
 
     private void saveMatchFeedback(Long sightingId, DedupDecision feature, ClipDedupDecision clip) {

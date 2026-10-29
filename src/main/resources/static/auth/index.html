@@ -109,7 +109,8 @@
     let isLogin = true;
     let nicknameTimer = null;
     let nicknameTaken = false;
-    let lang = (localStorage.getItem(LANG_KEY) || "en") === "zh" ? "zh" : "en";
+    // Same default as the home page (index.html) so pages never switch language on their own.
+    let lang = localStorage.getItem(LANG_KEY) === "en" ? "en" : "zh";
 
     const I18N = {
       zh: {
