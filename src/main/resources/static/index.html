@@ -2830,7 +2830,8 @@
       earTipVerdictNo: "未剪耳",
       earTipVerdictUnclear: "无法确认",
       earTipReviewUnclear: "AI 无法确认是否剪耳，请现场近距离查看耳朵后再决定。",
-      earTipReviewConflict: "AI 的剪耳判断与您的选择不一致，请现场再确认一次耳朵。"
+      earTipReviewConflict: "AI 的剪耳判断与您的选择不一致，请现场再确认一次耳朵。",
+      stationChatAria: "站长对话"
     },
     en: {
       pageTitle: "Schrödinger's Stray Cat",
@@ -3296,7 +3297,8 @@
       earTipVerdictNo: "Not ear-tipped",
       earTipVerdictUnclear: "Can't tell",
       earTipReviewUnclear: "The AI can't tell whether this cat is ear-tipped — please look at the ears up close before deciding.",
-      earTipReviewConflict: "The AI's ear-tip result differs from your answer — please check the ears again in person."
+      earTipReviewConflict: "The AI's ear-tip result differs from your answer — please check the ears again in person.",
+      stationChatAria: "Chat with the station lead"
     }
   };
 
@@ -7612,7 +7614,7 @@
 
   function pythonAgentChatCardHtml() {
     return (
-      "<section id='pythonAgentChatCard' class='step-card python-agent-block python-agent-block--home python-agent-home--has-messages' aria-label='station-lead-chat'>" +
+      "<section id='pythonAgentChatCard' class='step-card python-agent-block python-agent-block--home python-agent-home--has-messages' aria-label='" + escapeHtml(t("stationChatAria")) + "'>" +
       "<div class='python-agent-home-shell'>" +
       "<div class='python-agent-chat python-agent-chat--home'>" +
       "<div id='pythonAgentChatThread' class='python-agent-chat-thread python-agent-chat-thread--home' aria-live='polite'></div>" +
