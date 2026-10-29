@@ -12,7 +12,8 @@ import org.springframework.context.annotation.Configuration;
         AssessmentPersistenceProperties.class,
         ShareAccessProperties.class,
         InstitutionProperties.class,
-        SiteProperties.class
+        SiteProperties.class,
+        EarTipProperties.class
 })
 public class AppConfig {
 }

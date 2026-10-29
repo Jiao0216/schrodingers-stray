@@ -65,6 +65,16 @@ cat-rescue:
     absence-scan-ms: 3600000
     # Set true to bypass OpenAI in tracking feature extraction during local debugging.
     mock-feature-extraction: ${TRACKING_MOCK_FEATURE_EXTRACTION:false}
+  ear-tip:
+    # Dedicated ear-tip (TNR clip) check run in parallel with the main analysis; overrides its ear-tip fields.
+    enabled: ${CAT_RESCUE_EAR_TIP_ENABLED:true}
+    # Independent votes per photo; a verdict needs a two-thirds majority, otherwise "unclear".
+    votes: ${CAT_RESCUE_EAR_TIP_VOTES:3}
+    # Blank = same model as the main analysis; set e.g. gpt-4o to use a stronger model for this check only.
+    model: ${CAT_RESCUE_EAR_TIP_MODEL:}
+    # "yes" (already ear-tipped) also needs this mean confidence — a false "yes" skips a cat that needs TNR.
+    yes-min-confidence: ${CAT_RESCUE_EAR_TIP_YES_MIN_CONFIDENCE:75}
+    temperature: 0.4
   routing:
     rescue-threshold: 0.55
     feeding-threshold: 0.45

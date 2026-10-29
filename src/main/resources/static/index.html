@@ -2824,7 +2824,13 @@
       dedupSummaryConfirmedDuplicate: "已确认为重复记录",
       dedupSummaryRejectedDuplicate: "已确认是新线索，建议继续跟进",
       dedupSummaryDuplicateSuspected: "疑似重复记录，建议人工复核",
-      dedupSummaryNewCat: "疑似新猫线索，建议持续跟进"
+      dedupSummaryNewCat: "疑似新猫线索，建议持续跟进",
+      earTipVerdictLabel: "AI 剪耳判断",
+      earTipVerdictYes: "已剪耳",
+      earTipVerdictNo: "未剪耳",
+      earTipVerdictUnclear: "无法确认",
+      earTipReviewUnclear: "AI 无法确认是否剪耳，请现场近距离查看耳朵后再决定。",
+      earTipReviewConflict: "AI 的剪耳判断与您的选择不一致，请现场再确认一次耳朵。"
     },
     en: {
       pageTitle: "Schrödinger's Stray Cat",
@@ -3284,7 +3290,13 @@
       dedupSummaryConfirmedDuplicate: "Confirmed as a duplicate record",
       dedupSummaryRejectedDuplicate: "Confirmed as a new lead — keep following up",
       dedupSummaryDuplicateSuspected: "Possible duplicate — please review manually",
-      dedupSummaryNewCat: "Possibly a new cat — keep following up"
+      dedupSummaryNewCat: "Possibly a new cat — keep following up",
+      earTipVerdictLabel: "AI ear-tip check",
+      earTipVerdictYes: "Ear-tipped",
+      earTipVerdictNo: "Not ear-tipped",
+      earTipVerdictUnclear: "Can't tell",
+      earTipReviewUnclear: "The AI can't tell whether this cat is ear-tipped — please look at the ears up close before deciding.",
+      earTipReviewConflict: "The AI's ear-tip result differs from your answer — please check the ears again in person."
     }
   };
 
@@ -7775,9 +7787,18 @@
     const hasEarTipPct = Number.isFinite(earTipPctNum) && earTipPctNum >= 0;
     const earTipVerify = hasEarTipPct && earTipPctNum < 70;
     const earTipBasisStr = localizedEarTipBasis(labels);
-    const earTipMetaBlock = !isFailed && (hasEarTipPct || earTipBasisStr)
+    const earTipVerdict = String(labels.earTipVerdict || "");
+    const earTipVerdictKey = { yes: "earTipVerdictYes", no: "earTipVerdictNo", unclear: "earTipVerdictUnclear" }[earTipVerdict];
+    const earTipMetaBlock = !isFailed && (hasEarTipPct || earTipBasisStr || earTipVerdictKey)
       ? (
         "<div class='kv ear-tip-meta'>" +
+        (earTipVerdictKey
+          ? "<div><strong>" + escapeHtml(t("earTipVerdictLabel")) + "</strong>" + escapeHtml(uiColon() + t(earTipVerdictKey)) + "</div>"
+          : "") +
+        (labels.earTipNeedsReview
+          ? "<div class='chip warn' style='display:inline-block;margin:4px 0;'>" +
+            escapeHtml(t(earTipVerdict === "unclear" ? "earTipReviewUnclear" : "earTipReviewConflict")) + "</div>"
+          : "") +
         (hasEarTipPct
           ? "<div><strong>" + escapeHtml(t("earTipConfidenceLabel")) + "</strong> " + Math.round(earTipPctNum) + "%" +
             (earTipVerify

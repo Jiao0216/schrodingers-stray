@@ -415,7 +415,9 @@ public class AssessmentService {
                 ml.healthSeverelyEmaciatedPercent() >= 0 ? ml.healthSeverelyEmaciatedPercent() : null,
                 ml.healthSuspectedInjuryPercent() >= 0 ? ml.healthSuspectedInjuryPercent() : null,
                 ml.rationalePhrasesEn() != null ? ml.rationalePhrasesEn() : List.of(),
-                ml.earTipBasisEn() != null ? ml.earTipBasisEn() : ""
+                ml.earTipBasisEn() != null ? ml.earTipBasisEn() : "",
+                ml.earTipVerdict() != null ? ml.earTipVerdict() : "",
+                earTipNeedsReview(ml.earTipVerdict(), a.userEarClip())
         );
         BranchActionsDto actions;
         try {
@@ -602,6 +604,19 @@ public class AssessmentService {
                 null,
                 Collections.emptyList()
         );
+    }
+
+    /** Unclear verdict, or a model verdict that contradicts the volunteer's ear-clip answer. */
+    static boolean earTipNeedsReview(String verdict, String userEarClip) {
+        String v = verdict == null ? "" : verdict.trim();
+        if (v.isEmpty()) {
+            return false;
+        }
+        if ("unclear".equals(v)) {
+            return true;
+        }
+        String user = userEarClip == null ? "" : userEarClip.trim().toLowerCase(Locale.ROOT);
+        return ("yes".equals(v) && "no".equals(user)) || ("no".equals(v) && "yes".equals(user));
     }
 
     private BranchActionsDto failedActions(String failureReason) {

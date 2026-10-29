@@ -127,6 +127,7 @@ public class DbAssessmentRepository implements AssessmentRepository {
         ModelLabels ml = a.modelLabels();
         e.setRationalePhrasesEn(ml.rationalePhrasesEn() != null ? ml.rationalePhrasesEn() : List.of());
         e.setEarTipDetected(ml.earTipDetected());
+        e.setEarTipVerdict(ml.earTipVerdict());
         e.setEarTipConfidenceLevel(ml.earTipConfidenceLevel());
         e.setEarTipConfidencePercent(ml.earTipConfidencePercent() >= 0 ? ml.earTipConfidencePercent() : null);
         e.setEarTipBasis(ml.earTipBasis());
@@ -190,7 +191,8 @@ public class DbAssessmentRepository implements AssessmentRepository {
                 pctFromDb(e.getHealthSeverelyEmaciatedPercent()),
                 pctFromDb(e.getHealthSuspectedInjuryPercent()),
                 e.getRationalePhrasesEn() != null ? e.getRationalePhrasesEn() : List.of(),
-                e.getEarTipBasisEn() != null ? e.getEarTipBasisEn() : ""
+                e.getEarTipBasisEn() != null ? e.getEarTipBasisEn() : "",
+                e.getEarTipVerdict() != null ? e.getEarTipVerdict() : ""
         );
         CatFeatureSnapshot features = catFeaturesFromEntity(e);
         return new Assessment(

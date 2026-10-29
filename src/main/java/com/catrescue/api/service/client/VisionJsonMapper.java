@@ -97,7 +97,15 @@ public final class VisionJsonMapper {
 
         boolean leftEarTnrMark = out.path("left_ear_tnr_mark").asBoolean(false);
         boolean rightEarTnrMark = out.path("right_ear_tnr_mark").asBoolean(false);
-        if (leftEarTnrMark || rightEarTnrMark) {
+        // A per-ear "tipped" flag next to a "no" verdict is a self-contradicting answer: treat it as unclear (neither
+        // tipped nor intact) so a person checks, instead of letting either side win.
+        if ("no".equals(verdict) && (leftEarTnrMark || rightEarTnrMark)) {
+            verdict = "unclear";
+            likelyEarTipped = false;
+            earTipDetected = false;
+        }
+        // Per-ear flags only fill in when the model gave no overall verdict.
+        if (verdict.isEmpty() && (leftEarTnrMark || rightEarTnrMark)) {
             likelyEarTipped = true;
             earTipDetected = true;
         }
@@ -144,7 +152,8 @@ public final class VisionJsonMapper {
                 outSevere,
                 outInjury,
                 List.copyOf(rationaleEn),
-                basisEn
+                basisEn,
+                verdict
         );
     }
 

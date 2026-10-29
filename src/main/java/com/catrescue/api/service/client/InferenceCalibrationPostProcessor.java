@@ -34,8 +34,9 @@ public final class InferenceCalibrationPostProcessor {
                 ? new ArrayList<>()
                 : new ArrayList<>(labels.rationalePhrasesEn());
 
-        // Rule 1 — JSON ear tip overrides other spay/neuter uncertainty
-        if (labels.earTipDetected() || earTipConfidenceStrong(labels.earTipConfidenceLevel())) {
+        // Rule 1 — JSON ear tip overrides other spay/neuter uncertainty. High confidence alone is not evidence of a
+        // tip: it can be high confidence that the ears are intact.
+        if (labels.earTipDetected()) {
             earTipped = true;
             tnr = Math.min(tnr, MAX_TNR_IF_JSON_EAR_TIP);
         }
@@ -78,17 +79,9 @@ public final class InferenceCalibrationPostProcessor {
                 labels.healthSeverelyEmaciatedPercent(),
                 labels.healthSuspectedInjuryPercent(),
                 List.copyOf(rationaleEn),
-                labels.earTipBasisEn() != null ? labels.earTipBasisEn() : ""
+                labels.earTipBasisEn() != null ? labels.earTipBasisEn() : "",
+                labels.earTipVerdict() != null ? labels.earTipVerdict() : ""
         );
-    }
-
-    private static boolean earTipConfidenceStrong(String level) {
-        String l = safeLevel(level);
-        return "high".equalsIgnoreCase(l);
-    }
-
-    private static String safeLevel(String s) {
-        return s == null ? "" : s.trim();
     }
 
     private static String safeQuality(String s) {

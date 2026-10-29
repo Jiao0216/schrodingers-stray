@@ -46,19 +46,29 @@ public final class ModelLabelPostProcessor {
         String joined = String.join(" ", rationale).toLowerCase(Locale.ROOT);
 
         boolean uncertain = hasUncertainLanguage(joined);
+        String verdict = labels.earTipVerdict() == null ? "" : labels.earTipVerdict();
 
-        boolean earTippedModel = labels.likelyEarTipped();
-        boolean earTippedText = !uncertain && matchesEarTippedEvidence(joined, rationale);
-        boolean earTipped = earTippedModel || earTippedText;
+        boolean earTipped;
+        boolean intactText;
+        if (!verdict.isEmpty()) {
+            // A structured verdict is authoritative: rationale wording ("左耳有剪耳标记，右耳无法确认") must not
+            // flip it. "unclear" leaves the TNR score untouched and does not mark the cat as tipped.
+            earTipped = "yes".equals(verdict);
+            intactText = "no".equals(verdict);
+        } else {
+            boolean earTippedModel = labels.likelyEarTipped();
+            boolean earTippedText = !uncertain && matchesEarTippedEvidence(joined, rationale);
+            earTipped = earTippedModel || earTippedText;
 
-        boolean intactText = !uncertain && matchesAnyHint(joined, EAR_INTACT_HINTS, rationale)
-                && !matchesEarTippedEvidence(joined, rationale);
+            intactText = !uncertain && matchesAnyHint(joined, EAR_INTACT_HINTS, rationale)
+                    && !matchesEarTippedEvidence(joined, rationale);
 
-        if (earTipped && intactText) {
-            if (earTippedModel) {
-                intactText = false;
-            } else {
-                earTipped = false;
+            if (earTipped && intactText) {
+                if (earTippedModel) {
+                    intactText = false;
+                } else {
+                    earTipped = false;
+                }
             }
         }
 
@@ -72,6 +82,8 @@ public final class ModelLabelPostProcessor {
             outFlag = true;
         } else if (intactText) {
             tnr = Math.max(tnr, MIN_TNR_WHEN_INTACT);
+            outFlag = false;
+        } else if (!verdict.isEmpty()) {
             outFlag = false;
         } else {
             outFlag = legacyEarTipAdjust(joined, uncertain, labels);
@@ -96,7 +108,8 @@ public final class ModelLabelPostProcessor {
                 labels.healthSeverelyEmaciatedPercent(),
                 labels.healthSuspectedInjuryPercent(),
                 labels.rationalePhrasesEn() != null ? labels.rationalePhrasesEn() : List.of(),
-                labels.earTipBasisEn() != null ? labels.earTipBasisEn() : ""
+                labels.earTipBasisEn() != null ? labels.earTipBasisEn() : "",
+                verdict
         );
     }
 
@@ -131,7 +144,10 @@ public final class ModelLabelPostProcessor {
                 || joined.contains("not clear")
                 || joined.contains("cannot determine")
                 || joined.contains("unable to determine")
-                || joined.contains("无法判断");
+                || joined.contains("无法判断")
+                || joined.contains("无法确认")
+                || joined.contains("看不清")
+                || joined.contains("不确定");
     }
 
     private static boolean textImpliesNotTipped(String joined) {

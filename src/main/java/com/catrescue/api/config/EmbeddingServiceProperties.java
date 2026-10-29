@@ -17,6 +17,15 @@ public class EmbeddingServiceProperties {
     /** Cosine distance threshold for suspected same-cat (CLIP); fallback when auto-calibration lacks labels. */
     private double distanceThreshold = 0.35;
 
+    /**
+     * A CLIP candidate only counts when it was seen within this distance of the new photo. Look-alike cats are
+     * common; a match 30 km away is almost always a different cat.
+     */
+    private double clipMaxDistanceM = 3000;
+
+    /** ...and within this many days of it (cats move and change appearance over time). */
+    private int clipMaxAgeDays = 180;
+
     /** Re-fit the threshold from volunteer confirm/reject feedback (see ClipThresholdCalibrationService). */
     private boolean autoCalibrate = true;
 
@@ -56,6 +65,22 @@ public class EmbeddingServiceProperties {
 
     public void setDistanceThreshold(double distanceThreshold) {
         this.distanceThreshold = distanceThreshold;
+    }
+
+    public double getClipMaxDistanceM() {
+        return clipMaxDistanceM;
+    }
+
+    public void setClipMaxDistanceM(double clipMaxDistanceM) {
+        this.clipMaxDistanceM = clipMaxDistanceM;
+    }
+
+    public int getClipMaxAgeDays() {
+        return clipMaxAgeDays;
+    }
+
+    public void setClipMaxAgeDays(int clipMaxAgeDays) {
+        this.clipMaxAgeDays = clipMaxAgeDays;
     }
 
     public boolean isAutoCalibrate() {

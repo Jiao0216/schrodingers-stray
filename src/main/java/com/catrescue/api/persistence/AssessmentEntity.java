@@ -74,6 +74,10 @@ public class AssessmentEntity {
 
     private Boolean earTipDetected;
 
+    /** "yes" | "no" | "unclear" ("" / null for legacy rows). */
+    @Column(length = 16)
+    private String earTipVerdict;
+
     @Column(length = 16)
     private String earTipConfidenceLevel;
 
@@ -274,6 +278,14 @@ public class AssessmentEntity {
 
     public void setRationalePhrasesEn(List<String> rationalePhrasesEn) {
         this.rationalePhrasesEn = rationalePhrasesEn;
+    }
+
+    public String getEarTipVerdict() {
+        return earTipVerdict;
+    }
+
+    public void setEarTipVerdict(String earTipVerdict) {
+        this.earTipVerdict = earTipVerdict;
     }
 
     public Boolean getEarTipDetected() {

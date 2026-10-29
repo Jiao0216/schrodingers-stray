@@ -43,3 +43,7 @@ cat-agent/__pycache__/
 embedding-service/.venv/
 embedding-service/__pycache__/
 embedding-service/chroma_db/
+# Evaluation photos and per-run results stay local
+eval/photos/*
+!eval/photos/.gitkeep
+eval/*_results.csv
