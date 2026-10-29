@@ -220,3 +220,29 @@ Python Agent（LangGraph）
 
 参考产品说明与 3 分钟演示脚本：docs/agent_demo.md
 ```
+
+---
+
+## 混合路由：规则快速通道 + 大模型工具调用
+
+`classify` 节点现在是混合路由（`cat-agent/llm_router.py` + `ai_service.classify_node`）：
+
+1. **规则快速通道**：IoT 快照、`[nearby_shelters]` 标记，以及会写数据或答案固定的意图（喂养打卡 `checkin_feeding`、上报新猫 `report_cat`、平台统计）直接走原来的正则路由，不调用模型。**会写数据的工具从不交给模型决定。**
+2. **大模型选工具**：其余问题由 `gpt-4o-mini` 通过 tool calling 选择工具（每轮最多 3 个）：`get_cat_count_nearby`、`get_feeders_nearby`、`find_rescue_center(kind)`、`query_assessments_nearby`、`get_assessment_detail(focus)`、`get_cat_sightings_timeline(cat_id)`、`get_same_cat_cluster_timeline`、`search_knowledge_base(query)`、`web_search_facilities(query)`。
+   - 选了 **1 个工具**：沿用原来的节点（回复格式与之前一致）。
+   - 选了 **多个工具**（复合问题）：`multi_tool` 节点并行执行，再综合成一段回答。
+3. **兜底**：模型报错、超时（`AGENT_LLM_ROUTING_TIMEOUT`，默认 8 秒）、没选工具或参数不合法（例如没有打开评估却要查评估详情）时，自动退回正则路由。
+
+开关：`AGENT_LLM_ROUTING=false` 完全恢复为纯规则路由。
+
+### 演示时怎么展示「模型自己选了哪个工具」
+
+SSE 的 `route` 事件现在带上 `routing_mode`（`rule` / `llm` / `fallback`）和 `tools`，cat-agent 日志也会记录 `route=… mode=llm tools=[…] router_ms=…`。推荐的对比问题：
+
+| 问题 | 预期 |
+|---|---|
+| 我刚喂完了，帮我打卡 | `mode=rule`（写数据，不经模型） |
+| 我捡到一只受伤的小猫，这边有没有能收留它的组织？ | 规则识别不了的换种说法 → `llm`，`find_rescue_center` |
+| 附近有多少只流浪猫？顺便问一下哪里能做 TNR？ | 复合问题 → `multi`，两个工具一起回答 |
+
+测试：`cd cat-agent && .venv/bin/pip install -r requirements-dev.txt && .venv/bin/python -m pytest`（用假模型，不调用 OpenAI）。
