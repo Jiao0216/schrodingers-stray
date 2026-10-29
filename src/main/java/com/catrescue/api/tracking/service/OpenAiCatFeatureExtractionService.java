@@ -1,6 +1,7 @@
 package com.catrescue.api.tracking.service;
 
 import com.catrescue.api.config.OpenAiProperties;
+import com.catrescue.api.service.client.VisionPrompts;
 import com.catrescue.api.tracking.dto.CatFeatureVector;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -17,6 +18,7 @@ import reactor.netty.http.client.HttpClient;
 
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -45,6 +47,11 @@ public class OpenAiCatFeatureExtractionService implements CatFeatureExtractionSe
 
     @Override
     public CatFeatureVector extractFromImage(String imageUrlOrDataUrl) {
+        return extractFromImage(imageUrlOrDataUrl, null);
+    }
+
+    @Override
+    public CatFeatureVector extractFromImage(String imageUrlOrDataUrl, byte[] headCropJpeg) {
         String apiKey = openAiProperties.getApiKey();
         if (mockFeatureExtraction) {
             log.info("Tracking feature extraction uses mock mode (cat-rescue.tracking.mock-feature-extraction=true)");
@@ -53,6 +60,16 @@ public class OpenAiCatFeatureExtractionService implements CatFeatureExtractionSe
         if (apiKey == null || apiKey.isBlank()) {
             log.warn("OPENAI_API_KEY is missing; fallback to mock tracking feature extraction");
             return mockFeatureVector(imageUrlOrDataUrl);
+        }
+
+        List<Map<String, Object>> userContent = new ArrayList<>();
+        userContent.add(Map.of("type", "text", "text", CatFeaturePromptTemplate.GPT4O_PROMPT));
+        userContent.add(highDetailImage(imageUrlOrDataUrl));
+        if (headCropJpeg != null && headCropJpeg.length > 0) {
+            userContent.add(Map.of("type", "text", "text", VisionPrompts.HEAD_CROP_NOTE_FEATURES));
+            userContent.add(highDetailImage(
+                    "data:image/jpeg;base64," + Base64.getEncoder().encodeToString(headCropJpeg)
+            ));
         }
 
         Map<String, Object> body = Map.of(
@@ -67,10 +84,7 @@ public class OpenAiCatFeatureExtractionService implements CatFeatureExtractionSe
                                 "You extract structured cat appearance features with strict visual grounding. "
                                         + "Only describe what is visible, never guess, and use 'unknown' when unclear."
                         ),
-                        Map.of("role", "user", "content", List.of(
-                                Map.of("type", "text", "text", CatFeaturePromptTemplate.GPT4O_PROMPT),
-                                Map.of("type", "image_url", "image_url", Map.of("url", imageUrlOrDataUrl))
-                        ))
+                        Map.of("role", "user", "content", userContent)
                 )
         );
 
@@ -92,6 +106,11 @@ public class OpenAiCatFeatureExtractionService implements CatFeatureExtractionSe
         } catch (Exception e) {
             throw new IllegalStateException("OpenAI feature extraction failed: " + e.getMessage(), e);
         }
+    }
+
+    /** detail=high keeps small regions (ear tips, markings) from being lost to the default downscale. */
+    private static Map<String, Object> highDetailImage(String url) {
+        return Map.of("type", "image_url", "image_url", Map.of("url", url, "detail", "high"));
     }
 
     private CatFeatureVector parse(String rawResponse) throws Exception {

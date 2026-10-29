@@ -61,6 +61,23 @@ public final class VisionPrompts {
             likelyEarTipped must be true if ear_tip_verdict is "yes" OR left_ear_tnr_mark OR right_ear_tnr_mark is true; otherwise align with verdict when both ear flags are false.
             """;
 
+    /** Sent before the optional second image (auto-detected head crop). */
+    public static final String HEAD_CROP_NOTE = """
+            Image 2 is an automatic close-up crop of the same cat's head, upscaled for ear inspection. \
+            Use it as the primary evidence for left_ear_tnr_mark, right_ear_tnr_mark and all ear_tip_* fields: \
+            a TNR ear tip is a straight, flat cut across the top of one ear (either side; conventions differ by region), not a rounded notch or fold. \
+            The crop is automatic and may be imperfect — if it does not show this cat's head, ignore it and use image 1.
+            """;
+
+    /** Same as {@link #HEAD_CROP_NOTE}, worded for the tracking feature-extraction schema (earTipped fields). */
+    public static final String HEAD_CROP_NOTE_FEATURES = """
+            Image 2 is an automatic close-up crop of the same cat's head, upscaled for ear inspection. \
+            Use it as the primary evidence for earTipped and earTippedConfidence: \
+            a TNR ear tip is a straight, flat cut across the top of one ear (either side; conventions differ by region), not a rounded notch or fold. \
+            Use image 1 for coat, pattern, body size and other features. \
+            The crop is automatic and may be imperfect — if it does not show this cat's head, ignore it.
+            """;
+
     private VisionPrompts() {
     }
 }

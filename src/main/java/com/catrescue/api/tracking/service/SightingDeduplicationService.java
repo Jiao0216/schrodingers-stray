@@ -62,6 +62,7 @@ public class SightingDeduplicationService {
     private final CatMatchFeedbackJpaRepository catMatchFeedbackJpaRepository;
     private final CatFeatureExtractionService featureExtractionService;
     private final ClipEmbeddingClient clipEmbeddingClient;
+    private final ClipThresholdCalibrationService clipThresholdCalibrationService;
     private final VectorClient vectorClient;
     private final ApplicationEventPublisher applicationEventPublisher;
 
@@ -72,6 +73,7 @@ public class SightingDeduplicationService {
             CatMatchFeedbackJpaRepository catMatchFeedbackJpaRepository,
             CatFeatureExtractionService featureExtractionService,
             ClipEmbeddingClient clipEmbeddingClient,
+            ClipThresholdCalibrationService clipThresholdCalibrationService,
             VectorClient vectorClient,
             ApplicationEventPublisher applicationEventPublisher
     ) {
@@ -81,6 +83,7 @@ public class SightingDeduplicationService {
         this.catMatchFeedbackJpaRepository = catMatchFeedbackJpaRepository;
         this.featureExtractionService = featureExtractionService;
         this.clipEmbeddingClient = clipEmbeddingClient;
+        this.clipThresholdCalibrationService = clipThresholdCalibrationService;
         this.vectorClient = vectorClient;
         this.applicationEventPublisher = applicationEventPublisher;
     }
@@ -97,9 +100,10 @@ public class SightingDeduplicationService {
         final byte[] imageBytes = parsedDataImage != null ? parsedDataImage.bytes() : null;
         final String imageContentType = parsedDataImage != null ? parsedDataImage.contentType() : "image/jpeg";
 
-        CompletableFuture<CatFeatureVector> featureFuture = CompletableFuture.supplyAsync(
-                () -> featureExtractionService.extractFromImage(cmd.imageUrl())
-        );
+        CompletableFuture<CatFeatureVector> featureFuture = CompletableFuture.supplyAsync(() -> {
+            byte[] headCrop = clipEmbeddingClient.cropHead(imageBytes, imageContentType).orElse(null);
+            return featureExtractionService.extractFromImage(cmd.imageUrl(), headCrop);
+        });
         CompletableFuture<ClipDedupOutcome> clipFuture = CompletableFuture.supplyAsync(
                 () -> evaluateClipDedup(imageBytes, imageContentType)
         );
@@ -269,7 +273,7 @@ public class SightingDeduplicationService {
         }
 
         VectorMatchResult best = matches.get(0);
-        double threshold = clipEmbeddingClient.distanceThreshold();
+        double threshold = clipThresholdCalibrationService.effectiveThreshold();
         boolean hit = best.distance() < threshold;
         String reason = hit
                 ? "CLIP candidate distance=" + String.format(Locale.ROOT, "%.3f", best.distance())
@@ -291,6 +295,8 @@ public class SightingDeduplicationService {
         row.setMatchedCatId(firstNonNull(feature.suggestedCatId(), clip.matchedCatId()));
         row.setFeatureSimilarity(feature.bestSimilarityScore());
         row.setClipDistance(clip.bestDistance());
+        row.setClipMatchedSightingId(clip.matchedSightingId());
+        row.setEmbeddingVersion(clip.bestDistance() != null ? clipEmbeddingClient.embeddingVersion() : null);
         row.setVolunteerConfirmed(null);
         row.setCreatedAt(Instant.now());
         catMatchFeedbackJpaRepository.save(row);
@@ -305,6 +311,7 @@ public class SightingDeduplicationService {
             row.setConfirmedAt(Instant.now());
             row.setConfirmedBy(confirmedBy);
             catMatchFeedbackJpaRepository.save(row);
+            clipThresholdCalibrationService.recalibrate();
         });
     }
 

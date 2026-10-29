@@ -1,12 +1,12 @@
 package com.catrescue.api.service;
 
-import com.catrescue.api.config.EmbeddingServiceProperties;
 import com.catrescue.api.domain.AssessmentStatus;
 import com.catrescue.api.domain.CatFeatureSnapshot;
 import com.catrescue.api.persistence.AssessmentEntity;
 import com.catrescue.api.persistence.AssessmentJpaRepository;
 import com.catrescue.api.service.client.ClipEmbeddingClient;
 import com.catrescue.api.tracking.service.CatFeatureSimilarity;
+import com.catrescue.api.tracking.service.ClipThresholdCalibrationService;
 import com.catrescue.api.tracking.vector.VectorClient;
 import com.catrescue.api.tracking.vector.VectorMatchResult;
 import org.slf4j.Logger;
@@ -35,18 +35,18 @@ public class AssessmentDedupService {
     private final AssessmentJpaRepository jpa;
     private final ClipEmbeddingClient clipEmbeddingClient;
     private final VectorClient vectorClient;
-    private final EmbeddingServiceProperties embeddingProps;
+    private final ClipThresholdCalibrationService clipThresholdCalibrationService;
 
     public AssessmentDedupService(
             AssessmentJpaRepository jpa,
             ClipEmbeddingClient clipEmbeddingClient,
             VectorClient vectorClient,
-            EmbeddingServiceProperties embeddingProps
+            ClipThresholdCalibrationService clipThresholdCalibrationService
     ) {
         this.jpa = jpa;
         this.clipEmbeddingClient = clipEmbeddingClient;
         this.vectorClient = vectorClient;
-        this.embeddingProps = embeddingProps;
+        this.clipThresholdCalibrationService = clipThresholdCalibrationService;
     }
 
     /**
@@ -80,7 +80,7 @@ public class AssessmentDedupService {
 
         String excludeChromaId = excludeId != null ? "assessment_" + excludeId : null;
         List<VectorMatchResult> matches = vectorClient.queryTopK(embedding.get(), CLIP_QUERY_TOP_K, excludeChromaId);
-        double threshold = embeddingProps.getDistanceThreshold();
+        double threshold = clipThresholdCalibrationService.effectiveThreshold();
 
         for (VectorMatchResult match : matches) {
             if (match.distance() >= threshold) {

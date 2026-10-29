@@ -36,6 +36,14 @@ public class CatMatchFeedbackEntity {
     @Column
     private Double clipDistance;
 
+    /** Sighting CLIP itself proposed (may differ from matchedSightingId when the feature match won). */
+    @Column
+    private Long clipMatchedSightingId;
+
+    /** embedding-service pipeline version that produced clipDistance (e.g. clip-b32-catcrop-v1). */
+    @Column(length = 64)
+    private String embeddingVersion;
+
     @Column
     private Double featureSimilarity;
 
@@ -90,6 +98,22 @@ public class CatMatchFeedbackEntity {
 
     public void setClipDistance(Double clipDistance) {
         this.clipDistance = clipDistance;
+    }
+
+    public Long getClipMatchedSightingId() {
+        return clipMatchedSightingId;
+    }
+
+    public void setClipMatchedSightingId(Long clipMatchedSightingId) {
+        this.clipMatchedSightingId = clipMatchedSightingId;
+    }
+
+    public String getEmbeddingVersion() {
+        return embeddingVersion;
+    }
+
+    public void setEmbeddingVersion(String embeddingVersion) {
+        this.embeddingVersion = embeddingVersion;
     }
 
     public Double getFeatureSimilarity() {
