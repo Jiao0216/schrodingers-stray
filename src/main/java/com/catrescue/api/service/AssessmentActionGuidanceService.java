@@ -28,9 +28,15 @@ public class AssessmentActionGuidanceService {
         this.feedingSpotService = feedingSpotService;
     }
 
-    public AssessmentActionGuidanceDto build(String userEarClip, Double latitude, Double longitude) {
-        String clip = normalizeEarClip(userEarClip);
-        boolean showTnr = "no".equals(clip);
+    /**
+     * @param earClip       effective ear-tip status: "yes" | "no" | "unclear"
+     * @param earClipSource "user" (volunteer answered) or "ai" (left to the AI ear-tip check)
+     */
+    public AssessmentActionGuidanceDto build(String earClip, String earClipSource, Double latitude, Double longitude) {
+        String clip = normalizeEarClip(earClip);
+        boolean fromAi = "ai".equals(earClipSource);
+        // Unless the cat is (said to be) ear-tipped it may still need TNR — show resources for "unclear" too.
+        boolean showTnr = !"yes".equals(clip);
         List<ShelterInfoResponse> shelters = List.of();
         if (showTnr && latitude != null && longitude != null) {
             shelters = shelterInfoService.nearest(latitude, longitude, 5, "TNR");
@@ -49,9 +55,15 @@ public class AssessmentActionGuidanceService {
 
         List<String> lines = new ArrayList<>();
         if ("no".equals(clip)) {
-            lines.add("您标记为未剪耳：建议了解附近 TNR/绝育资源，安全诱捕后再送机构。");
+            lines.add(fromAi
+                    ? "AI 判断未剪耳：建议了解附近 TNR/绝育资源，安全诱捕后再送机构。"
+                    : "您标记为未剪耳：建议了解附近 TNR/绝育资源，安全诱捕后再送机构。");
         } else if ("yes".equals(clip)) {
-            lines.add("您标记为已剪耳：通常表示已参与 TNR，可持续观察与社区喂养。");
+            lines.add(fromAi
+                    ? "AI 判断已剪耳：通常表示已参与 TNR，可持续观察与社区喂养。"
+                    : "您标记为已剪耳：通常表示已参与 TNR，可持续观察与社区喂养。");
+        } else {
+            lines.add("AI 无法确认是否剪耳：请现场近距离查看耳朵；以下附近 TNR 资源供参考。");
         }
         if (showFeedingPrompt) {
             lines.add("附近暂无登记投喂点：可用旧碗/一次性餐盒先喂，欢迎拍照登记一个新投喂点。");
@@ -61,6 +73,7 @@ public class AssessmentActionGuidanceService {
 
         return new AssessmentActionGuidanceDto(
                 clip,
+                fromAi ? "ai" : "user",
                 showTnr,
                 shelters,
                 showFeedingPrompt,
@@ -78,7 +91,7 @@ public class AssessmentActionGuidanceService {
         return switch (v) {
             case "yes", "y", "true", "1" -> "yes";
             case "no", "n", "false", "0" -> "no";
-            default -> "";
+            default -> "unclear";
         };
     }
 }

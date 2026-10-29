@@ -1503,18 +1503,23 @@
       margin-top: 10px;
     }
 
-    .center-list { display: grid; gap: 10px; margin-top: 8px; }
+    .center-list { display: grid; gap: 6px; margin-top: 6px; }
     .center-item {
       border: 1px solid rgba(148, 163, 184, 0.15);
-      border-radius: 12px;
-      padding: 12px;
+      border-radius: 10px;
+      padding: 8px 12px;
       background: rgba(2, 6, 23, 0.4);
     }
+    .center-dist { font-weight: 500; color: var(--muted); }
+    .center-meta-line { font-size: 12.5px; line-height: 1.5; color: var(--muted); }
+    .center-meta-line a { color: var(--cyan); text-decoration: none; }
+    .center-meta-line a:hover { text-decoration: underline; }
+    .center-detail-link { white-space: nowrap; font-weight: 600; }
     body:not(.theme-tech) .center-item {
       background: rgba(255, 251, 235, 0.75);
       border-color: rgba(120, 78, 50, 0.15);
     }
-    .center-title { font-weight: 700; margin: 0 0 4px; font-size: 14px; color: #f1f5f9; }
+    .center-title { font-weight: 700; margin: 0 0 2px; font-size: 14px; color: #f1f5f9; }
     body:not(.theme-tech) .center-title { color: var(--text); }
     .center-addr-line, .center-phone-line { margin-top: 6px; font-size: 13px; line-height: 1.45; }
     .center-maps-link, .center-tel-link { color: var(--cyan); text-decoration: none; }
@@ -1964,10 +1969,11 @@
         </div>
 
         <div class="field">
-          <span class="ear-clip-group-label" data-i18n="earClipLabel">剪耳（TNR 标记）<span aria-hidden="true"> *</span></span>
-          <div class="ear-clip-row" role="radiogroup" aria-label="Ear clip" aria-required="true">
-            <label><input type="radio" name="earClip" value="yes" required> <span data-i18n="earClipYes">已剪耳</span></label>
-            <label><input type="radio" name="earClip" value="no" required> <span data-i18n="earClipNo">未剪耳</span></label>
+          <span class="ear-clip-group-label" data-i18n="earClipLabel">剪耳（TNR 标记，可选）</span>
+          <div class="ear-clip-row" role="radiogroup" aria-label="Ear clip">
+            <label><input type="radio" name="earClip" value="" checked> <span data-i18n="earClipUnsure">不确定，交给 AI 判断</span></label>
+            <label><input type="radio" name="earClip" value="yes"> <span data-i18n="earClipYes">已剪耳</span></label>
+            <label><input type="radio" name="earClip" value="no"> <span data-i18n="earClipNo">未剪耳</span></label>
           </div>
         </div>
 
@@ -2729,7 +2735,11 @@
       dupBannerLine: "我们曾在 {date} 于 {loc} 见过极为相似的猫咪（相似度约 {pct}%）。",
       timelineSummary: "出现记录时间线（共 {n} 条）",
       locUnknown: "位置未记录",
-      earClipLabel: "剪耳（TNR 标记）",
+      earClipLabel: "剪耳（TNR 标记，可选）",
+      earClipUnsure: "不确定，交给 AI 判断",
+      actionGuidanceLineAiEarNo: "AI 判断未剪耳：建议了解附近 TNR/绝育资源，安全诱捕后再送机构。",
+      actionGuidanceLineAiEarYes: "AI 判断已剪耳：通常表示已参与 TNR，可持续观察与社区喂养。",
+      actionGuidanceLineAiEarUnclear: "AI 无法确认是否剪耳：请现场近距离查看耳朵；以下附近 TNR 资源供参考。",
       earClipYes: "已剪耳",
       earClipNo: "未剪耳",
       actionGuidanceTitle: "下一步行动",
@@ -2758,7 +2768,6 @@
       agentOptionalHint: "可选：如需进一步咨询，可使用下方 AI 站长对话。",
       abnormalRiskTitle: "检测到异常风险",
       abnormalRiskBody: "已为你展开附近医院/TNR 机构，请尽快联系机构。",
-      chooseEarClipRequired: "请选择剪耳状态（已剪耳 / 未剪耳）。",
       locRequiredForFeedingSpot: "请先填写地址或定位。",
       submitting: "提交中…",
       emptyResponseHint: "（响应正文为空，请看运行 mvn 的终端里的报错堆栈）",
@@ -2831,7 +2840,8 @@
       earTipVerdictUnclear: "无法确认",
       earTipReviewUnclear: "AI 无法确认是否剪耳，请现场近距离查看耳朵后再决定。",
       earTipReviewConflict: "AI 的剪耳判断与您的选择不一致，请现场再确认一次耳朵。",
-      stationChatAria: "站长对话"
+      stationChatAria: "站长对话",
+      aiEarClipAiBanner: "未手动选择剪耳状态，以 AI 判断为准。"
     },
     en: {
       pageTitle: "Schrödinger's Stray Cat",
@@ -3196,7 +3206,11 @@
       dupBannerLine: "We've seen a very similar cat on {date} near {loc} (similarity ~{pct}%).",
       timelineSummary: "Sighting timeline ({n} records)",
       locUnknown: "Location not recorded",
-      earClipLabel: "Ear tip (TNR marker)",
+      earClipLabel: "Ear tip (TNR marker, optional)",
+      earClipUnsure: "Not sure — let the AI decide",
+      actionGuidanceLineAiEarNo: "The AI found no ear tip: look up nearby TNR / spay-neuter resources and trap safely before bringing it in.",
+      actionGuidanceLineAiEarYes: "The AI found an ear tip: this cat has usually been through TNR already — keep observing and support community feeding.",
+      actionGuidanceLineAiEarUnclear: "The AI can't tell whether this cat is ear-tipped: check the ears up close; nearby TNR resources are listed for reference.",
       earClipYes: "Tipped",
       earClipNo: "Not tipped",
       actionGuidanceTitle: "Suggested next steps",
@@ -3225,7 +3239,6 @@
       agentOptionalHint: "Optional: ask the station lead below if you need more advice.",
       abnormalRiskTitle: "Abnormal risk detected",
       abnormalRiskBody: "Nearby hospitals/TNR resources are expanded below. Please contact an organization now.",
-      chooseEarClipRequired: "Please choose ear-tip status (tipped / not tipped).",
       locRequiredForFeedingSpot: "Set location first (address or GPS).",
       submitting: "Submitting…",
       emptyResponseHint: "(empty response body — check Spring Boot terminal logs)",
@@ -3298,7 +3311,8 @@
       earTipVerdictUnclear: "Can't tell",
       earTipReviewUnclear: "The AI can't tell whether this cat is ear-tipped — please look at the ears up close before deciding.",
       earTipReviewConflict: "The AI's ear-tip result differs from your answer — please check the ears again in person.",
-      stationChatAria: "Chat with the station lead"
+      stationChatAria: "Chat with the station lead",
+      aiEarClipAiBanner: "No ear-tip answer given — going with the AI's judgment."
     }
   };
 
@@ -3540,7 +3554,16 @@
 
   function refreshDynamicLanguageContent() {
     if (__lastAssessmentPayload) {
+      // The agent chat card is mounted into the result after analysis; keep it (and its conversation) across re-renders.
+      const chatCard = document.getElementById("pythonAgentChatCard");
+      if (chatCard) chatCard.remove();
       try { renderResult(__lastAssessmentPayload); } catch (_e) {}
+      const slot = document.getElementById("pythonAgentChatSlot");
+      if (chatCard && slot) {
+        slot.appendChild(chatCard);
+        chatCard.setAttribute("aria-label", t("stationChatAria"));
+      }
+      refreshPythonAgentResultChatUi();
       const st = document.getElementById("status");
       if (st && st.classList.contains("success")) {
         st.textContent = t("analyzeOk");
@@ -4941,8 +4964,10 @@
     // Built from structured fields so the bullets follow the UI language (backend guidanceLines are zh-only).
     const lines = [];
     const userClip = String(guidance.userEarClip || "").toLowerCase();
-    if (userClip === "no") lines.push(t("actionGuidanceLineEarNo"));
-    else if (userClip === "yes") lines.push(t("actionGuidanceLineEarYes"));
+    const fromAi = guidance.earClipSource === "ai";
+    if (userClip === "no") lines.push(t(fromAi ? "actionGuidanceLineAiEarNo" : "actionGuidanceLineEarNo"));
+    else if (userClip === "yes") lines.push(t(fromAi ? "actionGuidanceLineAiEarYes" : "actionGuidanceLineEarYes"));
+    else if (userClip === "unclear") lines.push(t("actionGuidanceLineAiEarUnclear"));
     lines.push(t(guidance.showFeedingSpotPrompt ? "actionGuidanceLineNoFeedSpot" : "actionGuidanceLineHasFeedSpot"));
     const shelters = Array.isArray(guidance.tnrSheltersNearby) ? guidance.tnrSheltersNearby : [];
     const spots = Array.isArray(guidance.feedingSpotsNearby) ? guidance.feedingSpotsNearby : [];
@@ -6894,32 +6919,22 @@
       const mailHref = email ? ("mailto:" + email) : "";
       const contactHref = telHref || mailHref;
       const hasMapPoint = Number.isFinite(latN) && Number.isFinite(lngN);
-      const addrBlock = (addrLine || hasMapPoint)
-        ? (
-          "<div class='center-addr-line'>" +
-            "<a class='center-maps-link' target='_blank' rel='noopener noreferrer' href='" + escapeHtml(mapsHref) + "'>" +
-            "<strong>" + escapeHtml(addrLabel) + "</strong></a>" +
-          "</div>"
-          )
-        : "";
-      const phoneBlock = phone
-        ? (
-          "<div class='center-phone-line'>" +
-            "<a class='center-tel-link' href='" + escapeHtml(telHref) + "'><strong>" + escapeHtml(phone) + "</strong></a>" +
-          "</div>"
-          )
-        : "";
+      // Compact two-line card: name + distance, then address · phone · details on one meta line.
+      const meta = [];
+      if (addrLine || hasMapPoint) {
+        meta.push("<a class='center-maps-link' target='_blank' rel='noopener noreferrer' href='" + escapeHtml(mapsHref) + "'>" +
+          escapeHtml(addrLabel) + "</a>");
+      }
+      if (phone) {
+        meta.push("<a class='center-tel-link' href='" + escapeHtml(telHref) + "'>" + escapeHtml(phone) + "</a>");
+      } else if (contactHref) {
+        meta.push("<a class='center-tel-link' href='" + escapeHtml(contactHref) + "'>" + escapeHtml(t("contactOrg")) + "</a>");
+      }
+      meta.push("<a class='center-detail-link' href='" + escapeHtml(detailHref) + "'>" + escapeHtml(t("viewDetail")) + " ›</a>");
       return (
         "<div class='center-item'>" +
-          "<div class='center-title'>" + escapeHtml(pickLocalized(x, "name")) + distance + "</div>" +
-          addrBlock +
-          phoneBlock +
-          "<div class='center-actions'>" +
-            "<a class='btn secondary' href='" + escapeHtml(detailHref) + "'>" + escapeHtml(t("viewDetail")) + "</a>" +
-            (contactHref && !phone
-              ? "<a class='btn secondary' href='" + escapeHtml(contactHref) + "' style='margin-left:6px;'>" + escapeHtml(t("contactOrg")) + "</a>"
-              : "") +
-          "</div>" +
+          "<div class='center-title'>" + escapeHtml(pickLocalized(x, "name")) + "<span class='center-dist'>" + distance + "</span></div>" +
+          "<div class='center-meta-line'>" + meta.join("<span class='center-sep'> · </span>") + "</div>" +
         "</div>"
       );
     }
@@ -7528,7 +7543,7 @@
     if (v === "no") {
       return t("aiEarClipNoBanner");
     }
-    return t("chooseEarClipRequired");
+    return t("aiEarClipAiBanner");
   }
 
   function pythonAgentAnswerDanger(apiData) {
@@ -7899,6 +7914,9 @@
     }
 
     const tnrTitle = displaySterilized ? t("tnrListSuspected") : t("tnrList");
+    // "Suggested next steps" already lists nearby TNR when the cat is not ear-tipped; don't repeat it below.
+    const ag = data.actionGuidance || {};
+    const guidanceShowsTnr = !!(ag.showTnrNearby && Array.isArray(ag.tnrSheltersNearby) && ag.tnrSheltersNearby.length);
 
     const feedTriageInner = hasHealthScores
       ? "<span class='chip ok'>" + escapeHtml(t("triageFeedAutoLabel")) + "</span><div class='meta-line' style='font-size:12px;margin-top:6px'>" + escapeHtml(t("triageFeedAutoHint")) + "</div>"
@@ -7957,7 +7975,7 @@
 
     const stepResourcesBody =
       renderCenterList(t("rescueList"), rescueNearby, "rescue", refLat, refLng) +
-      renderCenterList(tnrTitle, tnrNearby, "tnr", refLat, refLng) +
+      (guidanceShowsTnr ? "" : renderCenterList(tnrTitle, tnrNearby, "tnr", refLat, refLng)) +
       (pickLocalized(actions, "disclaimer") ? "<div class='kv'>" + escapeHtml(t("disclaimer")) + uiColon() + escapeHtml(pickLocalized(actions, "disclaimer")) + "</div>" : "");
 
     const autoAbnormalHint = (!isFailed && severeAbnormal)
@@ -8169,12 +8187,7 @@
       statusEl.className = "status error";
       return;
     }
-    const earSel = document.querySelector('input[name="earClip"]:checked');
-    if (!earSel) {
-      statusEl.textContent = t("chooseEarClipRequired");
-      statusEl.className = "status error";
-      return;
-    }
+    // Ear clip is optional: an empty answer leaves the decision to the AI ear-tip check.
     var uploadFile;
     try {
       if (isHeicLikeImageFile(file)) {

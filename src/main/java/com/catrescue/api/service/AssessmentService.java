@@ -132,9 +132,6 @@ public class AssessmentService {
         if (image == null || image.isEmpty()) {
             throw new IllegalArgumentException("Image file is required");
         }
-        if (earClip == null || earClip.isBlank()) {
-            throw new IllegalArgumentException("is_ear_tipped is required (earClip: yes or no)");
-        }
         UUID id = UUID.randomUUID();
         Instant now = Instant.now();
         byte[] bytes;
@@ -239,11 +236,7 @@ public class AssessmentService {
         AssessmentDuplicateMatchDto hintDuplicate = featureHint
                 .flatMap(h -> buildHintDuplicateMatch(h, reloaded))
                 .orElse(null);
-        AssessmentActionGuidanceDto guidance = assessmentActionGuidanceService.build(
-                userEarClip,
-                reloaded.latitude(),
-                reloaded.longitude()
-        );
+        AssessmentActionGuidanceDto guidance = buildGuidance(reloaded);
         return toResponse(reloaded, trackingMatch, hintDuplicate, guidance);
     }
 
@@ -276,15 +269,43 @@ public class AssessmentService {
         }
     }
 
+    /** Optional volunteer answer: "yes" / "no", or "" when not given (the AI ear-tip verdict decides). */
     private static String normalizeEarClip(String raw) {
         if (raw == null || raw.isBlank()) {
-            throw new IllegalArgumentException("is_ear_tipped is required (earClip: yes or no)");
+            return "";
         }
         String v = raw.trim().toLowerCase(Locale.ROOT);
         return switch (v) {
             case "yes", "no" -> v;
-            default -> throw new IllegalArgumentException("Invalid earClip: must be yes or no");
+            case "unsure", "unknown", "ai" -> "";
+            default -> throw new IllegalArgumentException("Invalid earClip: must be yes, no, or empty");
         };
+    }
+
+    /**
+     * Ear-tip status the guidance follows: the volunteer's answer when given, otherwise the AI verdict
+     * ("yes" / "no" / "unclear"; legacy rows without a verdict fall back to likelyEarTipped).
+     */
+    static String effectiveEarClip(String userEarClip, ModelLabels labels) {
+        String user = userEarClip == null ? "" : userEarClip.trim().toLowerCase(Locale.ROOT);
+        if ("yes".equals(user) || "no".equals(user)) {
+            return user;
+        }
+        if (labels == null) {
+            return "unclear";
+        }
+        String v = labels.earTipVerdict() == null ? "" : labels.earTipVerdict().trim();
+        if (!v.isEmpty()) {
+            return v;
+        }
+        return labels.likelyEarTipped() ? "yes" : "unclear";
+    }
+
+    private AssessmentActionGuidanceDto buildGuidance(Assessment a) {
+        String user = a.userEarClip() == null ? "" : a.userEarClip().trim();
+        String source = "yes".equalsIgnoreCase(user) || "no".equalsIgnoreCase(user) ? "user" : "ai";
+        return assessmentActionGuidanceService.build(
+                effectiveEarClip(user, a.modelLabels()), source, a.latitude(), a.longitude());
     }
 
     public List<AssessmentListItemDto> listCommunityAssessments() {
@@ -441,7 +462,7 @@ public class AssessmentService {
         }
         AssessmentActionGuidanceDto actionGuidance = guidanceOverride != null
                 ? guidanceOverride
-                : assessmentActionGuidanceService.build(a.userEarClip(), a.latitude(), a.longitude());
+                : buildGuidance(a);
         return new AssessmentResponse(
                 a.id(),
                 a.status(),

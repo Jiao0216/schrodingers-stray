@@ -53,13 +53,13 @@ public record EarTipJudgement(
         if (no.size() >= needed) {
             return of("no", no, yes.size(), unclear, model);
         }
-        // Disagreement, too many "unclear" votes, or a "yes" majority that is not confident enough.
-        Vote sample = !yes.isEmpty() ? yes.get(0) : (!no.isEmpty() ? no.get(0) : votes.get(0));
+        // Disagreement, too many "unclear" votes, or a "yes" majority that is not confident enough. No single vote is
+        // quoted: repeating one vote's "clear cut" claim would read as a conclusion (and the agent would repeat it).
         return new EarTipJudgement(
                 "unclear",
                 Math.min(40, Math.max(meanConfidence(yes), meanConfidence(no))),
-                "多次判断结果不一致或把握不足，请现场核实耳朵。" + suffix(sample.basisZh()),
-                "Repeated checks disagreed or were not confident — please verify the ears in person." + suffixEn(sample.basisEn()),
+                "多次判断结果不一致或把握不足，请现场核实耳朵。",
+                "Repeated checks disagreed or were not confident — please verify the ears in person.",
                 yes.size(),
                 no.size(),
                 unclear,
@@ -94,14 +94,6 @@ public record EarTipJudgement(
         return Math.max(0, Math.min(100, v));
     }
 
-    private static String suffix(String basis) {
-        return basis == null || basis.isBlank() ? "" : "（其中一次：" + basis + "）";
-    }
-
-    private static String suffixEn(String basis) {
-        return basis == null || basis.isBlank() ? "" : " (one check: " + basis + ")";
-    }
-
     /**
      * Overrides the ear-tip fields of the main analysis with this verdict. The verdict is authoritative: the
      * post-processors no longer second-guess it from rationale wording.
@@ -109,11 +101,21 @@ public record EarTipJudgement(
     public ModelLabels applyTo(ModelLabels m) {
         boolean tipped = "yes".equals(verdict);
         String level = "unclear".equals(verdict) ? "low" : (confidencePercent >= 70 ? "high" : confidencePercent >= 40 ? "medium" : "low");
+        // The main analysis' own ear sentences would contradict this verdict (and are passed on to the agent),
+        // so they are replaced by this check's basis.
+        List<String> zh = withoutEarPhrases(m.rationalePhrases(), true);
+        List<String> en = withoutEarPhrases(m.rationalePhrasesEn(), false);
+        if (basisZh != null && !basisZh.isBlank()) {
+            zh.add(0, basisZh);
+        }
+        if (basisEn != null && !basisEn.isBlank()) {
+            en.add(0, basisEn);
+        }
         return new ModelLabels(
                 m.sickOrInjuredConfidence(),
                 m.needsFeedingConfidence(),
                 m.likelyNotNeuteredOrEarNotTippedConfidence(),
-                m.rationalePhrases(),
+                List.copyOf(zh),
                 tipped,
                 tipped,
                 level,
@@ -126,9 +128,29 @@ public record EarTipJudgement(
                 m.healthUndernutritionPercent(),
                 m.healthSeverelyEmaciatedPercent(),
                 m.healthSuspectedInjuryPercent(),
-                m.rationalePhrasesEn(),
+                List.copyOf(en),
                 basisEn,
                 verdict
         );
+    }
+
+    private static final java.util.regex.Pattern EAR_EN = java.util.regex.Pattern.compile(
+            "\\bears?\\b|ear-tip|eartip|\\btnr\\b|\\btipped\\b", java.util.regex.Pattern.CASE_INSENSITIVE);
+
+    static List<String> withoutEarPhrases(List<String> phrases, boolean zh) {
+        List<String> out = new ArrayList<>();
+        if (phrases == null) {
+            return out;
+        }
+        for (String p : phrases) {
+            if (p == null || p.isBlank()) {
+                continue;
+            }
+            boolean aboutEars = zh ? (p.contains("耳") || p.toLowerCase().contains("tnr")) : EAR_EN.matcher(p).find();
+            if (!aboutEars) {
+                out.add(p);
+            }
+        }
+        return out;
     }
 }

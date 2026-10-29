@@ -132,4 +132,19 @@ class EarTipAccuracyTest {
         assertThat(out.earTipBasis()).isEqualTo("依据");
         assertThat(out.likelyNotNeuteredOrEarNotTippedConfidence()).isLessThanOrEqualTo(0.10);
     }
+
+    @Test
+    void judgementReplacesContradictingEarSentencesInRationale() {
+        ModelLabels main = new ModelLabels(0.2, 0, 0.5,
+                List.of("右耳有平整的切口", "整体健康状况良好"), true, true, "high", "high", false, false,
+                80, "右耳平剪", 80, 10, 5, 5,
+                List.of("Right ear has a flat cut", "Overall body condition good"), "right ear cut", "yes");
+        EarTipJudgement j = EarTipJudgement.aggregate(List.of(v("yes", 90), v("no", 90), v("unclear", 30)), 75, "m");
+        ModelLabels out = j.applyTo(main);
+        assertThat(out.earTipVerdict()).isEqualTo("unclear");
+        assertThat(out.rationalePhrases()).noneMatch(p -> p.contains("右耳有平整"))
+                .contains("整体健康状况良好").first().asString().contains("请现场核实");
+        assertThat(out.rationalePhrasesEn()).noneMatch(p -> p.contains("flat cut"))
+                .contains("Overall body condition good");
+    }
 }
