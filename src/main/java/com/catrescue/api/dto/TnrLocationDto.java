@@ -11,6 +11,10 @@ public record TnrLocationDto(
         double longitude,
         Double distanceKm,
         String websiteHint,
-        String navigationUrl
+        String navigationUrl,
+        /* Chinese copy (null = use the default field as-is, e.g. a real organization name). */
+        String nameZh,
+        String shortDescriptionZh,
+        String streetAddressZh
 ) {
 }

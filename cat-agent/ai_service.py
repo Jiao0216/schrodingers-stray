@@ -12,11 +12,14 @@ CAT_RESCUE_API_BASE、OPENAI_HOSPITAL_SEARCH_MODEL（联网搜索用）
 
 from __future__ import annotations
 
+import asyncio
 import copy
 import json
+import logging
 import math
 import os
 import re
+import time
 from pathlib import Path
 from typing import Any, Literal, TypedDict
 
@@ -26,6 +29,10 @@ from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool
 from langchain_openai import ChatOpenAI
 from langgraph.graph import END, START, StateGraph
+
+import llm_router
+
+logger = logging.getLogger("cat_agent.router")
 
 # ---------------------------------------------------------------------------
 # OpenAI LLM（与 Spring cat-rescue.openai.* 环境变量命名一致）
@@ -359,7 +366,10 @@ def _db_lookup_kind(msg: str, state: AgentState | None = None) -> str | None:
     """
     数据库检索意图（与 classify_route 中 db_lookup 分支一致）。
     返回：platform_stats | report_cat | feeding_checkin | cats_nearby_count | feeding_stations | …
+    LLM 路由已选定工具时（db_kind_override）直接使用该意图。
     """
+    if state and state.get("db_kind_override"):
+        return state["db_kind_override"]
     m = (msg or "").strip()
     if not m:
         return None
@@ -623,7 +633,7 @@ def _extract_user_location_hint(state: AgentState) -> str:
     return "用户未提供详细文字地址（请根据问题中的地名或常识推断所在城市/区域）"
 
 
-RouteKind = Literal["education", "shelter", "iot", "web_search", "db_lookup"]
+RouteKind = Literal["education", "shelter", "iot", "web_search", "db_lookup", "multi"]
 
 
 class AgentState(TypedDict, total=False):
@@ -646,6 +656,11 @@ class AgentState(TypedDict, total=False):
     db_lookup_payload: dict[str, Any] | None
     final_text: str
     messages: list
+    # Hybrid routing (llm_router): which path decided, which tools ran, overrides for the chosen tool.
+    routing_mode: Literal["rule", "llm", "fallback"]
+    tools_used: list[str]
+    db_kind_override: str | None
+    plan_steps: list[dict[str, Any]]
 
 
 # ---------------------------------------------------------------------------
@@ -811,12 +826,100 @@ def _route_edge(state: AgentState) -> str:
         "iot": "iot_audit",
         "web_search": "web_search",
         "db_lookup": "db_lookup_fetch",
+        "multi": "multi_tool",
     }[kind]
 
 
+def _rule_fast_path(state: AgentState, rule_route: RouteKind) -> bool:
+    """Questions the regex rules recognise unambiguously (and every data-writing intent) never reach the LLM."""
+    if rule_route == "iot":
+        return True
+    raw = state.get("user_message") or ""
+    if "[nearby_shelters]" in raw:
+        return True
+    msg = raw.replace("[nearby_shelters]", "").strip()
+    return _db_lookup_kind(msg, state) in llm_router.RULE_ONLY_DB_KINDS
+
+
+def _router_context(state: AgentState) -> dict[str, Any]:
+    return {
+        "has_location": state.get("lat") is not None and state.get("lng") is not None,
+        "focus_cat_id": state.get("focus_cat_id"),
+        "has_focus_assessment": bool(state.get("focus_assessment_id")),
+        "has_duplicate": _state_has_assessment_duplicate(state),
+        "lang": _norm_output_language(state),
+    }
+
+
+async def _default_router_call(messages: list[dict], tools: list[dict]) -> list[dict[str, Any]]:
+    """
+    One non-streaming tool-choice request via the OpenAI SDK directly (not LangChain), so LangGraph's event
+    stream never forwards router output to the volunteer as reply tokens.
+    """
+    from openai import AsyncOpenAI
+
+    client = AsyncOpenAI(api_key=_openai_api_key(), base_url=_normalize_openai_base_url())
+    resp = await client.chat.completions.create(
+        model=_OPENAI_MODEL,
+        messages=messages,
+        tools=tools,
+        tool_choice="auto",
+        temperature=0,
+    )
+    calls = resp.choices[0].message.tool_calls or []
+    return [{"function": {"name": c.function.name, "arguments": c.function.arguments}} for c in calls]
+
+
+# Tests replace this with a fake to avoid real OpenAI calls.
+ROUTER_CALL = _default_router_call
+
+
 async def classify_node(state: AgentState) -> dict[str, Any]:
-    route = classify_route(state)
-    return {"route": route}
+    """
+    Hybrid routing: regex fast path for unambiguous / data-writing intents; otherwise the LLM picks tools.
+    Any router failure (error, timeout, no usable tool call) falls back to the regex classify_route.
+    """
+    rule_route = classify_route(state)
+    if not llm_router.LLM_ROUTING_ENABLED or not _openai_api_key() or _rule_fast_path(state, rule_route):
+        logger.info("route=%s mode=rule", rule_route)
+        return {"route": rule_route, "routing_mode": "rule", "tools_used": []}
+
+    msg = (state.get("user_message") or "").replace("[nearby_shelters]", "").strip()
+    ctx = _router_context(state)
+    t0 = time.monotonic()
+    try:
+        calls = await asyncio.wait_for(
+            ROUTER_CALL(llm_router.router_messages(msg, ctx, state.get("chat_history")), llm_router.TOOLS),
+            timeout=llm_router.LLM_ROUTING_TIMEOUT_S,
+        )
+        plan = llm_router.plan_from_tool_calls(calls, ctx)
+    except Exception as exc:  # noqa: BLE001 — timeout, network, bad response: always fall back
+        logger.warning("LLM router failed (%s); fallback route=%s", exc.__class__.__name__, rule_route)
+        return {"route": rule_route, "routing_mode": "fallback", "tools_used": []}
+    ms = int((time.monotonic() - t0) * 1000)
+    if plan.errors:
+        logger.info("LLM router dropped calls: %s", plan.errors)
+    if not plan.steps:
+        logger.info("LLM router chose no usable tool (%d ms); fallback route=%s", ms, rule_route)
+        return {"route": rule_route, "routing_mode": "fallback", "tools_used": []}
+
+    tools = [s.tool for s in plan.steps]
+    logger.info("route=%s mode=llm tools=%s router_ms=%d", "multi" if len(plan.steps) > 1 else plan.steps[0].route, tools, ms)
+    if len(plan.steps) == 1:
+        # A single tool goes through the existing node so the reply format stays exactly as before.
+        step = plan.steps[0]
+        out: dict[str, Any] = {"route": step.route, "routing_mode": "llm", "tools_used": tools}
+        if step.db_kind:
+            out["db_kind_override"] = step.db_kind
+        if step.cat_id is not None:
+            out["focus_cat_id"] = step.cat_id
+        return out
+    return {
+        "route": "multi",
+        "routing_mode": "llm",
+        "tools_used": tools,
+        "plan_steps": [s.__dict__ for s in plan.steps],
+    }
 
 
 def _chunk_content(chunk: Any) -> str:
@@ -1502,6 +1605,57 @@ async def db_lookup_reply_node(state: AgentState, config: RunnableConfig) -> dic
     return _done(text)
 
 
+SCENE_MULTI_APPEND = """
+【当前路由：多工具综合回答】
+下方 JSON 是本轮为回答志愿者问题依次调用的多个工具结果（tool 字段为工具名）。请逐一回答志愿者问题中的每个部分，
+只使用 JSON 里的数据与知识库内容，不编造机构、电话或记录；某个工具失败或无数据时如实说明。
+用口语化的短段落回答，不要编号列表。
+"""
+
+SCENE_MULTI_APPEND_EN = """
+[Route: combined answer from several tools]
+The JSON below holds the results of each tool called for this question (field "tool" is the tool name).
+Answer every part of the volunteer's question using only this data and the knowledge excerpts — never invent
+organizations, phone numbers or records; if a tool failed or returned nothing, say so plainly.
+Reply in short conversational paragraphs, no numbered lists.
+"""
+
+
+async def _run_step(state: AgentState, step: dict[str, Any]) -> dict[str, Any]:
+    """Executes one planned step through the existing implementations and returns its data for the reply."""
+    tool_name = step.get("tool")
+    try:
+        if step.get("route") == "db_lookup":
+            sub: AgentState = {**state, "db_kind_override": step.get("db_kind")}
+            if step.get("cat_id") is not None:
+                sub["focus_cat_id"] = step["cat_id"]
+            res = await db_lookup_fetch_node(sub)
+            payload = res.get("db_lookup_payload") or {}
+            return {"tool": tool_name, "result": _prepare_db_lookup_llm_payload(payload)}
+        if step.get("route") == "education":
+            q = step.get("query") or state.get("user_message") or ""
+            return {"tool": tool_name, "knowledge_excerpts": _rag_snippets_for_message(q) or ""}
+        if step.get("route") == "web_search":
+            res = await web_search_node({**state, "user_message": step.get("query") or state.get("user_message") or ""})
+            return {"tool": tool_name, "web_search_answer": res.get("final_text") or ""}
+    except Exception as exc:  # noqa: BLE001
+        return {"tool": tool_name, "error": "request_failed", "message": str(exc)[:300]}
+    return {"tool": tool_name, "error": "unknown_step"}
+
+
+async def multi_tool_node(state: AgentState, config: RunnableConfig) -> dict[str, Any]:
+    steps = state.get("plan_steps") or []
+    results = await asyncio.gather(*(_run_step(state, s) for s in steps))
+    lang = _norm_output_language(state)
+    scene = SCENE_MULTI_APPEND_EN if lang == "en" else SCENE_MULTI_APPEND
+    messages = _build_scene_messages(state, scene)
+    tool_json = json.dumps(list(results), ensure_ascii=False, indent=2)
+    head = "[Tool results JSON]" if lang == "en" else "【工具结果 JSON】"
+    messages.append(HumanMessage(content=f"{head}\n{tool_json}"))
+    text = await _stream_llm_to_text(messages, config)
+    return {"final_text": _polish_assistant_text(text, lang=lang), "shelter_cards": []}
+
+
 def build_station_master_graph():
     """编译站长 LangGraph（入口 → 分类 → 三场景之一 → END）。"""
     g = StateGraph(AgentState)
@@ -1513,6 +1667,7 @@ def build_station_master_graph():
     g.add_node("web_search", web_search_node)
     g.add_node("db_lookup_fetch", db_lookup_fetch_node)
     g.add_node("db_lookup_reply", db_lookup_reply_node)
+    g.add_node("multi_tool", multi_tool_node)
 
     g.add_edge(START, "classify")
     g.add_conditional_edges("classify", _route_edge)
@@ -1523,6 +1678,7 @@ def build_station_master_graph():
     g.add_edge("web_search", END)
     g.add_edge("db_lookup_fetch", "db_lookup_reply")
     g.add_edge("db_lookup_reply", END)
+    g.add_edge("multi_tool", END)
     return g.compile()
 
 

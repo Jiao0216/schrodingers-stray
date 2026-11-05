@@ -1503,18 +1503,23 @@
       margin-top: 10px;
     }
 
-    .center-list { display: grid; gap: 10px; margin-top: 8px; }
+    .center-list { display: grid; gap: 6px; margin-top: 6px; }
     .center-item {
       border: 1px solid rgba(148, 163, 184, 0.15);
-      border-radius: 12px;
-      padding: 12px;
+      border-radius: 10px;
+      padding: 8px 12px;
       background: rgba(2, 6, 23, 0.4);
     }
+    .center-dist { font-weight: 500; color: var(--muted); }
+    .center-meta-line { font-size: 12.5px; line-height: 1.5; color: var(--muted); }
+    .center-meta-line a { color: var(--cyan); text-decoration: none; }
+    .center-meta-line a:hover { text-decoration: underline; }
+    .center-detail-link { white-space: nowrap; font-weight: 600; }
     body:not(.theme-tech) .center-item {
       background: rgba(255, 251, 235, 0.75);
       border-color: rgba(120, 78, 50, 0.15);
     }
-    .center-title { font-weight: 700; margin: 0 0 4px; font-size: 14px; color: #f1f5f9; }
+    .center-title { font-weight: 700; margin: 0 0 2px; font-size: 14px; color: #f1f5f9; }
     body:not(.theme-tech) .center-title { color: var(--text); }
     .center-addr-line, .center-phone-line { margin-top: 6px; font-size: 13px; line-height: 1.45; }
     .center-maps-link, .center-tel-link { color: var(--cyan); text-decoration: none; }
@@ -1877,7 +1882,7 @@
     </div>
     <div class="top-controls">
       <button type="button" id="themeToggleBtn" class="theme-btn" data-i18n="themeToggleToTech">切换科技风</button>
-      <div class="lang" role="group" aria-label="Language">
+      <div class="lang" role="group" aria-label="Language" data-i18n-aria-label="langGroupAria">
         <button type="button" id="langEn" class="active">English</button>
         <button type="button" id="langZh">中文</button>
       </div>
@@ -1927,7 +1932,7 @@
     </div>
   </dialog>
 
-  <nav class="main-tabs" role="tablist" aria-label="CatGuardian">
+  <nav class="main-tabs" role="tablist" aria-label="CatGuardian" data-i18n-aria-label="mainTabsAria">
     <button type="button" class="main-tab active" id="tabUpload" data-panel="panel-upload" data-i18n="tabUpload">上传 / 分析</button>
     <button type="button" class="main-tab" id="tabCommunity" data-panel="panel-community" data-i18n="tabCommunity">社区记录</button>
     <button type="button" class="main-tab" id="tabVolunteer" data-panel="panel-volunteer" data-i18n="tabVolunteer">志愿者</button>
@@ -1964,16 +1969,15 @@
         </div>
 
         <div class="field">
-          <span class="ear-clip-group-label" data-i18n="earClipLabel">剪耳（TNR 标记）<span aria-hidden="true"> *</span></span>
-          <div class="ear-clip-row" role="radiogroup" aria-label="Ear clip" aria-required="true">
-            <label><input type="radio" name="earClip" value="yes" required> <span data-i18n="earClipYes">已剪耳</span></label>
-            <label><input type="radio" name="earClip" value="no" required> <span data-i18n="earClipNo">未剪耳</span></label>
+          <span class="ear-clip-group-label" data-i18n="earClipLabel">剪耳（TNR 标记，可选）</span>
+          <div class="ear-clip-row" role="radiogroup" aria-label="Ear clip">
+            <label><input type="radio" name="earClip" value="" checked> <span data-i18n="earClipUnsure">不确定，交给 AI 判断</span></label>
+            <label><input type="radio" name="earClip" value="yes"> <span data-i18n="earClipYes">已剪耳</span></label>
+            <label><input type="radio" name="earClip" value="no"> <span data-i18n="earClipNo">未剪耳</span></label>
           </div>
-          <p class="meta-line" style="margin-top:6px;font-size:12px;" data-i18n="earClipRequiredHint">必填：请根据现场观察选择；下方 AI 剪耳提示仅供参考。</p>
         </div>
 
         <input type="hidden" id="trackingUserId" value="">
-        <p class="desc" style="margin-top:8px;margin-bottom:0;font-size:12px;" data-i18n="recentAssessHint"></p>
 
         <div class="field" style="display:flex;align-items:center;gap:8px;opacity:0.65;">
           <input id="autoMatchAfterUpload" type="checkbox">
@@ -2031,7 +2035,7 @@
 
   <section id="panel-community" class="glass main-panel" hidden>
     <p class="desc" data-i18n="communityDesc">全区上传记录（最多 500 条）。开启本页后每 30 秒自动刷新。</p>
-    <div class="heatmap-filter-row" role="group" aria-label="Community filters" id="communityFilterRow">
+    <div class="heatmap-filter-row" role="group" aria-label="Community filters" data-i18n-aria-label="communityFiltersAria" id="communityFilterRow">
       <button type="button" class="filter-chip active community-filter-chip" data-filter="ALL" data-i18n="communityFilterAll">全部</button>
       <button type="button" class="filter-chip community-filter-chip" data-filter="INTACT" data-i18n="communityFilterIntact">未绝育</button>
       <button type="button" class="filter-chip community-filter-chip" data-filter="INJURED" data-i18n="communityFilterInjured">受伤</button>
@@ -2122,7 +2126,7 @@
 
   <section id="panel-assessment-map" class="glass main-panel" hidden>
     <p class="desc" data-i18n="assessmentMapDesc">基于带有 GPS 的评估记录绘制热力图；可筛选健康状态类别。</p>
-    <div class="heatmap-filter-row" role="group" aria-label="Heatmap filters">
+    <div class="heatmap-filter-row" role="group" aria-label="Heatmap filters" data-i18n-aria-label="heatmapFiltersAria">
       <button type="button" class="filter-chip active" data-filter="ALL" data-i18n="filterAll">全部</button>
       <button type="button" class="filter-chip" data-filter="NEEDS_HELP" data-i18n="filterNeedsHelp">需要帮助</button>
       <button type="button" class="filter-chip" data-filter="HEALTHY" data-i18n="filterHealthy">健康</button>
@@ -2462,7 +2466,7 @@
       addrCoordOk: "已识别坐标文本，坐标已更新。",
       analyzing: "正在分析，请稍候…",
       reqFail: "请求失败: HTTP ",
-      analyzeOk: "分析完成: HTTP ",
+      analyzeOk: "分析完成",
       analyzeInferFailed: "推理失败（后端已调用模型，见下方原因）",
       inferenceFailedTitle: "模型推理失败",
       inferenceFailedHint: "常见原因：未正确配置模型凭证、API 配额/限流、网络超时、图片格式不被接受。若响应体含 failureReason 可从中查看原因；切勿在界面或日志中粘贴密钥。",
@@ -2532,7 +2536,6 @@
       trackingDupPending: "与已有档案中的猫较相似（相似度约 {score}），可能与猫 ID {id} 为同一只，待志愿者复核。",
       trackingRecorded: "目击已入库（猫 ID {id}）。附近另有约 {near} 只不同的猫有近期记录。",
       badgeSterilizedModel: "模型：可能已绝育 / 有耳标",
-      recentAssessHint: "提示：完成定位后提交，可与社区档案联动并在右侧看到匹配说明。",
       bannerSterilizedOk: "模型判断：耳标/绝育可能性高（或 TNR 评分很低）。捕捉前仍建议现场确认。",
       tabUpload: "上传 / 分析",
       tabCommunity: "社区记录",
@@ -2732,10 +2735,13 @@
       dupBannerLine: "我们曾在 {date} 于 {loc} 见过极为相似的猫咪（相似度约 {pct}%）。",
       timelineSummary: "出现记录时间线（共 {n} 条）",
       locUnknown: "位置未记录",
-      earClipLabel: "剪耳（TNR 标记）",
+      earClipLabel: "剪耳（TNR 标记，可选）",
+      earClipUnsure: "不确定，交给 AI 判断",
+      actionGuidanceLineAiEarNo: "AI 判断未剪耳：建议了解附近 TNR/绝育资源，安全诱捕后再送机构。",
+      actionGuidanceLineAiEarYes: "AI 判断已剪耳：通常表示已参与 TNR，可持续观察与社区喂养。",
+      actionGuidanceLineAiEarUnclear: "AI 无法确认是否剪耳：请现场近距离查看耳朵；以下附近 TNR 资源供参考。",
       earClipYes: "已剪耳",
       earClipNo: "未剪耳",
-      earClipRequiredHint: "必填：请根据现场观察选择；下方 AI 剪耳提示仅供参考。",
       actionGuidanceTitle: "下一步行动",
       actionGuidanceTnrTitle: "附近 TNR / 绝育资源",
       actionGuidanceShelterMore: "展开其余 {n} 家机构",
@@ -2762,7 +2768,6 @@
       agentOptionalHint: "可选：如需进一步咨询，可使用下方 AI 站长对话。",
       abnormalRiskTitle: "检测到异常风险",
       abnormalRiskBody: "已为你展开附近医院/TNR 机构，请尽快联系机构。",
-      chooseEarClipRequired: "请选择剪耳状态（已剪耳 / 未剪耳）。",
       locRequiredForFeedingSpot: "请先填写地址或定位。",
       submitting: "提交中…",
       emptyResponseHint: "（响应正文为空，请看运行 mvn 的终端里的报错堆栈）",
@@ -2808,7 +2813,35 @@
       aiNearbyNoAddress: "请先在表单中填写地址/位置，再检索附近机构。",
       aiNearbySkipNoNeed: "当前为「已剪耳」且健康分析原文中未出现「送去治疗」，未请求 TNR/医院联网检索。",
       aiNearbyAutoTitle: "【未剪耳 · 已为你检索附近 TNR / 救助资源】",
-      aiNearbyTruncatedNote: "（以上仅展示最近的 3 家 / 条，其余已省略。）"
+      aiNearbyTruncatedNote: "（以上仅展示最近的 3 家 / 条，其余已省略。）",
+      actionGuidanceLineEarNo: "您标记为未剪耳：建议了解附近 TNR/绝育资源，安全诱捕后再送机构。",
+      actionGuidanceLineEarYes: "您标记为已剪耳：通常表示已参与 TNR，可持续观察与社区喂养。",
+      actionGuidanceLineNoFeedSpot: "附近暂无登记投喂点：可用旧碗/一次性餐盒先喂，欢迎拍照登记一个新投喂点。",
+      actionGuidanceLineHasFeedSpot: "附近已有社区投喂点，欢迎打卡「我喂了」方便其他志愿者。",
+      actionGuidanceShelterMoreOne: "展开其余 {n} 家机构",
+      distApproxM: "约 {n} 米",
+      distApproxKm: "约 {n} 公里",
+      mapZoomIn: "放大",
+      mapZoomOut: "缩小",
+      langGroupAria: "语言",
+      mainTabsAria: "主要功能",
+      communityFiltersAria: "社区记录筛选",
+      heatmapFiltersAria: "热力图筛选",
+      dedupSummaryPending: "待分析",
+      dedupSummaryNewConfirmed: "状态稳定，建议持续观察",
+      dedupSummaryPendingReview: "模型建议复核，可能需要进一步关注",
+      dedupSummaryConfirmedDuplicate: "已确认为重复记录",
+      dedupSummaryRejectedDuplicate: "已确认是新线索，建议继续跟进",
+      dedupSummaryDuplicateSuspected: "疑似重复记录，建议人工复核",
+      dedupSummaryNewCat: "疑似新猫线索，建议持续跟进",
+      earTipVerdictLabel: "AI 剪耳判断",
+      earTipVerdictYes: "已剪耳",
+      earTipVerdictNo: "未剪耳",
+      earTipVerdictUnclear: "无法确认",
+      earTipReviewUnclear: "AI 无法确认是否剪耳，请现场近距离查看耳朵后再决定。",
+      earTipReviewConflict: "AI 的剪耳判断与您的选择不一致，请现场再确认一次耳朵。",
+      stationChatAria: "站长对话",
+      aiEarClipAiBanner: "未手动选择剪耳状态，以 AI 判断为准。"
     },
     en: {
       pageTitle: "Schrödinger's Stray Cat",
@@ -2904,7 +2937,7 @@
       addrCoordOk: "Coordinate text detected. Coordinates updated.",
       analyzing: "Analyzing…",
       reqFail: "Request failed: HTTP ",
-      analyzeOk: "Done: HTTP ",
+      analyzeOk: "Analysis complete",
       analyzeInferFailed: "Inference failed (model was called — see details below)",
       inferenceFailedTitle: "Model inference failed",
       inferenceFailedHint: "Typical causes: missing/invalid LLM credentials, quota/rate limits, timeout, or unsupported image. Check failureReason in the response if present; never paste API keys into the UI or logs.",
@@ -2974,7 +3007,6 @@
       trackingDupPending: "Similar to an existing archive photo (~{score} match); may be the same cat as ID {id}. Pending volunteer review.",
       trackingRecorded: "Sighting saved (cat ID {id}). About {near} other distinct cats had recent sightings nearby.",
       badgeSterilizedModel: "Model: likely sterilized / ear-tipped",
-      recentAssessHint: "Tip: set location before Analyze to match community cats and see hints on the right.",
       bannerSterilizedOk: "Model: high chance of ear-tip / already sterilized (or very low TNR score). Confirm on-site before trapping.",
       tabUpload: "Upload",
       tabCommunity: "Community sightings",
@@ -3174,10 +3206,13 @@
       dupBannerLine: "We've seen a very similar cat on {date} near {loc} (similarity ~{pct}%).",
       timelineSummary: "Sighting timeline ({n} records)",
       locUnknown: "Location not recorded",
-      earClipLabel: "Ear tip (TNR marker)",
+      earClipLabel: "Ear tip (TNR marker, optional)",
+      earClipUnsure: "Not sure — let the AI decide",
+      actionGuidanceLineAiEarNo: "The AI found no ear tip: look up nearby TNR / spay-neuter resources and trap safely before bringing it in.",
+      actionGuidanceLineAiEarYes: "The AI found an ear tip: this cat has usually been through TNR already — keep observing and support community feeding.",
+      actionGuidanceLineAiEarUnclear: "The AI can't tell whether this cat is ear-tipped: check the ears up close; nearby TNR resources are listed for reference.",
       earClipYes: "Tipped",
       earClipNo: "Not tipped",
-      earClipRequiredHint: "Required — choose based on what you see; AI ear-tip hints are reference only.",
       actionGuidanceTitle: "Suggested next steps",
       actionGuidanceTnrTitle: "Nearby TNR / spay-neuter",
       actionGuidanceShelterMore: "Show {n} more organizations",
@@ -3204,7 +3239,6 @@
       agentOptionalHint: "Optional: ask the station lead below if you need more advice.",
       abnormalRiskTitle: "Abnormal risk detected",
       abnormalRiskBody: "Nearby hospitals/TNR resources are expanded below. Please contact an organization now.",
-      chooseEarClipRequired: "Please choose ear-tip status (tipped / not tipped).",
       locRequiredForFeedingSpot: "Set location first (address or GPS).",
       submitting: "Submitting…",
       emptyResponseHint: "(empty response body — check Spring Boot terminal logs)",
@@ -3248,9 +3282,37 @@
       aiEarClipNoBanner: "⚠️ Not tipped — likely not yet neutered; contact a shelter/rescue for TNR.",
       aiEarClipUnknownBanner: "❓ Ear status unclear — observe the ears up close when safe.",
       aiNearbyNoAddress: "Fill in the address/location on the form before searching nearby resources.",
-      aiNearbySkipNoNeed: "Ear tip is “tipped” and the health text does not contain “送去治疗”, so TNR/vet web search was not requested.",
+      aiNearbySkipNoNeed: "Ear tip is “tipped” and the health notes don't recommend vet treatment, so no TNR/vet web search was run.",
       aiNearbyAutoTitle: "[Not tipped — nearby TNR / rescue resources]",
-      aiNearbyTruncatedNote: "(Showing at most the nearest 3 listings; the rest are omitted.)"
+      aiNearbyTruncatedNote: "(Showing at most the nearest 3 listings; the rest are omitted.)",
+      actionGuidanceLineEarNo: "You marked this cat as not ear-tipped: look up nearby TNR / spay-neuter resources and trap safely before bringing it in.",
+      actionGuidanceLineEarYes: "You marked this cat as ear-tipped: it has usually been through TNR already — keep observing and support community feeding.",
+      actionGuidanceLineNoFeedSpot: "No registered feeding spots nearby: an old bowl or disposable container works to start — please photograph and register a new spot.",
+      actionGuidanceLineHasFeedSpot: "There are community feeding spots nearby — tap “I fed” to check in and help other volunteers.",
+      actionGuidanceShelterMoreOne: "Show 1 more organization",
+      distApproxM: "~{n} m",
+      distApproxKm: "~{n} km",
+      mapZoomIn: "Zoom in",
+      mapZoomOut: "Zoom out",
+      langGroupAria: "Language",
+      mainTabsAria: "Main sections",
+      communityFiltersAria: "Community filters",
+      heatmapFiltersAria: "Heatmap filters",
+      dedupSummaryPending: "Not analyzed yet",
+      dedupSummaryNewConfirmed: "Stable — keep observing",
+      dedupSummaryPendingReview: "The model suggests a review — may need more attention",
+      dedupSummaryConfirmedDuplicate: "Confirmed as a duplicate record",
+      dedupSummaryRejectedDuplicate: "Confirmed as a new lead — keep following up",
+      dedupSummaryDuplicateSuspected: "Possible duplicate — please review manually",
+      dedupSummaryNewCat: "Possibly a new cat — keep following up",
+      earTipVerdictLabel: "AI ear-tip check",
+      earTipVerdictYes: "Ear-tipped",
+      earTipVerdictNo: "Not ear-tipped",
+      earTipVerdictUnclear: "Can't tell",
+      earTipReviewUnclear: "The AI can't tell whether this cat is ear-tipped — please look at the ears up close before deciding.",
+      earTipReviewConflict: "The AI's ear-tip result differs from your answer — please check the ears again in person.",
+      stationChatAria: "Chat with the station lead",
+      aiEarClipAiBanner: "No ear-tip answer given — going with the AI's judgment."
     }
   };
 
@@ -3455,6 +3517,11 @@
       const k = el.getAttribute("data-i18n-placeholder");
       if (k) el.setAttribute("placeholder", t(k));
     });
+    document.querySelectorAll("[data-i18n-aria-label]").forEach((el) => {
+      const k = el.getAttribute("data-i18n-aria-label");
+      if (k) el.setAttribute("aria-label", t(k));
+    });
+    localizeLeafletControls();
     const earRg = document.querySelector(".ear-clip-row[role='radiogroup']");
     if (earRg) earRg.setAttribute("aria-label", t("earClipLabel"));
     document.getElementById("langZh").classList.toggle("active", lang === "zh");
@@ -3469,11 +3536,43 @@
     refreshPythonAgentResultChatUi();
   }
 
+  /** Leaflet ships English zoom tooltips; keep them in the UI language. */
+  function localizeLeafletControls() {
+    document.querySelectorAll(".leaflet-control-zoom-in").forEach((a) => {
+      a.setAttribute("title", t("mapZoomIn"));
+      a.setAttribute("aria-label", t("mapZoomIn"));
+    });
+    document.querySelectorAll(".leaflet-control-zoom-out").forEach((a) => {
+      a.setAttribute("title", t("mapZoomOut"));
+      a.setAttribute("aria-label", t("mapZoomOut"));
+    });
+  }
+
   function applyTheme() {
     document.body.classList.toggle("theme-tech", theme === "tech");
   }
 
   function refreshDynamicLanguageContent() {
+    if (__lastAssessmentPayload) {
+      // The agent chat card is mounted into the result after analysis; keep it (and its conversation) across re-renders.
+      const chatCard = document.getElementById("pythonAgentChatCard");
+      if (chatCard) chatCard.remove();
+      try { renderResult(__lastAssessmentPayload); } catch (_e) {}
+      const slot = document.getElementById("pythonAgentChatSlot");
+      if (chatCard && slot) {
+        slot.appendChild(chatCard);
+        chatCard.setAttribute("aria-label", t("stationChatAria"));
+      }
+      refreshPythonAgentResultChatUi();
+      const st = document.getElementById("status");
+      if (st && st.classList.contains("success")) {
+        st.textContent = t("analyzeOk");
+      }
+    }
+    if (__lastFeedingSpots !== undefined) {
+      try { renderFeedingSpotList(__lastFeedingSpots); } catch (_e) {}
+    }
+    localizeLeafletControls();
     try { renderCommunityGrid(); } catch (_e) {}
     try { renderAssessmentHeatmap(); } catch (_e) {}
     const pv = document.getElementById("panel-volunteer");
@@ -3727,7 +3826,10 @@
     } catch (_e) { /* ignore */ }
   }
 
+  let __lastFeedingSpots;  // undefined until the list has been rendered once
+
   function renderFeedingSpotList(spots) {
+    __lastFeedingSpots = spots;
     const el = document.getElementById("feedingSpotList");
     if (!el) {
       return;
@@ -3738,7 +3840,7 @@
     }
     el.innerHTML = spots.slice(0, 12).map(function (sp) {
       const desc = sp.description ? escapeHtml(String(sp.description)) : ("#" + sp.id);
-      const dist = sp.distanceMeters != null ? " · ~" + Math.round(Number(sp.distanceMeters)) + "m" : "";
+      const dist = sp.distanceMeters != null ? " · " + formatDistance(sp.distanceMeters) : "";
       return (
         "<div class='feeding-spot-row'>" +
         "<div><strong>" + desc + "</strong><span class='meta-line'>" + dist + "</span></div>" +
@@ -4232,11 +4334,24 @@
     try {
       const d = new Date(iso);
       if (Number.isNaN(d.getTime())) return String(iso || "");
-      return d.toLocaleString();
+      return d.toLocaleString(lang === "en" ? "en-US" : "zh-CN");
     } catch (_e) {
       return String(iso || "");
     }
   }
+
+  /** One distance format everywhere: "~850 m" / "~4.9 km" (en), "约 850 米" / "约 4.9 公里" (zh). */
+  function formatDistance(meters) {
+    const m = Number(meters);
+    if (meters == null || !Number.isFinite(m)) return "";
+    if (m < 1000) return t("distApproxM").replace("{n}", String(Math.round(m)));
+    return t("distApproxKm").replace("{n}", (m / 1000).toFixed(m < 10000 ? 1 : 0));
+  }
+
+  /** Language-appropriate punctuation (full-width only in Chinese). */
+  function uiColon() { return lang === "en" ? ": " : "："; }
+  function uiListSep() { return lang === "en" ? "; " : "；"; }
+  function uiParen(text) { return lang === "en" ? " (" + text + ")" : "（" + text + "）"; }
 
   async function fetchJsonFromCandidatePaths(paths, queryParams) {
     let lastErr = "";
@@ -4332,10 +4447,10 @@
       "</p><p class='cat-profile-meta'>" +
       esc(metaLine) +
       "</p>" +
-      listHtml(g.healthGuidanceLines, t("catProfileAiHealthLines")) +
-      listHtml(g.rescueNextSteps, t("catProfileAiRescueSteps")) +
-      listHtml(g.rationalePhrases, t("catProfileAiRationale")) +
-      (g.disclaimer ? "<p class='cat-ai-disclaimer'>" + esc(g.disclaimer) + "</p>" : "") +
+      listHtml(pickLocalizedList(g, "healthGuidanceLines"), t("catProfileAiHealthLines")) +
+      listHtml(pickLocalizedList(g, "rescueNextSteps"), t("catProfileAiRescueSteps")) +
+      listHtml(localizedRationale(g), t("catProfileAiRationale")) +
+      (pickLocalized(g, "disclaimer") ? "<p class='cat-ai-disclaimer'>" + esc(pickLocalized(g, "disclaimer")) + "</p>" : "") +
       "</div></div>"
     );
   }
@@ -4810,7 +4925,7 @@
       return "";
     }
     function row(s) {
-      const dist = s.distanceMeters != null ? " · ~" + Math.round(Number(s.distanceMeters)) + "m" : "";
+      const dist = s.distanceMeters != null ? " · " + formatDistance(s.distanceMeters) : "";
       return (
         "<div class='kv'>" + escapeHtml(s.name || "") + dist +
         "<div class='meta-line'>" + escapeHtml(s.address || "") +
@@ -4823,7 +4938,7 @@
       html +=
         "<details class='dup-timeline-details shelter-more-details'>" +
         "<summary class='dup-timeline-summary'>" +
-        escapeHtml(t("actionGuidanceShelterMore").replace("{n}", String(rest.length))) +
+        escapeHtml(t(rest.length === 1 ? "actionGuidanceShelterMoreOne" : "actionGuidanceShelterMore").replace("{n}", String(rest.length))) +
         "</summary>" + rest.map(row).join("") + "</details>";
     }
     return html;
@@ -4846,7 +4961,14 @@
     if (!guidance || typeof guidance !== "object") {
       return "";
     }
-    const lines = Array.isArray(guidance.guidanceLines) ? guidance.guidanceLines : [];
+    // Built from structured fields so the bullets follow the UI language (backend guidanceLines are zh-only).
+    const lines = [];
+    const userClip = String(guidance.userEarClip || "").toLowerCase();
+    const fromAi = guidance.earClipSource === "ai";
+    if (userClip === "no") lines.push(t(fromAi ? "actionGuidanceLineAiEarNo" : "actionGuidanceLineEarNo"));
+    else if (userClip === "yes") lines.push(t(fromAi ? "actionGuidanceLineAiEarYes" : "actionGuidanceLineEarYes"));
+    else if (userClip === "unclear") lines.push(t("actionGuidanceLineAiEarUnclear"));
+    lines.push(t(guidance.showFeedingSpotPrompt ? "actionGuidanceLineNoFeedSpot" : "actionGuidanceLineHasFeedSpot"));
     const shelters = Array.isArray(guidance.tnrSheltersNearby) ? guidance.tnrSheltersNearby : [];
     const spots = Array.isArray(guidance.feedingSpotsNearby) ? guidance.feedingSpotsNearby : [];
     let html =
@@ -4871,7 +4993,7 @@
     } else if (spots.length) {
       html += "<div class='kv'><strong>" + escapeHtml(t("actionGuidanceFeedSpotTitle")) + "</strong></div>";
       html += spots.slice(0, 4).map(function (sp) {
-        const dist = sp.distanceMeters != null ? " · ~" + Math.round(Number(sp.distanceMeters)) + "m" : "";
+        const dist = sp.distanceMeters != null ? " · " + formatDistance(sp.distanceMeters) : "";
         const label = sp.description
           ? String(sp.description)
           : t("feedingSpotItemLabel").replace("{id}", String(sp.id));
@@ -4890,7 +5012,7 @@
     const items = dup.clusterSightings.map((s) => {
       const tl = s.createdAt ? formatIsoLocal(s.createdAt) : "—";
       const sl = s.locationSummary || t("locUnknown");
-      return "<li>" + escapeHtml(tl) + " — " + escapeHtml(sl) + " · " + escapeHtml(s.healthStatus || "") + "</li>";
+      return "<li>" + escapeHtml(tl) + " — " + escapeHtml(sl) + (s.healthStatus ? " · " + escapeHtml(communityStatusLabel(s.healthStatus)) : "") + "</li>";
     }).join("");
     const n = dup.clusterSightings.length;
     const timeline =
@@ -4918,13 +5040,18 @@
     return true;
   }
 
+  function assessmentFilterLabel(code) {
+    const key = { ALL: "filterAll", NEEDS_HELP: "filterNeedsHelp", HEALTHY: "filterHealthy", TNR_VERIFIED: "filterTnr" }[code];
+    return key ? t(key) : String(code || "");
+  }
+
   function communityStatusLabel(code) {
     const x = String(code || "").toUpperCase();
     if (x === "HEALTHY") return t("communityStatusHealthy");
     if (x === "LIKELY_INTACT") return t("communityStatusLikelyIntact");
     if (x === "TNR_VERIFIED") return t("communityStatusTnrVerified");
     if (x === "INJURED" || x === "NEEDS_HELP" || x === "MONITOR") return t("communityStatusInjured");
-    return x ? x.replace(/_/g, " ") : t("communityStatusUnknown");
+    return t("communityStatusUnknown");
   }
 
   function getCommunityCatId(row) {
@@ -5116,7 +5243,7 @@
         Number.isFinite(Number(r.longitude))
     );
     if (note) {
-      note.textContent = filtered.length + " pts · " + assessmentFilter;
+      note.textContent = filtered.length + " " + t("heatmapStatPointsUnit") + " · " + assessmentFilterLabel(assessmentFilter);
     }
     const heatPts = filtered.map((r) => [Number(r.latitude), Number(r.longitude), 0.85]);
     if (assessmentHeatLayer) {
@@ -5132,7 +5259,7 @@
 
     if (!heatPts.length) {
       if (note) {
-        note.textContent = "0 pts · " + assessmentFilter + (stations.length ? " · 🍚" + stations.length : "");
+        note.textContent = "0 " + t("heatmapStatPointsUnit") + " · " + assessmentFilterLabel(assessmentFilter) + (stations.length ? " · 🍚" + stations.length : "");
       }
       assessmentStationLayer = createFeedingStationMarkerLayer(stations, "a");
       if (assessmentStationLayer) {
@@ -5506,16 +5633,33 @@
       NEW_CONFIRMED: "新猫已确认",
       PENDING_REVIEW: "待复核",
       DUPLICATE_SUSPECTED: "疑似重复",
+      CONFIRMED_DUPLICATE: "已确认重复",
+      REJECTED_DUPLICATE: "已确认为新线索",
       NEW_CAT: "新猫"
     };
     const en = {
       NEW_CONFIRMED: "New confirmed",
       PENDING_REVIEW: "Pending review",
       DUPLICATE_SUSPECTED: "Possible duplicate",
+      CONFIRMED_DUPLICATE: "Confirmed duplicate",
+      REJECTED_DUPLICATE: "Confirmed new lead",
       NEW_CAT: "New cat"
     };
     const m = lang === "en" ? en : zh;
-    return m[x] || x.replace(/_/g, " ");
+    return m[x] || "—";
+  }
+
+  /** Localized version of the backend's zh-only aiHealthSummary (SightingController#summarizeAiHealth). */
+  function volunteerDedupSummary(st) {
+    const key = {
+      NEW_CONFIRMED: "dedupSummaryNewConfirmed",
+      PENDING_REVIEW: "dedupSummaryPendingReview",
+      CONFIRMED_DUPLICATE: "dedupSummaryConfirmedDuplicate",
+      REJECTED_DUPLICATE: "dedupSummaryRejectedDuplicate",
+      DUPLICATE_SUSPECTED: "dedupSummaryDuplicateSuspected",
+      NEW_CAT: "dedupSummaryNewCat"
+    }[String(st || "").trim()];
+    return key ? t(key) : t("dedupSummaryPending");
   }
 
   let volunteerServiceGeoSyncedAt = 0;
@@ -5527,7 +5671,8 @@
   function sanitizeLeaderboardName(rawName) {
     const name = String(rawName || "").trim();
     if (!name) return "—";
-    return name.toLowerCase().includes("tracking user") ? t("volunteerAnonymousName") : name;
+    // Backend sends the zh placeholder "匿名志愿者" for anonymous volunteers; localize it.
+    return name.toLowerCase().includes("tracking user") || name === "匿名志愿者" ? t("volunteerAnonymousName") : name;
   }
 
   function updateVolunteerPointsView(points) {
@@ -5754,7 +5899,7 @@
           const name = escapeHtml(t("volunteerCatFallback").replace("{id}", String(j.catId != null ? j.catId : "—")));
           const when = j.occurredAt ? formatIsoLocal(j.occurredAt) : "—";
           const addr = escapeHtml(j.addressText || "—");
-          const aiSummary = escapeHtml(j.aiHealthSummary || volunteerDedupLabel(j.dedupStatus || ""));
+          const aiSummary = escapeHtml(volunteerDedupSummary(j.dedupStatus));
           const primaryImgSrc = sightingImageUrl(j.sightingId, j.imageUrl);
           const fallbackImgSrc = resolveMediaUrl(j.imageUrl || "");
           const imgSrc = primaryImgSrc || fallbackImgSrc;
@@ -6712,18 +6857,51 @@
     return "/resources/rescue-detail.html?" + q.toString();
   }
 
+  /** Bilingual API copy: in zh use `<field>Zh` when the backend provides it, else the default field. */
+  function pickLocalized(obj, field) {
+    if (!obj) return "";
+    return (lang === "zh" && obj[field + "Zh"]) || obj[field] || "";
+  }
+
+  /** List version of pickLocalized (an empty zh list falls back to the default list). */
+  function pickLocalizedList(obj, field) {
+    if (!obj) return [];
+    const zh = obj[field + "Zh"];
+    if (lang === "zh" && Array.isArray(zh) && zh.length) return zh;
+    return Array.isArray(obj[field]) ? obj[field] : [];
+  }
+
+  /** Model rationale in the UI language (rationalePhrases is zh, rationalePhrasesEn is en). */
+  function localizedRationale(labels) {
+    if (!labels) return [];
+    const en = Array.isArray(labels.rationalePhrasesEn) ? labels.rationalePhrasesEn.filter(Boolean) : [];
+    const zh = Array.isArray(labels.rationalePhrases) ? labels.rationalePhrases.filter(Boolean) : [];
+    if (lang === "en") return en;
+    // zh: rows saved before rationalePhrasesEn existed may hold English phrases — hide those rather than mix.
+    return zh.filter((x) => /[\u4e00-\u9fff]/.test(x));
+  }
+
+  function localizedEarTipBasis(labels) {
+    if (!labels) return "";
+    if (lang === "en") return String(labels.earTipBasisEn || "").trim();
+    const zh = String(labels.earTipBasis || "").trim();
+    return /[\u4e00-\u9fff]/.test(zh) ? zh : "";
+  }
+
   function renderCenterList(title, list, typePrefix, refLat, refLng) {
     if (!Array.isArray(list) || list.length === 0) return "";
     const kind = typePrefix === "tnr" ? "tnr" : "rescue";
     function renderOne(x) {
-      const distance = x.distanceKm == null ? "" : "（" + t("kmApprox") + x.distanceKm + " " + t("kmUnit") + "）";
+      const distance = x.distanceKm == null ? "" : uiParen(formatDistance(Number(x.distanceKm) * 1000));
       const detailHref = buildDirectoryDetailUrl(kind, x.id || "", refLat, refLng);
       const phone = (x.phone || "").trim();
       const email = (x.email || "").trim();
       const street = (x.streetAddress || "").trim();
       const city = (x.city || "").trim();
       const addrLine = [street, city].filter(Boolean).join(" · ");
-      const addrLabel = addrLine || t("openInMaps");
+      // Displayed copy follows the UI language; the maps query below keeps the registered address.
+      const shownStreet = String(pickLocalized(x, "streetAddress") || "").trim();
+      const addrLabel = [shownStreet, city].filter(Boolean).join(" · ") || t("openInMaps");
       const latN = Number(x.latitude);
       const lngN = Number(x.longitude);
       let mapsHref = "";
@@ -6741,32 +6919,22 @@
       const mailHref = email ? ("mailto:" + email) : "";
       const contactHref = telHref || mailHref;
       const hasMapPoint = Number.isFinite(latN) && Number.isFinite(lngN);
-      const addrBlock = (addrLine || hasMapPoint)
-        ? (
-          "<div class='center-addr-line'>" +
-            "<a class='center-maps-link' target='_blank' rel='noopener noreferrer' href='" + escapeHtml(mapsHref) + "'>" +
-            "<strong>" + escapeHtml(addrLabel) + "</strong></a>" +
-          "</div>"
-          )
-        : "";
-      const phoneBlock = phone
-        ? (
-          "<div class='center-phone-line'>" +
-            "<a class='center-tel-link' href='" + escapeHtml(telHref) + "'><strong>" + escapeHtml(phone) + "</strong></a>" +
-          "</div>"
-          )
-        : "";
+      // Compact two-line card: name + distance, then address · phone · details on one meta line.
+      const meta = [];
+      if (addrLine || hasMapPoint) {
+        meta.push("<a class='center-maps-link' target='_blank' rel='noopener noreferrer' href='" + escapeHtml(mapsHref) + "'>" +
+          escapeHtml(addrLabel) + "</a>");
+      }
+      if (phone) {
+        meta.push("<a class='center-tel-link' href='" + escapeHtml(telHref) + "'>" + escapeHtml(phone) + "</a>");
+      } else if (contactHref) {
+        meta.push("<a class='center-tel-link' href='" + escapeHtml(contactHref) + "'>" + escapeHtml(t("contactOrg")) + "</a>");
+      }
+      meta.push("<a class='center-detail-link' href='" + escapeHtml(detailHref) + "'>" + escapeHtml(t("viewDetail")) + " ›</a>");
       return (
         "<div class='center-item'>" +
-          "<div class='center-title'>" + escapeHtml(x.name) + " " + distance + "</div>" +
-          addrBlock +
-          phoneBlock +
-          "<div class='center-actions'>" +
-            "<a class='btn secondary' href='" + escapeHtml(detailHref) + "'>" + escapeHtml(t("viewDetail")) + "</a>" +
-            (contactHref && !phone
-              ? "<a class='btn secondary' href='" + escapeHtml(contactHref) + "' style='margin-left:6px;'>" + escapeHtml(t("contactOrg")) + "</a>"
-              : "") +
-          "</div>" +
+          "<div class='center-title'>" + escapeHtml(pickLocalized(x, "name")) + "<span class='center-dist'>" + distance + "</span></div>" +
+          "<div class='center-meta-line'>" + meta.join("<span class='center-sep'> · </span>") + "</div>" +
         "</div>"
       );
     }
@@ -6776,7 +6944,7 @@
     if (rest.length) {
       html +=
         "<details class='dup-timeline-details shelter-more-details'><summary class='dup-timeline-summary'>" +
-        escapeHtml(t("actionGuidanceShelterMore").replace("{n}", String(rest.length))) +
+        escapeHtml(t(rest.length === 1 ? "actionGuidanceShelterMoreOne" : "actionGuidanceShelterMore").replace("{n}", String(rest.length))) +
         "</summary><div class='center-list'>" + rest.map(renderOne).join("") + "</div></details>";
     }
     return "<div><strong>" + escapeHtml(title) + "</strong><div class='center-list'>" + html + "</div></div>";
@@ -6884,15 +7052,15 @@
     if (ear) {
       parts.push((en ? "Volunteer ear-tip note: " : "志愿者剪耳备注：") + ear);
     }
-    const rationale = Array.isArray(labels.rationalePhrases) ? labels.rationalePhrases : [];
+    const rationale = localizedRationale(labels);
     if (rationale.length) {
-      parts.push((en ? "Model rationale: " : "模型依据：") + rationale.slice(0, 4).join("；"));
+      parts.push((en ? "Model rationale: " : "模型依据：") + rationale.slice(0, 4).join(en ? "; " : "；"));
     }
     const cap = String(labels.captureAdvice || "").trim();
     if (cap) {
       parts.push((en ? "Capture / handling advice: " : "处置建议：") + cap);
     }
-    const lines = Array.isArray(actions.healthGuidanceLines) ? actions.healthGuidanceLines : [];
+    const lines = pickLocalizedList(actions, "healthGuidanceLines");
     if (lines.length) {
       parts.push((en ? "Health guidance:" : "健康建议：") + "\n" + lines.slice(0, 6).map(function (x) {
         return String(x || "").trim();
@@ -7375,7 +7543,7 @@
     if (v === "no") {
       return t("aiEarClipNoBanner");
     }
-    return t("chooseEarClipRequired");
+    return t("aiEarClipAiBanner");
   }
 
   function pythonAgentAnswerDanger(apiData) {
@@ -7461,7 +7629,7 @@
 
   function pythonAgentChatCardHtml() {
     return (
-      "<section id='pythonAgentChatCard' class='step-card python-agent-block python-agent-block--home python-agent-home--has-messages' aria-label='station-lead-chat'>" +
+      "<section id='pythonAgentChatCard' class='step-card python-agent-block python-agent-block--home python-agent-home--has-messages' aria-label='" + escapeHtml(t("stationChatAria")) + "'>" +
       "<div class='python-agent-home-shell'>" +
       "<div class='python-agent-chat python-agent-chat--home'>" +
       "<div id='pythonAgentChatThread' class='python-agent-chat-thread python-agent-chat-thread--home' aria-live='polite'></div>" +
@@ -7622,9 +7790,10 @@
     const isFailed = data.status === "FAILED";
     const labels = data.modelLabels || {};
     const actions = data.actions || {};
-    const rescueSteps = Array.isArray(actions.rescueNextSteps) ? actions.rescueNextSteps : [];
+    const rescueSteps = pickLocalizedList(actions, "rescueNextSteps");
+    // failureReason is a raw (English) technical error; in zh show the localized message from rescueNextStepsZh.
     const failureDetail = isFailed
-      ? String(data.failureReason || rescueSteps[0] || "").trim()
+      ? String((lang === "zh" ? rescueSteps[0] : data.failureReason) || rescueSteps[0] || "").trim()
       : "";
 
     const sickPct = scorePercent(labels.sickOrInjuredConfidence);
@@ -7634,10 +7803,19 @@
     const earTipPctNum = earTipPctRaw != null ? Number(earTipPctRaw) : NaN;
     const hasEarTipPct = Number.isFinite(earTipPctNum) && earTipPctNum >= 0;
     const earTipVerify = hasEarTipPct && earTipPctNum < 70;
-    const earTipBasisStr = String(labels.earTipBasis || "").trim();
-    const earTipMetaBlock = !isFailed && (hasEarTipPct || earTipBasisStr)
+    const earTipBasisStr = localizedEarTipBasis(labels);
+    const earTipVerdict = String(labels.earTipVerdict || "");
+    const earTipVerdictKey = { yes: "earTipVerdictYes", no: "earTipVerdictNo", unclear: "earTipVerdictUnclear" }[earTipVerdict];
+    const earTipMetaBlock = !isFailed && (hasEarTipPct || earTipBasisStr || earTipVerdictKey)
       ? (
         "<div class='kv ear-tip-meta'>" +
+        (earTipVerdictKey
+          ? "<div><strong>" + escapeHtml(t("earTipVerdictLabel")) + "</strong>" + escapeHtml(uiColon() + t(earTipVerdictKey)) + "</div>"
+          : "") +
+        (labels.earTipNeedsReview
+          ? "<div class='chip warn' style='display:inline-block;margin:4px 0;'>" +
+            escapeHtml(t(earTipVerdict === "unclear" ? "earTipReviewUnclear" : "earTipReviewConflict")) + "</div>"
+          : "") +
         (hasEarTipPct
           ? "<div><strong>" + escapeHtml(t("earTipConfidenceLabel")) + "</strong> " + Math.round(earTipPctNum) + "%" +
             (earTipVerify
@@ -7646,7 +7824,7 @@
             "</div>"
           : "") +
         (earTipBasisStr
-          ? "<div class='meta-line'>" + escapeHtml(t("earTipBasisLabel")) + "：" + escapeHtml(earTipBasisStr) + "</div>"
+          ? "<div class='meta-line'>" + escapeHtml(t("earTipBasisLabel")) + uiColon() + escapeHtml(earTipBasisStr) + "</div>"
           : "") +
         "</div>"
         )
@@ -7682,9 +7860,7 @@
         "<p class='meta-line'>" + escapeHtml(t("healthScoresFootnote")) + "</p>"
         )
       : "";
-    const hgLines = Array.isArray(actions.healthGuidanceLines)
-      ? actions.healthGuidanceLines.map((x) => String(x || "").trim()).filter(Boolean)
-      : [];
+    const hgLines = pickLocalizedList(actions, "healthGuidanceLines").map((x) => String(x || "").trim()).filter(Boolean);
     const healthGuidanceHtml = !isFailed && hgLines.length
       ? "<div class='kv'><strong>" + escapeHtml(t("healthGuidanceTitle")) + "</strong><ul class='list'>" +
         hgLines.map((line) => "<li>" + escapeHtml(line) + "</li>").join("") + "</ul></div>"
@@ -7706,11 +7882,11 @@
     } else if (earClipUser === "no") {
       displaySterilized = false;
     }
-    const rationale = Array.isArray(labels.rationalePhrases) ? labels.rationalePhrases : [];
+    const rationale = localizedRationale(labels);
     const rescueNearby = Array.isArray(actions.rescueNearby) ? actions.rescueNearby : [];
     const tnrNearby = Array.isArray(actions.tnrNearby) ? actions.tnrNearby : [];
-    const postTitle = actions.nextdoorTitle || t("postTitleDefault");
-    const postBody = actions.nextdoorBody || "";
+    const postTitle = pickLocalized(actions, "nextdoorTitle") || t("postTitleDefault");
+    const postBody = pickLocalized(actions, "nextdoorBody");
     lastSocialCopy = isFailed ? "" : ((postTitle ? postTitle + "\n\n" : "") + postBody);
 
     const rationaleHtml = !isFailed && rationale.length
@@ -7738,6 +7914,9 @@
     }
 
     const tnrTitle = displaySterilized ? t("tnrListSuspected") : t("tnrList");
+    // "Suggested next steps" already lists nearby TNR when the cat is not ear-tipped; don't repeat it below.
+    const ag = data.actionGuidance || {};
+    const guidanceShowsTnr = !!(ag.showTnrNearby && Array.isArray(ag.tnrSheltersNearby) && ag.tnrSheltersNearby.length);
 
     const feedTriageInner = hasHealthScores
       ? "<span class='chip ok'>" + escapeHtml(t("triageFeedAutoLabel")) + "</span><div class='meta-line' style='font-size:12px;margin-top:6px'>" + escapeHtml(t("triageFeedAutoHint")) + "</div>"
@@ -7796,8 +7975,8 @@
 
     const stepResourcesBody =
       renderCenterList(t("rescueList"), rescueNearby, "rescue", refLat, refLng) +
-      renderCenterList(tnrTitle, tnrNearby, "tnr", refLat, refLng) +
-      (actions.disclaimer ? "<div class='kv'>" + t("disclaimer") + ": " + escapeHtml(actions.disclaimer) + "</div>" : "");
+      (guidanceShowsTnr ? "" : renderCenterList(tnrTitle, tnrNearby, "tnr", refLat, refLng)) +
+      (pickLocalized(actions, "disclaimer") ? "<div class='kv'>" + escapeHtml(t("disclaimer")) + uiColon() + escapeHtml(pickLocalized(actions, "disclaimer")) + "</div>" : "");
 
     const autoAbnormalHint = (!isFailed && severeAbnormal)
       ? "<div class='failure-banner'><strong>" + escapeHtml(t("abnormalRiskTitle")) +
@@ -7957,7 +8136,7 @@
         }
         statusEl.className = "status success";
       } catch (_ipErr) {
-        statusEl.textContent = geolocationErrorMessage(err) + "；" + t("geocodeIpFail");
+        statusEl.textContent = geolocationErrorMessage(err) + uiListSep() + t("geocodeIpFail");
         statusEl.className = "status error";
       }
     } finally {
@@ -8008,12 +8187,7 @@
       statusEl.className = "status error";
       return;
     }
-    const earSel = document.querySelector('input[name="earClip"]:checked');
-    if (!earSel) {
-      statusEl.textContent = t("chooseEarClipRequired");
-      statusEl.className = "status error";
-      return;
-    }
+    // Ear clip is optional: an empty answer leaves the decision to the AI ear-tip check.
     var uploadFile;
     try {
       if (isHeicLikeImageFile(file)) {
@@ -8129,7 +8303,7 @@
           localStorage.setItem(histKey, JSON.stringify(hist.slice(0, 15)));
         } catch (_ignore) { /* ignore */ }
       } else {
-        statusEl.textContent = t("analyzeOk") + response.status;
+        statusEl.textContent = t("analyzeOk");
         statusEl.className = "status success";
         lastAssessmentTracking = parsed.trackingMatch || null;
         __lastAssessmentPayload = parsed;

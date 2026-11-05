@@ -9,7 +9,10 @@ import java.util.List;
  * Post-upload action guidance shown immediately after photo analysis.
  */
 public record AssessmentActionGuidanceDto(
+        /** Effective ear-tip status the guidance follows: "yes" | "no" | "unclear". */
         String userEarClip,
+        /** "user" when the volunteer answered, "ai" when it was left to the AI ear-tip check. */
+        String earClipSource,
         boolean showTnrNearby,
         List<ShelterInfoResponse> tnrSheltersNearby,
         boolean showFeedingSpotPrompt,

@@ -1,0 +1,3 @@
+image_a,image_b,same
+# same: 1 = the same individual cat, 0 = different cats
+photos/example_cat.jpg,photos/example_cat.jpg,1

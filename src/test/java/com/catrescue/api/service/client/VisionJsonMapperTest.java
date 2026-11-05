@@ -4,6 +4,7 @@ import com.catrescue.api.domain.ModelLabels;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -12,7 +13,7 @@ class VisionJsonMapperTest {
     private static final ObjectMapper M = new ObjectMapper();
 
     @Test
-    void rightEarMarkOverridesVerdictNo() throws Exception {
+    void rightEarMarkWithVerdictNoIsUnclear() throws Exception {
         String json = """
                 {"sickOrInjuredConfidence":0.1,"needsFeedingConfidence":0.2,"likelyNotNeuteredOrEarNotTippedConfidence":0.5,
                 "rationalePhrases":["x"],"likelyEarTipped":false,"ear_tip_detected":false,
@@ -20,12 +21,15 @@ class VisionJsonMapperTest {
                 "ear_tip_confidence":"medium","ear_tip_confidence_percent":80,"ear_tip_basis":"右耳平剪可见"}
                 """;
         ModelLabels m = VisionJsonMapper.parse(M.readTree(json));
-        assertTrue(m.likelyEarTipped());
-        assertTrue(m.earTipDetected());
+        // Self-contradicting answer: neither tipped nor intact — a person must check.
+        assertFalse(m.likelyEarTipped());
+        assertFalse(m.earTipDetected());
+        assertEquals("unclear", m.earTipVerdict());
+        assertEquals("low", m.earTipConfidenceLevel());
     }
 
     @Test
-    void leftEarMarkOverridesVerdictNo() throws Exception {
+    void leftEarMarkWithVerdictNoIsUnclear() throws Exception {
         String json = """
                 {"sickOrInjuredConfidence":0.1,"needsFeedingConfidence":0.2,"likelyNotNeuteredOrEarNotTippedConfidence":0.5,
                 "rationalePhrases":["x"],"likelyEarTipped":false,"ear_tip_detected":false,
@@ -33,7 +37,8 @@ class VisionJsonMapperTest {
                 "ear_tip_confidence":"low","ear_tip_confidence_percent":45,"ear_tip_basis":"左耳见平剪"}
                 """;
         ModelLabels m = VisionJsonMapper.parse(M.readTree(json));
-        assertTrue(m.likelyEarTipped());
+        assertFalse(m.likelyEarTipped());
+        assertEquals("unclear", m.earTipVerdict());
     }
 
     @Test

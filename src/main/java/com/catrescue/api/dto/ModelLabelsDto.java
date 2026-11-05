@@ -19,6 +19,16 @@ public record ModelLabelsDto(
         Integer healthBodyNormalPercent,
         Integer healthUndernutritionPercent,
         Integer healthSeverelyEmaciatedPercent,
-        Integer healthSuspectedInjuryPercent
+        Integer healthSuspectedInjuryPercent,
+        /** English versions of rationalePhrases / earTipBasis (those are Simplified Chinese). */
+        List<String> rationalePhrasesEn,
+        String earTipBasisEn,
+        /** "yes" | "no" | "unclear" | "" (legacy). */
+        String earTipVerdict,
+        /**
+         * True when a person should look at the ears: the verdict is unclear, or it contradicts the volunteer's own
+         * ear-clip answer.
+         */
+        boolean earTipNeedsReview
 ) {
 }

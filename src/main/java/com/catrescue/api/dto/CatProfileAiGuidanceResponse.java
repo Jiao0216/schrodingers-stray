@@ -17,6 +17,12 @@ public record CatProfileAiGuidanceResponse(
         String disclaimer,
         List<String> rescueNextSteps,
         List<String> healthGuidanceLines,
-        List<String> rationalePhrases
+        /** Simplified Chinese (model output). */
+        List<String> rationalePhrases,
+        /* Bilingual counterparts: disclaimer / steps / health lines default to English; rationale to Chinese. */
+        String disclaimerZh,
+        List<String> rescueNextStepsZh,
+        List<String> healthGuidanceLinesZh,
+        List<String> rationalePhrasesEn
 ) {
 }

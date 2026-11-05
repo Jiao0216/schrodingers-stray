@@ -60,6 +60,10 @@ public class AssessmentService {
 
     private static final String DISCLAIMER =
             "This app does not diagnose animals. For emergencies, contact a veterinarian or local animal control.";
+    private static final String DISCLAIMER_ZH = "本应用不对动物做诊断。紧急情况请联系兽医或当地动物管理部门。";
+    private static final String RESOURCES_UNAVAILABLE =
+            "Nearby resource list temporarily unavailable; please search local shelters or TNR groups.";
+    private static final String RESOURCES_UNAVAILABLE_ZH = "附近资源列表暂时无法获取，请自行搜索当地收容所或 TNR 组织。";
 
     private final AssessmentRepository repository;
     private final MultimodalClient multimodalClient;
@@ -127,9 +131,6 @@ public class AssessmentService {
     ) {
         if (image == null || image.isEmpty()) {
             throw new IllegalArgumentException("Image file is required");
-        }
-        if (earClip == null || earClip.isBlank()) {
-            throw new IllegalArgumentException("is_ear_tipped is required (earClip: yes or no)");
         }
         UUID id = UUID.randomUUID();
         Instant now = Instant.now();
@@ -235,11 +236,7 @@ public class AssessmentService {
         AssessmentDuplicateMatchDto hintDuplicate = featureHint
                 .flatMap(h -> buildHintDuplicateMatch(h, reloaded))
                 .orElse(null);
-        AssessmentActionGuidanceDto guidance = assessmentActionGuidanceService.build(
-                userEarClip,
-                reloaded.latitude(),
-                reloaded.longitude()
-        );
+        AssessmentActionGuidanceDto guidance = buildGuidance(reloaded);
         return toResponse(reloaded, trackingMatch, hintDuplicate, guidance);
     }
 
@@ -272,15 +269,43 @@ public class AssessmentService {
         }
     }
 
+    /** Optional volunteer answer: "yes" / "no", or "" when not given (the AI ear-tip verdict decides). */
     private static String normalizeEarClip(String raw) {
         if (raw == null || raw.isBlank()) {
-            throw new IllegalArgumentException("is_ear_tipped is required (earClip: yes or no)");
+            return "";
         }
         String v = raw.trim().toLowerCase(Locale.ROOT);
         return switch (v) {
             case "yes", "no" -> v;
-            default -> throw new IllegalArgumentException("Invalid earClip: must be yes or no");
+            case "unsure", "unknown", "ai" -> "";
+            default -> throw new IllegalArgumentException("Invalid earClip: must be yes, no, or empty");
         };
+    }
+
+    /**
+     * Ear-tip status the guidance follows: the volunteer's answer when given, otherwise the AI verdict
+     * ("yes" / "no" / "unclear"; legacy rows without a verdict fall back to likelyEarTipped).
+     */
+    static String effectiveEarClip(String userEarClip, ModelLabels labels) {
+        String user = userEarClip == null ? "" : userEarClip.trim().toLowerCase(Locale.ROOT);
+        if ("yes".equals(user) || "no".equals(user)) {
+            return user;
+        }
+        if (labels == null) {
+            return "unclear";
+        }
+        String v = labels.earTipVerdict() == null ? "" : labels.earTipVerdict().trim();
+        if (!v.isEmpty()) {
+            return v;
+        }
+        return labels.likelyEarTipped() ? "yes" : "unclear";
+    }
+
+    private AssessmentActionGuidanceDto buildGuidance(Assessment a) {
+        String user = a.userEarClip() == null ? "" : a.userEarClip().trim();
+        String source = "yes".equalsIgnoreCase(user) || "no".equalsIgnoreCase(user) ? "user" : "ai";
+        return assessmentActionGuidanceService.build(
+                effectiveEarClip(user, a.modelLabels()), source, a.latitude(), a.longitude());
     }
 
     public List<AssessmentListItemDto> listCommunityAssessments() {
@@ -409,7 +434,11 @@ public class AssessmentService {
                 ml.healthBodyNormalPercent() >= 0 ? ml.healthBodyNormalPercent() : null,
                 ml.healthUndernutritionPercent() >= 0 ? ml.healthUndernutritionPercent() : null,
                 ml.healthSeverelyEmaciatedPercent() >= 0 ? ml.healthSeverelyEmaciatedPercent() : null,
-                ml.healthSuspectedInjuryPercent() >= 0 ? ml.healthSuspectedInjuryPercent() : null
+                ml.healthSuspectedInjuryPercent() >= 0 ? ml.healthSuspectedInjuryPercent() : null,
+                ml.rationalePhrasesEn() != null ? ml.rationalePhrasesEn() : List.of(),
+                ml.earTipBasisEn() != null ? ml.earTipBasisEn() : "",
+                ml.earTipVerdict() != null ? ml.earTipVerdict() : "",
+                earTipNeedsReview(ml.earTipVerdict(), a.userEarClip())
         );
         BranchActionsDto actions;
         try {
@@ -418,15 +447,7 @@ public class AssessmentService {
                     : buildActions(a.branchType(), a.latitude(), a.longitude(), a.modelLabels());
         } catch (Exception ex) {
             log.warn("buildActions failed, using minimal actions: {}", ex.toString());
-            actions = new BranchActionsDto(
-                    DISCLAIMER,
-                    List.of("Nearby resource list temporarily unavailable; please search local shelters or TNR groups."),
-                    null,
-                    null,
-                    Collections.emptyList(),
-                    Collections.emptyList(),
-                    Collections.emptyList()
-            );
+            actions = resourcesUnavailableActions();
         }
         AssessmentDuplicateMatchDto duplicateDto = hintDuplicate;
         if (duplicateDto == null && a.catFeatures() != null) {
@@ -441,7 +462,7 @@ public class AssessmentService {
         }
         AssessmentActionGuidanceDto actionGuidance = guidanceOverride != null
                 ? guidanceOverride
-                : assessmentActionGuidanceService.build(a.userEarClip(), a.latitude(), a.longitude());
+                : buildGuidance(a);
         return new AssessmentResponse(
                 a.id(),
                 a.status(),
@@ -589,7 +610,38 @@ public class AssessmentService {
         return "Unknown";
     }
 
+    private static BranchActionsDto resourcesUnavailableActions() {
+        return new BranchActionsDto(
+                DISCLAIMER,
+                List.of(RESOURCES_UNAVAILABLE),
+                null,
+                null,
+                Collections.emptyList(),
+                Collections.emptyList(),
+                Collections.emptyList(),
+                DISCLAIMER_ZH,
+                List.of(RESOURCES_UNAVAILABLE_ZH),
+                null,
+                null,
+                Collections.emptyList()
+        );
+    }
+
+    /** Unclear verdict, or a model verdict that contradicts the volunteer's ear-clip answer. */
+    static boolean earTipNeedsReview(String verdict, String userEarClip) {
+        String v = verdict == null ? "" : verdict.trim();
+        if (v.isEmpty()) {
+            return false;
+        }
+        if ("unclear".equals(v)) {
+            return true;
+        }
+        String user = userEarClip == null ? "" : userEarClip.trim().toLowerCase(Locale.ROOT);
+        return ("yes".equals(v) && "no".equals(user)) || ("no".equals(v) && "yes".equals(user));
+    }
+
     private BranchActionsDto failedActions(String failureReason) {
+        // The raw reason is a technical (English) error; the zh field carries a readable message instead.
         String detail = failureReason != null ? failureReason : "Inference failed.";
         return new BranchActionsDto(
                 DISCLAIMER,
@@ -598,29 +650,54 @@ public class AssessmentService {
                 null,
                 Collections.emptyList(),
                 Collections.emptyList(),
+                Collections.emptyList(),
+                DISCLAIMER_ZH,
+                List.of("模型分析失败，请稍后重试或换一张更清晰的照片。"),
+                null,
+                null,
                 Collections.emptyList()
         );
     }
 
-    private static List<String> buildHealthGuidanceLines(ModelLabels m) {
+    private static List<String> buildHealthGuidanceLines(ModelLabels m, boolean zh) {
         List<String> out = new ArrayList<>();
         if (m.healthSuspectedInjuryPercent() >= 70) {
-            out.add("Suspected injury: volunteers should follow up urgently. Use «Nearby rescue» below to contact a shelter or emergency care.");
+            out.add(zh
+                    ? "疑似受伤：志愿者应尽快跟进。可通过下方「附近救助」联系收容所或急诊。"
+                    : "Suspected injury: volunteers should follow up urgently. Use «Nearby rescue» below to contact a shelter or emergency care.");
         }
         if (m.healthSeverelyEmaciatedPercent() >= 70) {
-            out.add("Severe wasting visible: contact a nearby TNR or rescue group for coordinated trapping and veterinary assessment.");
+            out.add(zh
+                    ? "明显严重消瘦：请联系附近的 TNR 或救助组织，协调诱捕并安排兽医评估。"
+                    : "Severe wasting visible: contact a nearby TNR or rescue group for coordinated trapping and veterinary assessment.");
         } else if (m.healthUndernutritionPercent() >= 70) {
-            out.add("Possible undernutrition: monitor closely, coordinate feeding, and involve TNR groups when the cat is stable.");
+            out.add(zh
+                    ? "可能营养不良：请密切观察、协调投喂，待猫状态稳定后再联系 TNR 组织。"
+                    : "Possible undernutrition: monitor closely, coordinate feeding, and involve TNR groups when the cat is stable.");
         }
         return out;
     }
 
     private BranchActionsDto buildActions(BranchType branch, Double lat, Double lng, ModelLabels labels) {
-        List<String> healthGuidance = buildHealthGuidanceLines(labels);
+        List<String> healthGuidance = buildHealthGuidanceLines(labels, false);
+        List<String> healthGuidanceZh = buildHealthGuidanceLines(labels, true);
         List<String> rescueSteps = List.of(
                 "If the animal is bleeding, non-responsive, or hit by a car: seek emergency veterinary care immediately.",
                 "Contact City of San Jose Animal Care & Services or a local rescue for coordinated help.",
                 "Avoid chasing; use a towel or carrier if safe to reduce stress."
+        );
+        List<String> rescueStepsZh = List.of(
+                "如果动物在流血、没有反应或被车撞：请立即就医（兽医急诊）。",
+                "联系圣何塞市动物关爱服务处（City of San Jose Animal Care & Services）或当地救助组织协同处理。",
+                "不要追赶；在安全的前提下用毛巾或猫包减轻它的应激。"
+        );
+        List<String> generalSteps = List.of(
+                "Observe from a distance; note location and time.",
+                "Consider TNR programs if cats are recurring; coordinate with neighbors respectfully."
+        );
+        List<String> generalStepsZh = List.of(
+                "远距离观察，记下地点和时间。",
+                "如果经常出现，可考虑 TNR 项目；与邻居友善沟通协调。"
         );
 
         double refLat = lat != null ? lat : 37.3382;
@@ -629,48 +706,33 @@ public class AssessmentService {
         List<TnrLocationDto> tnrList = tnrDirectoryService.nearestDtos(refLat, refLng, 5);
         String nextdoorTitle = feedingCopyService.suggestedTitle();
         String nextdoorBody = feedingCopyService.buildPost("San Jose area", lat, lng);
+        String nextdoorTitleZh = feedingCopyService.suggestedTitleZh();
+        String nextdoorBodyZh = feedingCopyService.buildPostZh("圣何塞地区", lat, lng);
 
-        return switch (branch) {
-            case RESCUE -> new BranchActionsDto(
-                    DISCLAIMER,
-                    rescueSteps,
-                    nextdoorTitle,
-                    nextdoorBody,
-                    rescueList,
-                    tnrList,
-                    healthGuidance
-            );
-            case FEEDING_OUTREACH -> new BranchActionsDto(
-                    DISCLAIMER,
-                    Collections.emptyList(),
-                    nextdoorTitle,
-                    nextdoorBody,
-                    rescueList,
-                    tnrList,
-                    healthGuidance
-            );
-            case TNR_RESOURCES -> new BranchActionsDto(
-                    DISCLAIMER,
-                    Collections.emptyList(),
-                    nextdoorTitle,
-                    nextdoorBody,
-                    rescueList,
-                    tnrList,
-                    healthGuidance
-            );
-            case GENERAL_GUIDANCE -> new BranchActionsDto(
-                    DISCLAIMER,
-                    List.of(
-                            "Observe from a distance; note location and time.",
-                            "Consider TNR programs if cats are recurring; coordinate with neighbors respectfully."
-                    ),
-                    nextdoorTitle,
-                    nextdoorBody,
-                    rescueList,
-                    tnrList,
-                    healthGuidance
-            );
+        List<String> steps = switch (branch) {
+            case RESCUE -> rescueSteps;
+            case GENERAL_GUIDANCE -> generalSteps;
+            case FEEDING_OUTREACH, TNR_RESOURCES -> Collections.emptyList();
         };
+        List<String> stepsZh = switch (branch) {
+            case RESCUE -> rescueStepsZh;
+            case GENERAL_GUIDANCE -> generalStepsZh;
+            case FEEDING_OUTREACH, TNR_RESOURCES -> Collections.emptyList();
+        };
+        return new BranchActionsDto(
+                DISCLAIMER,
+                steps,
+                nextdoorTitle,
+                nextdoorBody,
+                rescueList,
+                tnrList,
+                healthGuidance,
+                DISCLAIMER_ZH,
+                stepsZh,
+                nextdoorTitleZh,
+                nextdoorBodyZh,
+                healthGuidanceZh
+        );
     }
 
     /**
@@ -706,15 +768,7 @@ public class AssessmentService {
                         : buildActions(a.branchType(), a.latitude(), a.longitude(), a.modelLabels());
             } catch (Exception ex) {
                 log.warn("findAiGuidance buildActions failed: {}", ex.toString());
-                actions = new BranchActionsDto(
-                        DISCLAIMER,
-                        List.of("Nearby resource list temporarily unavailable; please search local shelters or TNR groups."),
-                        null,
-                        null,
-                        Collections.emptyList(),
-                        Collections.emptyList(),
-                        Collections.emptyList()
-                );
+                actions = resourcesUnavailableActions();
             }
             List<String> rationale = a.modelLabels().rationalePhrases() != null
                     ? List.copyOf(a.modelLabels().rationalePhrases())
@@ -727,7 +781,11 @@ public class AssessmentService {
                     actions.disclaimer(),
                     actions.rescueNextSteps() != null ? List.copyOf(actions.rescueNextSteps()) : List.of(),
                     actions.healthGuidanceLines() != null ? List.copyOf(actions.healthGuidanceLines()) : List.of(),
-                    rationale
+                    rationale,
+                    actions.disclaimerZh(),
+                    actions.rescueNextStepsZh() != null ? List.copyOf(actions.rescueNextStepsZh()) : List.of(),
+                    actions.healthGuidanceLinesZh() != null ? List.copyOf(actions.healthGuidanceLinesZh()) : List.of(),
+                    a.modelLabels().rationalePhrasesEn() != null ? List.copyOf(a.modelLabels().rationalePhrasesEn()) : List.of()
             );
         });
     }

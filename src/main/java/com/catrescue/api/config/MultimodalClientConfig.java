@@ -21,7 +21,8 @@ public class MultimodalClientConfig {
     @Bean
     public MultimodalClient multimodalClient(
             MultimodalProperties multimodalProperties,
-            OpenAiProperties openAiProperties) {
+            OpenAiProperties openAiProperties,
+            EarTipProperties earTipProperties) {
 
         String mode = multimodalProperties.getProvider() == null
                 ? "openai"
@@ -39,7 +40,8 @@ public class MultimodalClientConfig {
             return new OpenAiMultimodalClient(
                     createWebClient(openAiProperties.getBaseUrl()),
                     openAiKey.trim(),
-                    openAiProperties.getModel());
+                    openAiProperties.getModel(),
+                    earTipProperties);
         }
         log.warn(
                 "multimodal.provider=openai but OPENAI_API_KEY is empty — using StubMultimodalClient");

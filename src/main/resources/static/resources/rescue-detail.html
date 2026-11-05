@@ -126,8 +126,12 @@
       load: "正在加载…",
       errMissing: "缺少参数：请从评估页「查看详情」进入，或手动指定 type、id。",
       errFetch: "加载失败：",
+      errNotFound: "未找到这家机构，可能已下线。请返回首页重新查看附近资源。",
+      errHttp: "服务器返回错误（HTTP {status}），请稍后重试。",
+      errNetwork: "网络连接失败，请检查网络后重试。",
+      errCopy: "复制失败，请手动选择文本复制。",
       distance: "相对您所选位置约 ",
-      km: " km",
+      km: " 公里",
       description: "简介",
       city: "城市 / 区域",
       address: "地址",
@@ -145,6 +149,10 @@
       load: "Loading…",
       errMissing: "Missing parameters. Open this page from “View details” on the assessment screen, or add type and id to the URL.",
       errFetch: "Failed to load: ",
+      errNotFound: "This organization was not found — it may have been removed. Go back to see nearby resources again.",
+      errHttp: "The server returned an error (HTTP {status}). Please try again later.",
+      errNetwork: "Network error — check your connection and try again.",
+      errCopy: "Copy failed — please select the text and copy it manually.",
       distance: "About ",
       km: " km from your selected location",
       description: "Description",
@@ -161,7 +169,8 @@
     }
   };
 
-  let lang = localStorage.getItem(LANG_KEY) || "en";
+  // Same default as the home page (index.html) so pages never switch language on their own.
+  let lang = localStorage.getItem(LANG_KEY) === "en" ? "en" : "zh";
   let theme = localStorage.getItem(THEME_KEY) || "warm";
 
   function t(key) {
@@ -241,7 +250,7 @@
       await navigator.clipboard.writeText(v);
       statusEl.textContent = okMsg;
     } catch (_e) {
-      statusEl.textContent = t("errFetch") + "clipboard";
+      statusEl.textContent = t("errCopy");
     }
   }
 
@@ -255,15 +264,23 @@
     const url = apiFetchUrl("/api/v1/" + seg + "/" + encodeURIComponent(id)
       + "?lat=" + encodeURIComponent(lat) + "&lng=" + encodeURIComponent(lng));
     let data;
+    let res;
     try {
-      const res = await fetch(url);
-      if (!res.ok) {
-        const txt = await res.text();
-        throw new Error("HTTP " + res.status + " " + txt.slice(0, 200));
-      }
+      res = await fetch(url);
+    } catch (_err) {
+      statusEl.innerHTML = "<div class='err'>" + escapeHtml(t("errNetwork")) + "</div>";
+      return;
+    }
+    if (!res.ok) {
+      // Raw server bodies are English JSON — show a localized message instead.
+      const msg = res.status === 404 ? t("errNotFound") : t("errHttp").replace("{status}", String(res.status));
+      statusEl.innerHTML = "<div class='err'>" + escapeHtml(msg) + "</div>";
+      return;
+    }
+    try {
       data = await res.json();
-    } catch (err) {
-      statusEl.innerHTML = "<div class='err'>" + escapeHtml(t("errFetch") + (err && err.message ? err.message : String(err))) + "</div>";
+    } catch (_err) {
+      statusEl.innerHTML = "<div class='err'>" + escapeHtml(t("errHttp").replace("{status}", String(res.status))) + "</div>";
       return;
     }
 
@@ -275,14 +292,16 @@
     document.getElementById("lblAddr").textContent = t("address");
     document.getElementById("lblPhone").textContent = t("phone");
 
-    document.getElementById("placeName").textContent = data.name || "";
+    // Directory copy is bilingual; organization names stay as registered unless a zh name exists.
+    const pick = (field) => (lang === "zh" && data[field + "Zh"]) || data[field] || "";
+    document.getElementById("placeName").textContent = pick("name");
     const dk = data.distanceKm;
     document.getElementById("distanceLine").textContent =
       dk != null ? (t("distance") + dk + t("km")) : "";
 
-    document.getElementById("desc").textContent = data.shortDescription || "";
+    document.getElementById("desc").textContent = pick("shortDescription");
     document.getElementById("city").textContent = data.city || "";
-    document.getElementById("addr").textContent = data.streetAddress || "—";
+    document.getElementById("addr").textContent = pick("streetAddress") || "—";
 
     const phone = (data.phone || "").trim();
     const phoneEl = document.getElementById("phone");
