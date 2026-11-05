@@ -130,5 +130,12 @@ cat-rescue:
     calibration-floor: 0.10
     calibration-ceiling: 0.60
     calibration-interval-ms: 3600000
+    # The settings above are for CLIP. Other encoders put distances on another scale; embedding-service uses DINOv2
+    # by default (CAT_EMBEDDING_MODEL=clip switches back) and the backend picks these from its embedding_version.
+    encoders:
+      dinov2:
+        distance-threshold: ${CAT_RESCUE_EMBEDDING_DINOV2_DISTANCE_THRESHOLD:0.45}
+        calibration-floor: 0.30
+        calibration-ceiling: 0.80
   chroma:
     collection: ${CAT_RESCUE_CHROMA_COLLECTION:stray_cats}

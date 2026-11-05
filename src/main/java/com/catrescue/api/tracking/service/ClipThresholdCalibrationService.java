@@ -50,10 +50,13 @@ public class ClipThresholdCalibrationService {
         this.props = props;
     }
 
-    /** Threshold to compare CLIP distances against (calibrated when enough labels exist, else configured). */
+    /**
+     * Threshold to compare embedding distances against (calibrated when enough labels exist, else configured for
+     * the current encoder).
+     */
     public double effectiveThreshold() {
         if (!props.isAutoCalibrate()) {
-            return props.getDistanceThreshold();
+            return props.thresholdsFor(clipEmbeddingClient.embeddingVersion()).getDistanceThreshold();
         }
         Status s = status;
         // Version is learned from /embed responses; refit as soon as it is known or changes.
@@ -77,8 +80,9 @@ public class ClipThresholdCalibrationService {
     }
 
     public synchronized Status recalibrate() {
-        double configured = props.getDistanceThreshold();
         String version = clipEmbeddingClient.embeddingVersion();
+        EmbeddingServiceProperties.EncoderThresholds thresholds = props.thresholdsFor(version);
+        double configured = thresholds.getDistanceThreshold();
         List<ClipThresholdCalibrator.Sample> samples = version == null
                 ? List.of()
                 : feedbackRepository.findByVolunteerConfirmedIsNotNullAndClipDistanceIsNotNullAndEmbeddingVersion(version)
@@ -91,16 +95,17 @@ public class ClipThresholdCalibrationService {
                 samples,
                 configured,
                 props.getCalibrationMinPerClass(),
-                props.getCalibrationFloor(),
-                props.getCalibrationCeiling()
+                thresholds.getCalibrationFloor(),
+                thresholds.getCalibrationCeiling()
         );
         double effective = props.isAutoCalibrate() ? result.threshold() : configured;
         Status previous = status;
         status = new Status(configured, effective, props.isAutoCalibrate(), version, Instant.now(), result);
         if (previous == null || Math.abs(previous.effectiveThreshold() - effective) > 1e-6) {
             log.info(
-                    "CLIP distance threshold = {} (configured {}, calibrated={}, labels {}+/{}-): {}",
+                    "Same-cat distance threshold = {} for {} (configured {}, calibrated={}, labels {}+/{}-): {}",
                     String.format(Locale.ROOT, "%.3f", effective),
+                    version,
                     configured,
                     result.calibrated(),
                     result.positives(),

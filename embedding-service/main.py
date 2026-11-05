@@ -1,4 +1,4 @@
-"""CLIP image embedding microservice for stray-cat same-cat identification."""
+"""Image embedding microservice for stray-cat same-cat identification (DINOv2 by default, CLIP as fallback)."""
 
 from __future__ import annotations
 
@@ -8,40 +8,48 @@ import os
 from contextlib import asynccontextmanager
 from typing import Annotated
 
-import numpy as np
 from fastapi import FastAPI, File, HTTPException, Query, UploadFile
 from fastapi.responses import JSONResponse, Response
 from PIL import Image, UnidentifiedImageError
 from pydantic import BaseModel, Field
-from sentence_transformers import SentenceTransformer
-
 import detector
+import encoders
 from chroma_store import collection_count, collection_name, get_collection, persist_dir
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
-MODEL_NAME = "clip-ViT-B-32"
+MODEL_NAME = encoders.SPEC.model_id
 ALLOWED_MIME_PREFIX = "image/"
 MAX_BYTES = 15 * 1024 * 1024
-EXPECTED_DIM = 512
+EXPECTED_DIM = encoders.SPEC.dim
 
-# Crop to the detected cat before CLIP so background does not dominate the embedding.
+# Crop to the detected cat before embedding so background does not dominate the vector.
 CROP_ENABLED = os.environ.get("CAT_CROP_ENABLED", "true").strip().lower() not in ("0", "false", "no")
 # Vectors from different pipelines are not comparable; queries only match the current version.
-EMBEDDING_VERSION = "clip-b32-catcrop-v1" if CROP_ENABLED else "clip-b32-full-v1"
+EMBEDDING_VERSION = f"{encoders.SPEC.version_prefix}-{'catcrop' if CROP_ENABLED else 'full'}-v1"
 
-model: SentenceTransformer | None = None
+model: encoders.ClipEncoder | encoders.Dinov2Encoder | None = None
+
+
+def _check_collection_dim() -> None:
+    """Fail fast when the configured collection already holds vectors of another size (e.g. CLIP's 512)."""
+    stored = get_collection().peek(1).get("embeddings")
+    if stored is not None and len(stored) and len(stored[0]) != EXPECTED_DIM:
+        raise RuntimeError(
+            f"Chroma collection {collection_name()!r} holds {len(stored[0])}-d vectors but {encoders.EMBEDDING_MODEL} "
+            f"produces {EXPECTED_DIM}-d; unset CHROMA_COLLECTION to use the per-model default collection"
+        )
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global model
-    logger.info("Loading CLIP model %s ...", MODEL_NAME)
-    model = SentenceTransformer(MODEL_NAME)
+    logger.info("Loading %s encoder %s ...", encoders.EMBEDDING_MODEL, MODEL_NAME)
+    model = encoders.load()
     if CROP_ENABLED:
         detector.load()
-    get_collection()
+    _check_collection_dim()
     logger.info(
         "Model and Chroma collection %s ready (persist=%s, embedding_version=%s)",
         collection_name(),
@@ -53,7 +61,7 @@ async def lifespan(app: FastAPI):
     detector.unload()
 
 
-app = FastAPI(title="Cat CLIP Embedding Service", lifespan=lifespan)
+app = FastAPI(title="Cat Embedding Service", lifespan=lifespan)
 
 
 class ChromaAddRequest(BaseModel):
@@ -82,7 +90,7 @@ def open_image(raw: bytes) -> Image.Image:
 
 
 def embed_image_bytes(raw: bytes, crop: bool = True) -> tuple[list[float], dict]:
-    """CLIP embedding, computed on the detected cat crop when available. Returns (embedding, crop info)."""
+    """Image embedding, computed on the detected cat crop when available. Returns (embedding, crop info)."""
     if model is None:
         raise RuntimeError("Model not loaded")
     image = open_image(raw)
@@ -92,9 +100,7 @@ def embed_image_bytes(raw: bytes, crop: bool = True) -> tuple[list[float], dict]
         if found.cat is not None:
             image = detector.crop_cat(image, found.cat)
             crop_info = {"applied": True, "box": found.cat.as_list(), "score": round(found.cat.score, 4)}
-    vec = model.encode(image)
-    arr = np.asarray(vec, dtype=np.float32).reshape(-1)
-    return arr.tolist(), crop_info
+    return model.encode(image).tolist(), crop_info
 
 
 async def _read_image_upload(file: UploadFile) -> bytes:
@@ -151,6 +157,8 @@ def health():
     return {
         "status": "ok",
         "model": MODEL_NAME,
+        "encoder": encoders.EMBEDDING_MODEL,
+        "dimensions": EXPECTED_DIM,
         "ready": model is not None,
         "embedding_version": EMBEDDING_VERSION,
         "detector": {

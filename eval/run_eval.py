@@ -26,6 +26,8 @@ from pathlib import Path
 
 BACKEND = "http://127.0.0.1:8090"
 EMBEDDING = "http://127.0.0.1:8001"
+# Backend defaults per encoder (cat-rescue.embedding.distance-threshold / encoders.<name>.distance-threshold).
+DEFAULT_THRESHOLDS = {"clip": 0.35, "dinov2": 0.45}
 
 
 def post_multipart(url: str, field: str, path: Path, params: dict[str, str] | None = None) -> dict:
@@ -127,11 +129,14 @@ def run_same_cat(args: argparse.Namespace) -> None:
     pairs = read_csv(csv_path)
     crop = "false" if args.no_crop else "true"
     cache: dict[str, list[float]] = {}
+    versions: set[str] = set()
 
     def embed(rel: str) -> list[float]:
         if rel not in cache:
             img = (csv_path.parent / rel.strip()).resolve()
-            cache[rel] = post_multipart(f"{EMBEDDING}/embed?crop={crop}", "file", img)["embedding"]
+            r = post_multipart(f"{EMBEDDING}/embed?crop={crop}", "file", img)
+            cache[rel] = r["embedding"]
+            versions.add(r.get("embedding_version", ""))
         return cache[rel]
 
     results = []
@@ -147,18 +152,20 @@ def run_same_cat(args: argparse.Namespace) -> None:
 
     pos = [r["distance"] for r in results if r["same"]]
     neg = [r["distance"] for r in results if not r["same"]]
-    print(f"\nSame-cat — {len(results)} pairs ({len(pos)} same, {len(neg)} different), crop={crop}")
+    version = ",".join(sorted(versions))
+    default = DEFAULT_THRESHOLDS.get(version.split("-", 1)[0], 0.35)
+    print(f"\nSame-cat — {len(results)} pairs ({len(pos)} same, {len(neg)} different), crop={crop}, {version}")
     if pos and neg:
         print(f"  mean distance: same {sum(pos) / len(pos):.3f}   different {sum(neg) / len(neg):.3f}")
         best = None
-        for t in sorted({round(x, 3) for x in pos + neg} | {0.35}):
+        for t in sorted({round(x, 3) for x in pos + neg} | {default}):
             tp = sum(1 for d in pos if d < t)
             fp = sum(1 for d in neg if d < t)
             prec = tp / (tp + fp) if tp + fp else 0
             rec = tp / len(pos)
             f1 = 2 * prec * rec / (prec + rec) if prec + rec else 0
-            if t == 0.35:
-                print(f"  at current default 0.35: precision {prec:.0%} recall {rec:.0%} F1 {f1:.2f}")
+            if t == default:
+                print(f"  at current default {default}: precision {prec:.0%} recall {rec:.0%} F1 {f1:.2f}")
             if best is None or f1 > best[3]:
                 best = (t, prec, rec, f1)
         print(f"  best threshold on this set: {best[0]:.3f} (precision {best[1]:.0%}, recall {best[2]:.0%}, F1 {best[3]:.2f})")
@@ -175,7 +182,7 @@ def main() -> None:
     e.add_argument("--model")
     e.add_argument("--no-head-crop", action="store_true")
     e.add_argument("--mode", choices=["judge", "main"], default="judge")
-    s = sub.add_parser("same-cat", help="CLIP distance separation for same / different cat pairs (local)")
+    s = sub.add_parser("same-cat", help="embedding distance separation for same / different cat pairs (local)")
     s.add_argument("csv")
     s.add_argument("--no-crop", action="store_true", help="embed the full photo instead of the detected cat")
     args = ap.parse_args()
