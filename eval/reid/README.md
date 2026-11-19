@@ -73,10 +73,13 @@ Measured speeds:
 | Where | Speed | All single-cat PetFinder listings (3,893 cats, 15,387 photos), 15 epochs |
 |---|---|---|
 | M1 MacBook, 8 GB, `--p 8 --k 4` | ~7 photos/s (batch 128 does not fit in memory) | ~8 h of training plus ~2 h of cropping: use `--max-cats 1000` in step 1 instead |
-| Explorer GPU (`explorer.sbatch`) | not measured yet; expected far higher | expected to fit the 8 h `gpu` job; check the first epoch's time in the log |
+| Explorer, one H200 (`explorer.sbatch`, `--p 32 --k 4`) | ~61 s per epoch | 17 epochs (early stop, best at 13) in ~17 min; validation mAP 0.49 → 0.64 |
 
 On Explorer (SSH needs the key Research Computing puts in `~/.ssh` on the cluster; download it from Open
 OnDemand): follow the one-time setup at the top of `explorer.sbatch`. Upload the crops as a single `crops.tar`
 through the transfer node: thousands of small files over the login node crawl at a few files per second. Build
-the virtualenv in a `short` job, not on the login node, where heavy processes are killed. Then
-`sbatch eval/reid/explorer.sbatch` from `/projects/schrodingers_stray/stray`.
+the environment once with `sbatch eval/reid/explorer-setup.sbatch`: it builds the venv on a `short` node's local
+disk and packs it as `catenv.tar` (pip into `/projects` directly took over an hour), and installs PyTorch from
+the CUDA 12.8 index, because the GPU nodes' driver is too old for the default CUDA 13 wheels, which silently run
+on the CPU. Then `sbatch eval/reid/explorer.sbatch` from `/projects/schrodingers_stray/stray`; it unpacks
+`catenv.tar` and the crops onto the node and exits early if PyTorch cannot see the GPU.
