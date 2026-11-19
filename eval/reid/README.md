@@ -70,10 +70,13 @@ step 3 (validation-only threshold and early stopping).
 
 Measured speeds:
 
-| Where | Speed | All PetFinder cats (estimated ~25k photos, 15 epochs) |
+| Where | Speed | All single-cat PetFinder listings (3,893 cats, 15,387 photos), 15 epochs |
 |---|---|---|
-| M1 MacBook, 8 GB, `--p 8 --k 4` | ~7 photos/s (batch 128 does not fit in memory) | ~14 h: use `--max-cats 1000` in step 1 instead |
-| Explorer GPU (`explorer.sbatch`) | not measured yet; expected far higher | expected to fit the 4 h job; check the first epoch's time in the log |
+| M1 MacBook, 8 GB, `--p 8 --k 4` | ~7 photos/s (batch 128 does not fit in memory) | ~8 h of training plus ~2 h of cropping: use `--max-cats 1000` in step 1 instead |
+| Explorer GPU (`explorer.sbatch`) | not measured yet; expected far higher | expected to fit the 8 h `gpu` job; check the first epoch's time in the log |
 
-On Explorer: copy `eval/`, `embedding-service/` and `eval/reid/data/crops/` to `/scratch/$USER/stray`, check
-the partition name in `explorer.sbatch`, then `sbatch eval/reid/explorer.sbatch`.
+On Explorer (SSH needs the key Research Computing puts in `~/.ssh` on the cluster; download it from Open
+OnDemand): follow the one-time setup at the top of `explorer.sbatch`. Upload the crops as a single `crops.tar`
+through the transfer node: thousands of small files over the login node crawl at a few files per second. Build
+the virtualenv in a `short` job, not on the login node, where heavy processes are killed. Then
+`sbatch eval/reid/explorer.sbatch` from `/projects/schrodingers_stray/stray`.

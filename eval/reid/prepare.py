@@ -28,9 +28,11 @@ DEFAULT_OUT = Path(__file__).resolve().parent / "data" / "train_cats.csv"
 
 def from_petfinder(root: Path) -> dict[str, list[Path]]:
     cats = set()
-    with (root / "train.csv").open(newline="", encoding="utf-8") as f:
+    table = root / "train.csv" if (root / "train.csv").exists() else root / "train" / "train.csv"  # zip has train/
+    with table.open(newline="", encoding="utf-8") as f:
         for row in csv.DictReader(f):
-            if row.get("Type", "").strip() == "2":
+            # Cats only, and single-pet listings: a listing with Quantity > 1 shows several different cats.
+            if row.get("Type", "").strip() == "2" and row.get("Quantity", "1").strip() == "1":
                 cats.add(row["PetID"].strip())
     groups: dict[str, list[Path]] = defaultdict(list)
     for img in sorted((root / "train_images").glob("*.jpg")):
