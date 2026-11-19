@@ -2,8 +2,11 @@ package com.catrescue.api.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
- * Local CLIP embedding microservice (embedding-service on :8001).
+ * Local image embedding microservice (embedding-service on :8001; DINOv2 by default, CLIP as fallback).
  */
 @ConfigurationProperties(prefix = "cat-rescue.embedding")
 public class EmbeddingServiceProperties {
@@ -36,6 +39,13 @@ public class EmbeddingServiceProperties {
     private double calibrationFloor = 0.10;
 
     private double calibrationCeiling = 0.60;
+
+    /**
+     * Threshold settings for other encoders, keyed by the first part of the embedding version ("dinov2" for
+     * "dinov2-b-catcrop-v1"). Encoders put distances on different scales; versions without an entry (CLIP) use the
+     * top-level distance-threshold / calibration-floor / calibration-ceiling above.
+     */
+    private Map<String, EncoderThresholds> encoders = new HashMap<>(Map.of("dinov2", new EncoderThresholds(0.45, 0.30, 0.80)));
 
     /**
      * Send an auto-detected head crop ({@code POST /crop}) to the vision model as extra ear-tip evidence.
@@ -121,5 +131,60 @@ public class EmbeddingServiceProperties {
 
     public void setHeadCropEnabled(boolean headCropEnabled) {
         this.headCropEnabled = headCropEnabled;
+    }
+
+    public Map<String, EncoderThresholds> getEncoders() {
+        return encoders;
+    }
+
+    public void setEncoders(Map<String, EncoderThresholds> encoders) {
+        this.encoders = encoders;
+    }
+
+    /** Threshold settings for the encoder that produced {@code embeddingVersion} (CLIP defaults when unknown). */
+    public EncoderThresholds thresholdsFor(String embeddingVersion) {
+        String encoder = embeddingVersion == null ? "" : embeddingVersion.split("-", 2)[0];
+        EncoderThresholds t = encoders.get(encoder);
+        return t != null ? t : new EncoderThresholds(distanceThreshold, calibrationFloor, calibrationCeiling);
+    }
+
+    public static class EncoderThresholds {
+
+        private double distanceThreshold;
+        private double calibrationFloor;
+        private double calibrationCeiling;
+
+        public EncoderThresholds() {
+        }
+
+        public EncoderThresholds(double distanceThreshold, double calibrationFloor, double calibrationCeiling) {
+            this.distanceThreshold = distanceThreshold;
+            this.calibrationFloor = calibrationFloor;
+            this.calibrationCeiling = calibrationCeiling;
+        }
+
+        public double getDistanceThreshold() {
+            return distanceThreshold;
+        }
+
+        public void setDistanceThreshold(double distanceThreshold) {
+            this.distanceThreshold = distanceThreshold;
+        }
+
+        public double getCalibrationFloor() {
+            return calibrationFloor;
+        }
+
+        public void setCalibrationFloor(double calibrationFloor) {
+            this.calibrationFloor = calibrationFloor;
+        }
+
+        public double getCalibrationCeiling() {
+            return calibrationCeiling;
+        }
+
+        public void setCalibrationCeiling(double calibrationCeiling) {
+            this.calibrationCeiling = calibrationCeiling;
+        }
     }
 }

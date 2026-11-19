@@ -1,4 +1,4 @@
-"""Local ChromaDB persist store for stray cat CLIP embeddings."""
+"""Local ChromaDB persist store for stray cat image embeddings."""
 
 from __future__ import annotations
 
@@ -7,8 +7,14 @@ from pathlib import Path
 
 import chromadb
 
+from encoders import EMBEDDING_MODEL
+
 PERSIST_DIR = Path(os.environ.get("CHROMA_PERSIST_DIR", "./chroma_db")).resolve()
-COLLECTION_NAME = os.environ.get("CHROMA_COLLECTION", "stray_cats")
+# One collection per encoder: Chroma fixes the vector size per collection (CLIP 512, DINOv2 768). CLIP keeps the
+# original name so existing vectors stay usable when switching back.
+COLLECTION_NAME = os.environ.get("CHROMA_COLLECTION") or (
+    "stray_cats" if EMBEDDING_MODEL == "clip" else f"stray_cats_{EMBEDDING_MODEL}"
+)
 
 _client: chromadb.PersistentClient | None = None
 _collection = None

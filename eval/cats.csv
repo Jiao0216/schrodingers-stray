@@ -1,0 +1,27 @@
+image,cat_id
+# cat_id: any name; photos of the same individual share it (aim for 3+ photos per cat, different days)
+photos/polar_1.jpg,polar
+photos/polar_2.jpg,polar
+photos/polar_3.jpg,polar
+photos/cat02_1.jpg,cat02
+photos/cat02_2.jpg,cat02
+photos/cat02_3.jpg,cat02
+photos/cat03_1.jpg,cat03
+photos/cat03_2.jpg,cat03
+photos/cat03_3.jpg,cat03
+photos/cat04_1.jpg,cat04
+photos/cat04_2.jpg,cat04
+photos/cat04_3.jpg,cat04
+photos/cat05_1.jpg,cat05
+photos/cat05_2.jpg,cat05
+photos/cat05_3.jpg,cat05
+photos/cat09_1.jpg,cat09
+photos/cat09_2.jpg,cat09
+photos/cat09_3.jpg,cat09
+photos/cat10_1.jpg,cat10
+photos/cat10_2.jpg,cat10
+photos/cat11_1.jpg,cat11
+photos/cat11_2.jpg,cat11
+photos/cat11_3.jpg,cat11
+photos/cat12_1.jpg,cat12
+photos/cat12_2.jpg,cat12

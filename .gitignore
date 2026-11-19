@@ -47,5 +47,7 @@ embedding-service/chroma_db/
 eval/photos/*
 !eval/photos/.gitkeep
 eval/*_results.csv
+eval/**/__pycache__/
+eval/reid/data/
 cat-agent/tests/__pycache__/
 cat-agent/.pytest_cache/

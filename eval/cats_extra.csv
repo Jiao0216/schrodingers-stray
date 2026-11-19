@@ -1,0 +1,27 @@
+image,cat_id
+# Supplementary set: rendered / AI-looking images. Not part of the evaluation set (cats.csv); kept for possible training use.
+# extra01: 3D-render style British Blue, baked-in checkerboard background
+photos/extra01_1.jpg,extra01
+photos/extra01_2.jpg,extra01
+photos/extra01_3.jpg,extra01
+# cat01: watermarked stock photo (Shutterstock)
+photos/example_cat.jpg,cat01
+# cat06: cropped from one collage image (studio background, low resolution) — not a real street photo
+photos/cat06_1.jpg,cat06
+photos/cat06_2.jpg,cat06
+photos/cat06_3.jpg,cat06
+photos/cat06_4.jpg,cat06
+photos/cat06_5.jpg,cat06
+photos/cat06_6.jpg,cat06
+photos/cat06_7.jpg,cat06
+# cat07: cropped from one small watermarked stock image (~80 px per pose) — not a real street photo
+photos/cat07_1.jpg,cat07
+photos/cat07_2.jpg,cat07
+photos/cat07_3.jpg,cat07
+photos/cat07_4.jpg,cat07
+photos/cat07_5.jpg,cat07
+# cat08: cropped from one watermarked stock image (studio background) — not a real street photo
+photos/cat08_1.jpg,cat08
+photos/cat08_2.jpg,cat08
+photos/cat08_3.jpg,cat08
+photos/cat08_4.jpg,cat08
